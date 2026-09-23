@@ -52,3 +52,74 @@ Orders of Court; 9; 7; 1118
 Orders of Special Courts; 9; 77; 90
 Orders of ED / CGM (Quasi-Judicial Authorities); 9; 133; 440
 Orders under Regulation 30A of the SEBI (Intermediaries) Regulations, 2008; 9; 138; 46
+
+# ==========================================================================
+# Verified listing protocol (2026-09-23, established empirically from WSL)
+# Implemented in src/scrape_listings.py. Read this before touching that file.
+# ==========================================================================
+
+## 1. `doDirect` is the page selector, NOT `nextValue`
+
+The browser sends both, but only `doDirect` changes the result, and it is
+**0-based**:
+
+    doDirect = page - 1        (page 1 -> doDirect=0)
+
+Evidence:
+  - Holding doDirect fixed and varying nextValue 1/2/3 returned byte-identical
+    HTML. Varying doDirect returned different pages.
+  - doDirect 0,1,2,3,4,5 gave disjoint row sets (0 overlap) in strictly
+    descending date order.
+  - Row counts reconcile exactly with SEBI's published totals:
+        ED/CGM  totalpage=18  -> 17*25 + 15 = 440   (published 440)
+        WTM     totalpage=257 -> 256*25 + 24 = 6424 (published 6424)
+  - Beyond the last page the table is empty (0 rows), not an error.
+
+`next="n"` must be sent or doDirect is ignored (next="p" or "" snaps back to
+page 1). `nextValue` is still sent to mirror the browser.
+
+The response's hidden `nextValue` is NOT a cursor: it is just doDirect+1 echoed
+back. Do not drive the loop from it. Drive it from hidden `totalpage`.
+
+## 2. Headers: no cookies needed at all
+
+SEBI sits behind a WAF that returns HTTP 530 "Unauthorized Request Blocked"
+for non-browser User-Agents. A plain "Academic research (BITS Pilani)" UA is
+blocked outright — this is why the runbook's original cache.py could never
+have worked against this endpoint.
+
+Minimal header set that works (verified from a fresh WSL shell, no cookie jar):
+
+    User-Agent:    a browser-shaped string   <- REQUIRED, WAF rejects otherwise
+    Content-type:  application/x-www-form-urlencoded
+    Origin:        https://www.sebi.gov.in
+    Referer:       .../HomeAction.do?doListing=yes&sid=2&ssid=9&smid=<smid>
+
+JSESSIONID, _ga, _gid, sec-ch-ua etc. are all unnecessary. Nothing is
+session-stateful, so cache entries stay valid across runs and machines.
+Set SEBI_CONTACT=<email> to append a contact address to the UA (politeness).
+
+## 3. Two tables in the response — only one holds orders
+
+    table#sample_1     the 25 order rows
+    table.ordersum     seven static "Order-11B-<year>.xlsx" summary
+                       spreadsheets, repeated on EVERY WTM page
+
+Parsing "every <a> in every table" would add 7 bogus rows per WTM page
+(257 pages = 1799 junk rows). Scope to table#sample_1.
+
+## 4. Row shapes to expect
+
+  - Most rows: one <a> to a detail page ending `_<order_id>.html`.
+  - Some rows (notably AO): a second <a> labelled "[Corrigendum]" pointing at
+    a PDF. It is a supplement to the same order, NOT a separate order.
+  - Some rows link straight to a PDF with no numeric id — chiefly SAST
+    "Exemption Order"s under WTM. order_id is left null and the row is
+    flagged needs_review rather than given an invented id.
+
+## 5. Ordering is date-descending, newest first
+
+New orders therefore enter at page 1 and shift everything down. A long run
+that straddles a new publication can see a row twice or miss one; dedup by
+order_id plus the row-count reconciliation in the run summary is what catches
+this. Re-run to fill gaps — cached pages cost nothing.

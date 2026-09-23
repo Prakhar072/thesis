@@ -1,5 +1,8 @@
 raw/
 derived/
+logs/
+reports/
 __pycache__/
 .venv/
 *.pyc
+.pytest_cache/
