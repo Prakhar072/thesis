@@ -867,7 +867,10 @@ def main(argv: list[str] | None = None) -> int:
     log.info("elapsed %.1f min", (time.monotonic() - started) / 60)
     log.info("wrote %s and %s", docs_path, pages_path)
     share = summary["pdf_docs_needing_ocr_share"]
-    if share is not None:
+    if args.order_id or args.sample or args.limit:
+        # A hand-picked subset says nothing about the corpus-wide OCR share.
+        log.info("runbook Day 5: not assessed on a subset run")
+    elif share is not None:
         verdict = ("under 10%: OCR just those and move on" if share < 0.10 else
                    "over 30%: restrict the study period instead of OCRing everything"
                    if share > 0.30 else "10-30%: judgement call — see runbook Day 5")

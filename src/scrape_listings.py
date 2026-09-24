@@ -98,6 +98,9 @@ class ListingRow:
     smid: int
     doc_kind: str
     corrigendum_url: str | None = None
+    #: SAT appeal numbers SEBI annotates on the listing ("539/2022; 475/2022"),
+    #: i.e. this order was challenged before the Securities Appellate Tribunal.
+    sat_appeals: str | None = None
     needs_review: bool = False
     review_reason: str | None = None
     scraped_at: dt.datetime | None = None
@@ -258,6 +261,39 @@ def _normalise(text: str | None) -> str:
     return re.sub(r"\s+", " ", (text or "")).strip()
 
 
+_TAG_RE = re.compile(r"<[a-zA-Z/][^>]*>")
+
+
+def clean_title_attr(attr: str | None) -> tuple[str, str | None, list[str]]:
+    """Clean SEBI's ``title`` attribute, which can carry HTML.
+
+    SEBI appends markup to the title of 1,541 orders: corrigendum links
+    (``…Limited<br><a href='…_p.pdf'>[Corrigendum]</a>``) and SAT appeal
+    annotations (``<span>[SAT Appeal No.:</span><a href='sat.gov.in/…'>539/2022]</a>``).
+    Corrigendum links are removed and returned separately; other links keep
+    their text, so an appeal annotation stays readable in the title.
+
+    Returns ``(clean title, corrigendum url, SAT appeal numbers)``.
+    """
+    attr = attr or ""
+    if not _TAG_RE.search(attr):
+        return _normalise(attr), None, []
+    fragment = BeautifulSoup(attr, "lxml")
+    corrigendum: str | None = None
+    appeals: list[str] = []
+    for anchor in fragment.find_all("a"):
+        text = _normalise(anchor.get_text(" "))
+        href = (anchor.get("href") or "").strip()
+        if "corrigendum" in f"{text} {href}".lower():
+            corrigendum = corrigendum or href or None
+            anchor.decompose()
+            continue
+        if "sat.gov.in" in href.lower() and text:
+            appeals.append(text.rstrip("]").strip())
+        anchor.replace_with(text)
+    return _normalise(fragment.get_text(" ")), corrigendum, appeals
+
+
 def _select_rows_table(soup: BeautifulSoup):
     """The orders table only.
 
@@ -313,7 +349,11 @@ def parse_rows(
         href = _normalise(primary["href"])
         date_raw = _normalise(cells[0].get_text(" "))
         order_date = parse_order_date(date_raw)
-        title = _normalise(primary.get("title")) or _normalise(primary.get_text(" "))
+        # The attribute is preferred because the visible text is cut short where
+        # a SAT appeal link begins; the visible text is the fallback.
+        title, title_corrigendum, appeals = clean_title_attr(primary.get("title"))
+        title = title or _normalise(primary.get_text(" "))
+        corrigendum = corrigendum or title_corrigendum
         order_id = extract_order_id(href)
 
         reasons = []
@@ -345,6 +385,7 @@ def parse_rows(
                 smid=category.smid,
                 doc_kind=doc_kind,
                 corrigendum_url=corrigendum,
+                sat_appeals="; ".join(appeals) or None,
                 needs_review=bool(reasons),
                 review_reason=",".join(reasons) or None,
                 scraped_at=scraped_at,
@@ -518,6 +559,7 @@ PARQUET_SCHEMA = pa.schema(
         pa.field("smid", pa.int32()),
         pa.field("doc_kind", pa.string()),
         pa.field("corrigendum_url", pa.string()),
+        pa.field("sat_appeals", pa.string()),
         pa.field("needs_review", pa.bool_()),
         pa.field("review_reason", pa.string()),
         pa.field("scraped_at", pa.timestamp("us", tz="UTC")),

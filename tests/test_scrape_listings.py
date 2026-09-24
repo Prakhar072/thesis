@@ -170,6 +170,67 @@ def test_corrigendum_link_does_not_become_a_row():
     assert with_corr and all(r.order_id is not None for r in with_corr)
 
 
+def test_titles_carry_no_html_markup():
+    """REGRESSION: SEBI puts corrigendum links inside the title attribute."""
+    ao = fixture_html("listing_ao_page1.html")
+    rows = sl.parse_rows(ao, AO, 1)
+    assert all("<" not in r.title and "href" not in r.title for r in rows)
+    veerkrupa = next(r for r in rows if "Veerkrupa" in r.title)
+    assert veerkrupa.title == "Adjudication Order in the matter of Veerkrupa Jewellers Limited"
+    assert veerkrupa.corrigendum_url.endswith("_p.pdf")
+
+
+def test_clean_title_attr_plain_title_is_untouched():
+    assert sl.clean_title_attr("Order in the matter of A & B Ltd.") == (
+        "Order in the matter of A & B Ltd.", None, [])
+    assert sl.clean_title_attr(None) == ("", None, [])
+
+
+@pytest.mark.parametrize("attr", [
+    "Adjudication Order in the matter of X Limited<br><a href='https://www.sebi.gov.in/c/X_p.pdf'"
+    "target='_blank' style='color:#007ffc'>[Corrigendum]</a>",
+    "Adjudication Order in the matter of X Limited <span style='color:#007ffc;'></span> "
+    "<a style='color:#007ffc;' href='https://www.sebi.gov.in/c/X_p.pdf' target='_blank'>"
+    "<em class='fa fa-external-link'></em>Corrigendum</a>",
+])
+def test_clean_title_attr_strips_corrigendum_markup(attr):
+    title, corrigendum, appeals = sl.clean_title_attr(attr)
+    assert title == "Adjudication Order in the matter of X Limited"
+    assert corrigendum == "https://www.sebi.gov.in/c/X_p.pdf"
+    assert appeals == []
+
+
+def test_clean_title_attr_keeps_sat_appeal_annotation():
+    attr = ("Final Order in the matter of Trend Market Advisory Services "
+            "<span style='color:#007ffc;'>[SAT Appeal No.:</span><a style='color:#007ffc;' "
+            "href='https://sat.gov.in/english/pdf/E2022_JO2022568_4.PDF' target='_blank'>"
+            "<em class='fa fa-external-link'></em>568/2022 & Misc. App. No. 1036/2022]</a>")
+    title, corrigendum, appeals = sl.clean_title_attr(attr)
+    assert title == ("Final Order in the matter of Trend Market Advisory Services "
+                     "[SAT Appeal No.: 568/2022 & Misc. App. No. 1036/2022]")
+    assert corrigendum is None
+    assert appeals == ["568/2022 & Misc. App. No. 1036/2022"]
+
+
+def test_multiple_sat_appeals_are_all_captured():
+    attr = ("Order in the matter of CNBC Awaaz <span>[SAT Appeal No.:</span>"
+            "<a href='http://sat.gov.in/a.PDF'>475/2022]</a>"
+            "<span>[SAT Appeal No.:</span><a href='http://sat.gov.in/b.PDF'>480/2022]</a>")
+    _, _, appeals = sl.clean_title_attr(attr)
+    assert appeals == ["475/2022", "480/2022"]
+
+
+def test_parse_rows_records_sat_appeals():
+    html = ("<table id='sample_1'><tr><td>Feb 23, 2026</td><td>"
+            "<a href='https://www.sebi.gov.in/o/final-order_555.html' title=\"Final Order in X "
+            "&lt;span&gt;[SAT Appeal No.:&lt;/span&gt;&lt;a href='https://sat.gov.in/x.PDF'&gt;"
+            "539/2022]&lt;/a&gt;\">Final Order in X [SAT Appeal No.:</a></td></tr></table>")
+    row = sl.parse_rows(html, WTM, 1)[0]
+    assert row.title == "Final Order in X [SAT Appeal No.: 539/2022]"
+    assert row.sat_appeals == "539/2022"
+    assert row.order_type == "WTM", "an appeal annotation does not change the category"
+
+
 def test_titles_are_whitespace_normalised(wtm_page1):
     for row in sl.parse_rows(wtm_page1, WTM, 1):
         assert row.title == " ".join(row.title.split())

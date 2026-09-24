@@ -23,6 +23,8 @@ pages across every year from 2000 on:
                   so they are carried forward as text, not treated as failures.
 ``DIRECT_PDF``    The listing already points at a PDF (SAST exemption orders);
                   there is no detail page to follow.
+``ANCHOR_PDF``    Rare: a page with neither viewer nor inline text that links a
+                  PDF. Checked *after* inline text — see ``extract_document_ref``.
 
 The two stages are separated so the expensive download can be re-run, resumed
 and re-parsed independently::
@@ -150,29 +152,46 @@ def _soup(html: str | bytes) -> BeautifulSoup:
     return BeautifulSoup(html, "lxml")
 
 
+def upgrade_scheme(url: str) -> str:
+    """SEBI no longer serves plain HTTP (port 80 gives "No route to host"), but
+    a few old links still use it. Only SEBI's own host is rewritten."""
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme == "http" and parts.hostname and parts.hostname.endswith("sebi.gov.in"):
+        return urllib.parse.urlunsplit(parts._replace(scheme="https"))
+    return url
+
+
 def extract_document_ref(html: str | bytes, base_url: str) -> DocumentRef:
-    """Find the document a detail page points at. Never raises on bad HTML."""
+    """Find the document a detail page points at. Never raises on bad HTML.
+
+    Precedence is iframe -> inline text -> anchor. An old page that prints the
+    order in full and *also* links a PDF is linking something secondary: in the
+    corpus that link was an annexure ("ANNEXURE 1 STATUS OF 195 DEMAT
+    REQUESTS…"), a PDF copy of the same order, a SAT judgment cited by the
+    order, or a dead link. Taking the anchor first archived annexures as orders.
+    """
     soup = _soup(html)
 
-    # 1. iframe/embed/object — the normal case.
+    # 1. iframe/embed/object — the viewer holding the order.
     for node in soup.find_all(["iframe", "embed", "object"]):
         src = node.get("src") or node.get("data")
         if not src or not src.strip():
             continue
-        real = urllib.parse.urljoin(base_url, unwrap_viewer_url(src.strip()))
+        real = upgrade_scheme(urllib.parse.urljoin(base_url, unwrap_viewer_url(src.strip())))
         if looks_like_pdf_url(real):
             return DocumentRef(IFRAME_PDF, real)
 
-    # 2. A plain anchor to a PDF.
-    for anchor in soup.find_all("a", href=True):
-        href = anchor["href"].strip()
-        if href and looks_like_pdf_url(urllib.parse.urljoin(base_url, href)):
-            return DocumentRef(ANCHOR_PDF, urllib.parse.urljoin(base_url, href))
-
-    # 3. The order text is the page itself.
+    # 2. The order text is the page itself.
     text = extract_inline_text(html)
     if len(text) >= INLINE_TEXT_MIN_CHARS:
         return DocumentRef(INLINE_HTML, None, len(text))
+
+    # 3. Only then a plain anchor to a PDF.
+    for anchor in soup.find_all("a", href=True):
+        href = anchor["href"].strip()
+        real = upgrade_scheme(urllib.parse.urljoin(base_url, href)) if href else ""
+        if real and looks_like_pdf_url(real):
+            return DocumentRef(ANCHOR_PDF, real)
 
     return DocumentRef(NO_DOCUMENT, None, len(text))
 
@@ -229,7 +248,7 @@ def resolve_document(row, *, force: bool = False) -> tuple[DocumentRef, str | No
     Returns ``(ref, error)``. A direct-PDF listing row needs no detail fetch.
     """
     if row.listing_doc_kind == "DIRECT_PDF" or looks_like_pdf_url(row.source_url):
-        return DocumentRef(DIRECT_PDF, row.source_url), None
+        return DocumentRef(DIRECT_PDF, upgrade_scheme(row.source_url)), None
     try:
         html = cache.get(row.source_url, headers={"Referer": f"{SEBI_ORIGIN}/"}, force=force)
     except cache.FetchError as exc:

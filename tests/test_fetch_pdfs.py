@@ -116,6 +116,59 @@ def test_anchor_pdf_fallback():
     assert ref.pdf_url == "https://www.sebi.gov.in/sebi_data/attachdocs/9.pdf"
 
 
+def test_inline_order_wins_over_an_annexure_link_on_a_real_page():
+    """REGRESSION: order 13993 prints the order in full and links two
+    annexures. The anchor-first resolver archived "ANNEXURE 1" as the order."""
+    html = fixture_html("detail_inline_with_annexure.html")
+    assert "indoann1_p.pdf" in html
+    ref = fp.extract_document_ref(html, "https://www.sebi.gov.in/enforcement/orders/x_13993.html")
+    assert ref.shape == fp.INLINE_HTML
+    assert ref.pdf_url is None
+    assert ref.inline_text_chars > 15000
+
+
+def test_inline_text_wins_over_any_anchor():
+    body = "ORDER OF THE ADJUDICATING OFFICER " + "The noticee violated the regulations. " * 60
+    html = (f"<section class='main_section'>{body}"
+            "<a href='/sebi_data/commondocs/annex1_p.pdf'>(Annexure - 1)</a></section>")
+    ref = fp.extract_document_ref(html, "https://www.sebi.gov.in/x_1.html")
+    assert ref.shape == fp.INLINE_HTML
+
+
+def test_iframe_still_wins_over_inline_text():
+    body = "Some long text on the page. " * 100
+    html = (f"<iframe src='/web/?file=/sebi_data/attachdocs/1.pdf'></iframe>"
+            f"<section class='main_section'>{body}</section>")
+    ref = fp.extract_document_ref(html, "https://www.sebi.gov.in/x_1.html")
+    assert ref.shape == fp.IFRAME_PDF
+
+
+@pytest.mark.parametrize("url,expected", [
+    ("http://www.sebi.gov.in/sebi_data/commondocs/aug-2017/VTX industries order_p.pdf",
+     "https://www.sebi.gov.in/sebi_data/commondocs/aug-2017/VTX industries order_p.pdf"),
+    ("http://siportal.sebi.gov.in/a.pdf", "https://siportal.sebi.gov.in/a.pdf"),
+    ("https://www.sebi.gov.in/a.pdf", "https://www.sebi.gov.in/a.pdf"),
+    ("http://sat.gov.in/english/pdf/E2017_JO2017244.PDF", "http://sat.gov.in/english/pdf/E2017_JO2017244.PDF"),
+    ("http://notsebi.gov.in.example.com/a.pdf", "http://notsebi.gov.in.example.com/a.pdf"),
+])
+def test_upgrade_scheme_only_rewrites_sebi(url, expected):
+    assert fp.upgrade_scheme(url) == expected
+
+
+def test_direct_pdf_over_http_is_fetched_over_https_but_keeps_its_name():
+    row = listing(order_id=None, url="http://www.sebi.gov.in/a/VTX order_p.pdf", kind="DIRECT_PDF")
+    ref, error = fp.resolve_document(row)
+    assert error is None and ref.pdf_url.startswith("https://")
+    # archive naming follows the listing URL, so it is stable across the fix
+    assert fp.archive_name(None, row.source_url) == fp.archive_name(None, row.source_url)
+
+
+def test_anchor_pdf_is_upgraded_to_https():
+    html = "<div><a href='http://www.sebi.gov.in/sebi_data/attachdocs/9.pdf'>Order</a></div>"
+    ref = fp.extract_document_ref(html, "https://www.sebi.gov.in/x_1.html")
+    assert ref.pdf_url == "https://www.sebi.gov.in/sebi_data/attachdocs/9.pdf"
+
+
 def test_iframe_wins_over_anchor():
     html = ("<iframe src='/sebi_data/attachdocs/real.pdf'></iframe>"
             "<a href='/some/other.pdf'>other</a>")
