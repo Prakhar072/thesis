@@ -39,15 +39,35 @@ class FakeEngine:
     calls: list = field(default_factory=list)
     fail: bool = False
 
-    def ocr_png(self, png: bytes):
+    def ocr_png(self, png: bytes, dpi=None):
         self.calls.append(len(png))
         if self.fail:
             raise et.OcrError("engine exploded")
         return self.text, self.conf
 
 
+@dataclass
+class ScriptedEngine:
+    """Returns one (text, conf) per call, in order: first pass, then the retry
+    variants in OCR_RETRY_DPIS x OCR_RETRY_ROTATIONS order (upright base skipped)."""
+    script: list
+    signature: str = "scripted 1.0|dpi=300"
+    dpi: int = 300
+    calls: list = field(default_factory=list)
+
+    def ocr_png(self, png: bytes, dpi=None):
+        self.calls.append(dpi)
+        return self.script[len(self.calls) - 1]
+
+
+RETRY_ORDER = [f"r{rot}_{dpi}" for dpi in et.OCR_RETRY_DPIS for rot in et.OCR_RETRY_ROTATIONS
+               if f"r{rot}_{dpi}" != "r0_300"]
+
+
 def make_pdf(kinds: list[str]) -> bytes:
-    """Synthetic PDF: 'text' (digital), 'image' (page-sized image, no text), 'blank'."""
+    """Synthetic PDF: 'text' (digital), 'image' (page-sized image, no text),
+    'blank', 'vector' (hundreds of paths, no text: outlined lettering),
+    'sideways' (a scan of a text page, rotated 90 degrees in the image)."""
     doc = pymupdf.open()
     for kind in kinds:
         page = doc.new_page()
@@ -56,6 +76,25 @@ def make_pdf(kinds: list[str]) -> bytes:
         elif kind == "image":
             pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 200, 280), 0)
             pix.clear_with(220)
+            page.insert_image(page.rect, pixmap=pix)
+        elif kind == "vector":
+            # One path per "glyph", as in the real outlined order.
+            shape = page.new_shape()
+            for i in range(400):
+                x, y = 60 + (i % 40) * 12, 80 + (i // 40) * 20
+                shape.draw_line((x, y), (x + 8, y + 10))
+                shape.finish(color=(0, 0, 0))
+            shape.commit()
+        elif kind == "upside_down":
+            # A page scanned upside down. (Clean 90-degree text is not a useful
+            # test: tesseract reads it unaided; it fails on the corpus's noisy
+            # 1-bit sideways scans, which a synthetic page does not reproduce.)
+            src = pymupdf.open()
+            sp = src.new_page()
+            sp.insert_textbox(sp.rect + (50, 50, -50, -50), LOREM, fontname="helv", fontsize=13)
+            pix = sp.get_pixmap(matrix=pymupdf.Matrix(200 / 72, 200 / 72).prerotate(180),
+                                colorspace=pymupdf.csGRAY)
+            src.close()
             page.insert_image(page.rect, pixmap=pix)
     data = doc.tobytes()
     doc.close()
@@ -138,6 +177,20 @@ def test_private_use_and_replacement_chars_count_against_quality():
 )
 def test_classify_page(chars, quality, cover, expected):
     assert et.classify_page(chars, quality, cover) == expected
+
+
+@pytest.mark.parametrize(
+    "chars,cover,drawings,expected",
+    [
+        (0, 0.0, 1462, et.VECTOR_TEXT),       # order 37481: text drawn as outlines
+        (0, 0.0, 300, et.VECTOR_TEXT),        # boundary
+        (0, 0.0, 99, et.SPARSE),              # a letterhead rule and a logo
+        (0, 0.9, 5000, et.SCANNED),           # an image-covered page stays SCANNED
+        (500, 0.0, 5000, et.NATIVE),          # real text wins regardless of drawings
+    ],
+)
+def test_classify_vector_text(chars, cover, drawings, expected):
+    assert et.classify_page(chars, 1.0, cover, drawings) == expected
 
 
 def test_real_broken_layer_is_not_mistaken_for_text():
@@ -392,6 +445,78 @@ def test_mixed_document_pages_are_classified_individually(workspace):
     assert parts[1] == "SCANNED ANNEXURE" and "investigation" in parts[0]
     assert doc.has_text_layer is False
     assert (doc.n_native, doc.n_scanned, doc.n_sparse) == (2, 1, 1)
+
+
+def test_vector_text_page_is_ocrd(workspace):
+    """REGRESSION: order 37481 draws its text as paths; it came out empty."""
+    engine = FakeEngine(text="BEFORE THE ADJUDICATING OFFICER")
+    doc, pages = et.extract_pdf(job_for(workspace, "v.pdf", data=make_pdf(["vector", "blank"])),
+                                settings_for(workspace, engine))
+    assert [p.page_class for p in pages] == [et.VECTOR_TEXT, et.SPARSE]
+    assert pages[0].drawings >= et.MIN_VECTOR_DRAWINGS and pages[0].method == et.M_OCR
+    assert doc.n_vector == 1 and doc.has_text_layer is False and len(engine.calls) == 1
+    assert (workspace / doc.text_path).read_text().startswith("BEFORE THE ADJUDICATING")
+
+
+def test_confident_first_pass_is_not_retried(workspace):
+    engine = ScriptedEngine(script=[("upright text", 95.0)])
+    doc, pages = et.extract_pdf(job_for(workspace, "s.pdf", source="pdf_scanned.pdf"),
+                                settings_for(workspace, engine))
+    assert engine.calls == [300]
+    assert pages[0].ocr_variant == "r0_300" and doc.n_ocr_rotated == 0
+
+
+def test_low_confidence_page_is_retried_and_best_variant_wins(workspace):
+    confs = {"r90_300": 55.0, "r90_200": 91.0, "r180_200": 60.0}
+    script = [("garbage", 31.0)] + [(f"text {v}", confs.get(v, 10.0)) for v in RETRY_ORDER]
+    engine = ScriptedEngine(script=script)
+    s = settings_for(workspace, engine)
+    job = job_for(workspace, "s.pdf", source="pdf_scanned.pdf")
+    doc, pages = et.extract_pdf(job, s)
+    assert len(engine.calls) == 1 + len(RETRY_ORDER), "first pass + every other variant"
+    assert pages[0].ocr_variant == "r90_200" and pages[0].ocr_conf == 91.0
+    assert (workspace / doc.text_path).read_text() == "text r90_200"
+    assert doc.n_ocr_rotated == 1 and doc.mean_ocr_conf == 91.0
+    assert sorted(set(engine.calls)) == sorted(set(et.OCR_RETRY_DPIS)), "dpi passed through"
+
+    et.extract_pdf(job, s)
+    assert len(engine.calls) == 1 + len(RETRY_ORDER), "both passes come from the cache"
+
+
+def test_retry_that_does_no_better_keeps_the_first_pass(workspace):
+    script = [("first pass", 40.0)] + [("worse", 12.0)] * len(RETRY_ORDER)
+    doc, pages = et.extract_pdf(job_for(workspace, "s.pdf", source="pdf_scanned.pdf"),
+                                settings_for(workspace, ScriptedEngine(script=script)))
+    assert pages[0].ocr_variant == "r0_300" and pages[0].ocr_conf == 40.0
+    assert (workspace / doc.text_path).read_text() == "first pass"
+
+
+def test_first_pass_cache_written_before_variants_existed_is_reused(workspace):
+    """The full run's 7,731 cached pages have no 'variant' key; they must not be re-OCR'd."""
+    job = job_for(workspace, "s.pdf", source="pdf_scanned.pdf")
+    sha = hashlib.sha256((workspace / job.pdf_path).read_bytes()).hexdigest()
+    engine = ScriptedEngine(script=[])
+    path = et.ocr_cache_path(workspace / "ocr", sha, 1, engine)
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"text": "old cached text", "conf": 93.0, "engine": engine.signature}))
+    doc, pages = et.extract_pdf(job, settings_for(workspace, engine))
+    assert engine.calls == [] and pages[0].ocr_variant == "r0_300"
+    assert (workspace / doc.text_path).read_text() == "old cached text"
+
+
+@pytest.mark.skipif(et.tesseract_version() is None, reason="tesseract not installed")
+def test_real_tesseract_recovers_an_upside_down_scan(workspace):
+    """End to end with the real engine: the upright pass reads mirrored
+    gibberish (~42% confidence) and the retry must find the 180-degree turn."""
+    engine = et.TesseractEngine(version=et.tesseract_version())
+    doc, pages = et.extract_pdf(job_for(workspace, "r.pdf", data=make_pdf(["upside_down"])),
+                                settings_for(workspace, engine))
+    text = (workspace / doc.text_path).read_text()
+    assert pages[0].page_class == et.SCANNED
+    assert pages[0].ocr_variant.startswith("r180_"), pages[0].ocr_variant
+    assert pages[0].ocr_conf > 80 and doc.n_ocr_rotated == 1
+    assert "Securities and Exchange Board of India" in text
+    assert "investigation" in text
 
 
 def test_source_pdf_is_never_modified(workspace):

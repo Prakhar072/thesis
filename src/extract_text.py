@@ -23,6 +23,8 @@ body with a scanned annexure:
                   fine; it has to be judged on quality, then OCR'd.
 ``SCANNED``       fewer than ``MIN_CHARS`` characters and an image covering at
                   least half the page: OCR.
+``VECTOR_TEXT``   few characters, no page-sized image, but hundreds of vector
+                  paths: text drawn as outlines (one 2018 order). OCR.
 ``SPARSE``        few characters and no page-sized image — blank, signature and
                   "Sd/-" pages. OCR would add nothing, so the native text stays.
 
@@ -50,6 +52,12 @@ SHA-256, the page number, and the engine version + settings, so re-running
 never repeats OCR and changing a setting re-OCRs cleanly. If tesseract is
 absent, OCR pages are recorded as pending and the order's status is
 ``NEEDS_OCR``; re-running after installing it fills them in.
+
+A page that OCRs badly upright (mean word confidence under 70) is retried at
+every rotation and at 200 as well as 300 dpi, keeping the most confident
+reading; ``text_pages.ocr_variant`` records which won. In the full corpus this
+rescued sideways and upside-down scans (tesseract does not rotate pages at
+psm 3) and 1-bit scans whose thin strokes blur when upsampled.
 
 Safety
 ------
@@ -105,6 +113,19 @@ MIN_QUALITY = 0.75
 #: (a stray control code on an otherwise empty page is not a text layer).
 MIN_BROKEN_CHARS = 20
 MIN_IMAGE_COVER = 0.5
+#: Vector paths on an otherwise empty page before it counts as text drawn as
+#: outlines. Across the corpus's 282 sparse pages, 276 have <= 100 paths; the
+#: next value up is ~500, on the six pages of an order whose text is outlined.
+MIN_VECTOR_DRAWINGS = 300
+
+#: Pages whose first OCR pass scores below this mean word confidence are
+#: re-OCR'd at every rotation and at a second resolution, keeping the best.
+#: On the full corpus this rescued sideways/upside-down scans and 1-bit scans
+#: that upsampling blurs: pages under 70 fell from 207 to 25.
+OCR_RETRY_BELOW = 70.0
+OCR_RETRY_ROTATIONS = (0, 90, 180, 270)
+OCR_RETRY_DPIS = (300, 200)
+OCR_RETRY_TAG = "retry-v1"
 
 #: Expand ligatures (ﬁ -> fi) so later regexes match "financial"; keep
 #: whitespace; clip to the page. Deliberately no dehyphenation — it would glue
@@ -118,7 +139,8 @@ NATIVE = "NATIVE"
 BROKEN_LAYER = "BROKEN_LAYER"
 SCANNED = "SCANNED"
 SPARSE = "SPARSE"
-NEEDS_OCR_CLASSES = frozenset({BROKEN_LAYER, SCANNED})
+VECTOR_TEXT = "VECTOR_TEXT"
+NEEDS_OCR_CLASSES = frozenset({BROKEN_LAYER, SCANNED, VECTOR_TEXT})
 
 # How a page's final text was obtained
 M_NATIVE = "native"
@@ -160,13 +182,16 @@ def text_quality(text: str) -> tuple[int, float]:
     return len(chars), 1.0 - bad / len(chars)
 
 
-def classify_page(native_chars: int, quality: float, image_cover: float) -> str:
+def classify_page(native_chars: int, quality: float, image_cover: float,
+                  drawings: int = 0) -> str:
     if native_chars >= MIN_BROKEN_CHARS and quality < MIN_QUALITY:
         return BROKEN_LAYER
     if native_chars >= MIN_CHARS:
         return NATIVE
     if image_cover >= MIN_IMAGE_COVER:
         return SCANNED
+    if drawings >= MIN_VECTOR_DRAWINGS:
+        return VECTOR_TEXT
     return SPARSE
 
 
@@ -260,7 +285,7 @@ class OcrEngine(Protocol):
     signature: str
     dpi: int
 
-    def ocr_png(self, png: bytes) -> tuple[str, float | None]: ...
+    def ocr_png(self, png: bytes, dpi: int | None = None) -> tuple[str, float | None]: ...
 
 
 def parse_tesseract_tsv(tsv: str) -> tuple[str, float | None]:
@@ -328,12 +353,13 @@ class TesseractEngine:
     def signature(self) -> str:
         return f"{self.version}|lang={self.lang}|psm={self.psm}|dpi={self.dpi}"
 
-    def ocr_png(self, png: bytes) -> tuple[str, float | None]:
+    def ocr_png(self, png: bytes, dpi: int | None = None) -> tuple[str, float | None]:
+        """``dpi`` is the resolution the PNG was rendered at (default: ``self.dpi``)."""
         # One thread per tesseract: we parallelise across documents instead,
         # and OpenMP inside each process would oversubscribe the CPUs.
         env = {**os.environ, "OMP_THREAD_LIMIT": "1"}
         cmd = [self.binary, "stdin", "stdout", "-l", self.lang,
-               "--psm", str(self.psm), "--dpi", str(self.dpi), "tsv"]
+               "--psm", str(self.psm), "--dpi", str(dpi or self.dpi), "tsv"]
         try:
             proc = subprocess.run(cmd, input=png, capture_output=True,
                                   timeout=self.timeout, env=env)
@@ -345,24 +371,72 @@ class TesseractEngine:
 
 
 def ocr_cache_path(ocr_dir: pathlib.Path, pdf_sha256: str, page_no: int,
-                   engine: OcrEngine) -> pathlib.Path:
-    config = hashlib.sha256(engine.signature.encode("utf-8")).hexdigest()[:12]
+                   engine: OcrEngine, tag: str = "") -> pathlib.Path:
+    key = engine.signature + (f"|{tag}" if tag else "")
+    config = hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]
     return ocr_dir / pdf_sha256[:2] / pdf_sha256 / f"p{page_no:04d}-{config}.json"
 
 
-def ocr_page(page: pymupdf.Page, page_no: int, pdf_sha256: str, engine: OcrEngine,
-             ocr_dir: pathlib.Path) -> tuple[str, float | None]:
-    """OCR one page, from the OCR cache when possible."""
-    path = ocr_cache_path(ocr_dir, pdf_sha256, page_no, engine)
+def _render(page: pymupdf.Page, dpi: int, rotation: int = 0) -> bytes:
+    matrix = pymupdf.Matrix(dpi / 72, dpi / 72).prerotate(rotation)
+    return page.get_pixmap(matrix=matrix, colorspace=pymupdf.csGRAY).tobytes("png")
+
+
+def _cached_ocr(path: pathlib.Path, compute) -> dict:
     if path.exists():
-        cached = json.loads(path.read_text(encoding="utf-8"))
-        return cached["text"], cached["conf"]
-    pix = page.get_pixmap(dpi=engine.dpi, colorspace=pymupdf.csGRAY)
-    text, conf = engine.ocr_png(pix.tobytes("png"))
-    payload = {"text": text, "conf": conf, "engine": engine.signature,
-               "page": page_no, "pdf_sha256": pdf_sha256}
+        return json.loads(path.read_text(encoding="utf-8"))
+    payload = compute()
     write_atomic(path, json.dumps(payload, ensure_ascii=False).encode("utf-8"))
-    return text, conf
+    return payload
+
+
+def _conf(value: float | None) -> float:
+    return -1.0 if value is None else value
+
+
+def ocr_page(page: pymupdf.Page, page_no: int, pdf_sha256: str, engine: OcrEngine,
+             ocr_dir: pathlib.Path) -> tuple[str, float | None, str]:
+    """OCR one page, from the OCR cache when possible.
+
+    Returns ``(text, mean word confidence, variant)``, where variant names the
+    rendering that won, e.g. ``r0_300`` (upright, 300 dpi) or ``r90_200``.
+
+    A first pass renders the page upright at the engine's dpi. If that scores
+    below ``OCR_RETRY_BELOW`` — in this corpus, almost always a page scanned
+    sideways or upside down, or a 1-bit scan that upsampling blurs — every
+    rotation is tried at every ``OCR_RETRY_DPIS`` resolution and the most
+    confident reading wins. Both passes are cached separately, so a retry never
+    invalidates first-pass results.
+    """
+    base_variant = f"r0_{engine.dpi}"
+
+    def first_pass() -> dict:
+        text, conf = engine.ocr_png(_render(page, engine.dpi), engine.dpi)
+        return {"text": text, "conf": conf, "variant": base_variant,
+                "engine": engine.signature, "page": page_no, "pdf_sha256": pdf_sha256}
+
+    base = _cached_ocr(ocr_cache_path(ocr_dir, pdf_sha256, page_no, engine), first_pass)
+    base.setdefault("variant", base_variant)  # entries written before variants existed
+    if _conf(base["conf"]) >= OCR_RETRY_BELOW:
+        return base["text"], base["conf"], base["variant"]
+
+    def retry_pass() -> dict:
+        best = {"text": "", "conf": None, "variant": None}
+        for dpi in OCR_RETRY_DPIS:
+            for rotation in OCR_RETRY_ROTATIONS:
+                variant = f"r{rotation}_{dpi}"
+                if variant == base_variant:
+                    continue
+                text, conf = engine.ocr_png(_render(page, dpi, rotation), dpi)
+                if _conf(conf) > _conf(best["conf"]):
+                    best = {"text": text, "conf": conf, "variant": variant}
+        return {**best, "engine": engine.signature, "tag": OCR_RETRY_TAG,
+                "page": page_no, "pdf_sha256": pdf_sha256}
+
+    retry = _cached_ocr(ocr_cache_path(ocr_dir, pdf_sha256, page_no, engine, OCR_RETRY_TAG),
+                        retry_pass)
+    winner = retry if _conf(retry["conf"]) > _conf(base["conf"]) else base
+    return winner["text"], winner["conf"], winner["variant"]
 
 
 # --------------------------------------------------------------------------
@@ -392,6 +466,8 @@ class PageResult:
     image_cover: float
     ocr_conf: float | None
     out_chars: int
+    drawings: int | None = None
+    ocr_variant: str | None = None
 
 
 @dataclass
@@ -409,7 +485,9 @@ class DocResult:
     n_sparse: int = 0
     n_scanned: int = 0
     n_broken: int = 0
+    n_vector: int = 0
     n_ocr_done: int = 0
+    n_ocr_rotated: int = 0
     n_ocr_pending: int = 0
     n_ocr_failed: int = 0
     has_text_layer: bool | None = None
@@ -482,27 +560,34 @@ def extract_pdf(job: Job, settings: Settings) -> tuple[DocResult, list[PageResul
             native = clean_page_text(page.get_text("text", flags=TEXT_FLAGS))
             n_chars, quality = text_quality(native)
             cover = image_cover(page)
-            page_class = classify_page(n_chars, quality, cover)
+            # Vector paths only matter for pages that would otherwise be SPARSE,
+            # and counting them is the slow part, so only count those.
+            drawings = None
+            if n_chars < MIN_CHARS and cover < MIN_IMAGE_COVER and quality >= MIN_QUALITY:
+                drawings = len(page.get_drawings())
+            page_class = classify_page(n_chars, quality, cover, drawings or 0)
 
-            method, text, conf = M_NATIVE, native, None
+            method, text, conf, variant = M_NATIVE, native, None, None
             if page_class in NEEDS_OCR_CLASSES:
                 if settings.engine is None:
                     method, text = M_OCR_PENDING, ""
                 else:
                     try:
-                        text, conf = ocr_page(page, page_no, result.pdf_sha256,
-                                              settings.engine, settings.ocr_dir)
+                        text, conf, variant = ocr_page(page, page_no, result.pdf_sha256,
+                                                       settings.engine, settings.ocr_dir)
                         method = M_OCR
                         text = clean_page_text(text)
                     except OcrError as exc:
                         method, text = M_OCR_FAILED, ""
                         result.error = f"page {page_no}: {exc}"[:300]
 
-            counter = {NATIVE: "n_native", SPARSE: "n_sparse",
-                       SCANNED: "n_scanned", BROKEN_LAYER: "n_broken"}[page_class]
+            counter = {NATIVE: "n_native", SPARSE: "n_sparse", SCANNED: "n_scanned",
+                       BROKEN_LAYER: "n_broken", VECTOR_TEXT: "n_vector"}[page_class]
             setattr(result, counter, getattr(result, counter) + 1)
             if method == M_OCR:
                 result.n_ocr_done += 1
+                if variant and not variant.startswith("r0_"):
+                    result.n_ocr_rotated += 1
                 if conf is not None:
                     confs.append(conf)
             elif method == M_OCR_PENDING:
@@ -516,12 +601,12 @@ def extract_pdf(job: Job, settings: Settings) -> tuple[DocResult, list[PageResul
                 page_class=page_class, method=method, native_chars=n_chars,
                 quality=round(quality, 4), image_cover=round(cover, 4),
                 ocr_conf=None if conf is None else round(conf, 2),
-                out_chars=len(text),
+                out_chars=len(text), drawings=drawings, ocr_variant=variant,
             ))
     finally:
         doc.close()
 
-    result.has_text_layer = result.n_scanned + result.n_broken == 0
+    result.has_text_layer = result.n_scanned + result.n_broken + result.n_vector == 0
     result.mean_ocr_conf = round(sum(confs) / len(confs), 2) if confs else None
     if result.n_ocr_failed:
         result.status = FAILED
@@ -660,7 +745,9 @@ DOCS_SCHEMA = pa.schema([
     pa.field("n_sparse", pa.int32()),
     pa.field("n_scanned", pa.int32()),
     pa.field("n_broken", pa.int32()),
+    pa.field("n_vector", pa.int32()),
     pa.field("n_ocr_done", pa.int32()),
+    pa.field("n_ocr_rotated", pa.int32()),
     pa.field("n_ocr_pending", pa.int32()),
     pa.field("n_ocr_failed", pa.int32()),
     pa.field("has_text_layer", pa.bool_()),
@@ -685,6 +772,8 @@ PAGES_SCHEMA = pa.schema([
     pa.field("image_cover", pa.float64()),
     pa.field("ocr_conf", pa.float64()),
     pa.field("out_chars", pa.int32()),
+    pa.field("drawings", pa.int32()),
+    pa.field("ocr_variant", pa.string()),
 ])
 
 
@@ -763,10 +852,14 @@ def run(jobs: list[Job], settings: Settings, *, workers: int = 1, niceness: int 
     return docs, pages
 
 
+def _ocr_pages(d: DocResult) -> int:
+    return d.n_scanned + d.n_broken + d.n_vector
+
+
 def summarise(docs: list[DocResult], pages: list[PageResult]) -> dict:
     pdf_docs = [d for d in docs if d.source == SRC_PDF and d.n_pages is not None]
-    needing = [d for d in pdf_docs if d.n_scanned + d.n_broken > 0]
-    ocr_pages = sum(d.n_scanned + d.n_broken for d in pdf_docs)
+    needing = [d for d in pdf_docs if _ocr_pages(d) > 0]
+    ocr_pages = sum(_ocr_pages(d) for d in pdf_docs)
     total_pages = sum(d.n_pages for d in pdf_docs)
     return {
         "documents": len(docs),
@@ -777,10 +870,11 @@ def summarise(docs: list[DocResult], pages: list[PageResult]) -> dict:
         "page_classes": dict(collections.Counter(p.page_class for p in pages)),
         "pdf_docs_needing_ocr": len(needing),
         "pdf_docs_needing_ocr_share": round(len(needing) / len(pdf_docs), 4) if pdf_docs else None,
-        "fully_scanned_docs": sum(d.n_scanned + d.n_broken == d.n_pages for d in needing),
+        "fully_scanned_docs": sum(_ocr_pages(d) == d.n_pages for d in needing),
         "ocr_pages": ocr_pages,
         "ocr_pages_share": round(ocr_pages / total_pages, 4) if total_pages else None,
         "ocr_done_pages": sum(d.n_ocr_done for d in docs),
+        "ocr_rotated_pages": sum(d.n_ocr_rotated for d in docs),
     }
 
 
