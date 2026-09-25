@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.25)  25 SEP 2026 10:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.25)  25 SEP 2026 10:57
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -951,14 +951,14 @@ LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/m/it' will be
 (Font)              scaled to size 7.0pt on input line 33.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/m/it' will be
 (Font)              scaled to size 5.0pt on input line 33.
-LaTeX Font Info:    Trying to load font information for T1+SourceCodePro-TLF on input line 37.
+LaTeX Font Info:    Trying to load font information for T1+SourceCodePro-TLF on input line 36.
  (/usr/share/texlive/texmf-dist/tex/latex/sourcecodepro/T1SourceCodePro-TLF.fd
 File: T1SourceCodePro-TLF.fd 2025/04/07 (autoinst) Font definitions for T1/SourceCodePro-TLF.
 )
 LaTeX Font Info:    Font shape `T1/SourceCodePro-TLF/regular/n' aliased to
-(Font)              `T1/SourceCodePro-TLF/m/n' on input line 37.
+(Font)              `T1/SourceCodePro-TLF/m/n' on input line 36.
 LaTeX Font Info:    Font shape `T1/SourceCodePro-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 37.
+(Font)              scaled to size 9.0pt on input line 36.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `SourceCodePro-TLF' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
@@ -967,100 +967,100 @@ Package microtype Info: Loading generic protrusion settings for font family
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/sourceserifpro/a_rlbtkr.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/sourcecodepro/a_rzhnou.enc}]
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/b/n' will be
-(Font)              scaled to size 12.0pt on input line 40.
+(Font)              scaled to size 12.0pt on input line 39.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/m/it' will be
-(Font)              scaled to size 10.95pt on input line 42.
+(Font)              scaled to size 10.95pt on input line 41.
 Package microtype Info: Fixing zero \fontdimen 6 for font `OMX/MnSymbolE/m/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 42.
+(microtype)             (new value: 10.95pt) on input line 41.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolA/m/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 42.
+(microtype)             (new value: 10.95pt) on input line 41.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolB/m/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 42.
+(microtype)             (new value: 10.95pt) on input line 41.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolC/m/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 42.
+(microtype)             (new value: 10.95pt) on input line 41.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolD/m/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 42.
+(microtype)             (new value: 10.95pt) on input line 41.
  [1{/usr/share/texlive/texmf-dist/fonts/enc/dvips/sourceserifpro/a_5mjl2d.enc}] [2] [3]
 LaTeX Font Info:    Font shape `T1/SourceCodePro-TLF/regular/n' aliased to
-(Font)              `T1/SourceCodePro-TLF/m/n' on input line 80.
+(Font)              `T1/SourceCodePro-TLF/m/n' on input line 79.
 LaTeX Font Info:    Font shape `T1/SourceCodePro-TLF/m/n' will be
-(Font)              scaled to size 10.95pt on input line 80.
+(Font)              scaled to size 10.95pt on input line 79.
  [4{/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolE.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolC.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolD.enc}{/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolA.enc}]
 LaTeX Font Info:    Font shape `U/eus/m/n' will be
-(Font)              scaled to size 10.95pt on input line 121.
+(Font)              scaled to size 10.95pt on input line 120.
  (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-eus.cfg
 File: mt-eus.cfg 2006/07/28 v1.2 microtype config. file: AMS Euler Script (RS)
 )
 LaTeX Font Info:    Font shape `U/eus/m/n' will be
-(Font)              scaled to size 9.0pt on input line 121.
+(Font)              scaled to size 9.0pt on input line 120.
 LaTeX Font Info:    Font shape `U/eus/m/n' will be
-(Font)              scaled to size 7.0pt on input line 121.
+(Font)              scaled to size 7.0pt on input line 120.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 10.95pt on input line 126.
+(Font)              scaled to size 10.95pt on input line 125.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 9.0pt on input line 126.
+(Font)              scaled to size 9.0pt on input line 125.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 7.0pt on input line 126.
+(Font)              scaled to size 7.0pt on input line 125.
  [5{/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolF.enc}]
 Package microtype Info: Fixing zero \fontdimen 6 for font `OMX/MnSymbolE/b/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 142.
+(microtype)             (new value: 10.95pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `OMX/MnSymbolE/b/n/9'
-(microtype)             (new value: 9.0pt) on input line 142.
+(microtype)             (new value: 9.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `OMX/MnSymbolE/b/n/7'
-(microtype)             (new value: 7.0pt) on input line 142.
+(microtype)             (new value: 7.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolA/b/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 142.
+(microtype)             (new value: 10.95pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolA/b/n/9'
-(microtype)             (new value: 9.0pt) on input line 142.
+(microtype)             (new value: 9.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolA/b/n/7'
-(microtype)             (new value: 7.0pt) on input line 142.
+(microtype)             (new value: 7.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolB/b/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 142.
+(microtype)             (new value: 10.95pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolB/b/n/9'
-(microtype)             (new value: 9.0pt) on input line 142.
+(microtype)             (new value: 9.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolB/b/n/7'
-(microtype)             (new value: 7.0pt) on input line 142.
+(microtype)             (new value: 7.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolC/b/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 142.
+(microtype)             (new value: 10.95pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolC/b/n/9'
-(microtype)             (new value: 9.0pt) on input line 142.
+(microtype)             (new value: 9.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolC/b/n/7'
-(microtype)             (new value: 7.0pt) on input line 142.
+(microtype)             (new value: 7.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolD/b/n/10.95'
-(microtype)             (new value: 10.95pt) on input line 142.
+(microtype)             (new value: 10.95pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolD/b/n/9'
-(microtype)             (new value: 9.0pt) on input line 142.
+(microtype)             (new value: 9.0pt) on input line 141.
 Package microtype Info: Fixing zero \fontdimen 6 for font `U/MnSymbolD/b/n/7'
-(microtype)             (new value: 7.0pt) on input line 142.
+(microtype)             (new value: 7.0pt) on input line 141.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/b/n' will be
-(Font)              scaled to size 9.0pt on input line 142.
+(Font)              scaled to size 9.0pt on input line 141.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/b/n' will be
-(Font)              scaled to size 7.0pt on input line 142.
+(Font)              scaled to size 7.0pt on input line 141.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/b/it' will be
-(Font)              scaled to size 10.95pt on input line 142.
+(Font)              scaled to size 10.95pt on input line 141.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/b/it' will be
-(Font)              scaled to size 9.0pt on input line 142.
+(Font)              scaled to size 9.0pt on input line 141.
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/b/it' will be
-(Font)              scaled to size 7.0pt on input line 142.
+(Font)              scaled to size 7.0pt on input line 141.
 LaTeX Font Info:    Font shape `U/eus/b/n' will be
-(Font)              scaled to size 10.95pt on input line 142.
+(Font)              scaled to size 10.95pt on input line 141.
 LaTeX Font Info:    Font shape `U/eus/b/n' will be
-(Font)              scaled to size 9.0pt on input line 142.
+(Font)              scaled to size 9.0pt on input line 141.
 LaTeX Font Info:    Font shape `U/eus/b/n' will be
-(Font)              scaled to size 7.0pt on input line 142.
+(Font)              scaled to size 7.0pt on input line 141.
  [6]
 LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/m/sc' will be
-(Font)              scaled to size 10.95pt on input line 175.
+(Font)              scaled to size 10.95pt on input line 174.
 Package microtype Info: Character `029' is missing
 (microtype)             in font `T1/SourceSerifPro-LF/m/sc/10.95'.
 (microtype)             Ignoring protrusion settings for this character.
  [7{/usr/share/texlive/texmf-dist/fonts/enc/dvips/sourceserifpro/a_lseshj.enc}] [8]
-LaTeX Font Info:    Trying to load font information for TS1+SourceSerifPro-LF on input line 231.
+LaTeX Font Info:    Trying to load font information for TS1+SourceSerifPro-LF on input line 230.
  (/usr/share/texlive/texmf-dist/tex/latex/sourceserifpro/TS1SourceSerifPro-LF.fd
 File: TS1SourceSerifPro-LF.fd 2018/09/05 (autoinst) Font definitions for TS1/SourceSerifPro-LF.
 )
 LaTeX Font Info:    Font shape `TS1/SourceSerifPro-LF/m/n' will be
-(Font)              scaled to size 10.95pt on input line 231.
+(Font)              scaled to size 10.95pt on input line 230.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `SourceSerifPro-LF' (encoding: TS1).
 (microtype)             For optimal results, create family-specific settings.
@@ -1069,49 +1069,49 @@ Package microtype Info: Loading generic protrusion settings for font family
 <figures.pdf, id=288, page=1, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 1>
-Package pdftex.def Info: figures.pdf , page1 used on input line 275.
+Package pdftex.def Info: figures.pdf , page1 used on input line 274.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
 <figures.pdf, id=289, page=2, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 2>
-Package pdftex.def Info: figures.pdf , page2 used on input line 276.
+Package pdftex.def Info: figures.pdf , page2 used on input line 275.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
  [10]
 <figures.pdf, id=309, page=5, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 5>
-Package pdftex.def Info: figures.pdf , page5 used on input line 290.
+Package pdftex.def Info: figures.pdf , page5 used on input line 289.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
 <figures.pdf, id=310, page=6, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 6>
-Package pdftex.def Info: figures.pdf , page6 used on input line 291.
+Package pdftex.def Info: figures.pdf , page6 used on input line 290.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
 <figures.pdf, id=311, page=7, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 7>
-Package pdftex.def Info: figures.pdf , page7 used on input line 292.
+Package pdftex.def Info: figures.pdf , page7 used on input line 291.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
 <figures.pdf, id=312, page=8, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 8>
-Package pdftex.def Info: figures.pdf , page8 used on input line 293.
+Package pdftex.def Info: figures.pdf , page8 used on input line 292.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
 <figures.pdf, id=313, page=9, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 9>
-Package pdftex.def Info: figures.pdf , page9 used on input line 294.
+Package pdftex.def Info: figures.pdf , page9 used on input line 293.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
 <figures.pdf, id=314, page=10, 1027.84pt x 770.88pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 10>
-Package pdftex.def Info: figures.pdf , page10 used on input line 295.
+Package pdftex.def Info: figures.pdf , page10 used on input line 294.
 (pdftex.def)             Requested size: 205.56436pt x 154.17326pt.
  [11 <./figures.pdf> <./figures.pdf>] [12 <./figures.pdf> <./figures.pdf> <./figures.pdf> <./figures.pdf> <./figures.pdf> <./figures.pdf>]
 LaTeX Font Info:    Font shape `U/eus/m/n' will be
-(Font)              scaled to size 5.0pt on input line 312.
+(Font)              scaled to size 5.0pt on input line 311.
 LaTeX Font Info:    Font shape `U/futm/m/n' will be
-(Font)              scaled to size 5.0pt on input line 312.
+(Font)              scaled to size 5.0pt on input line 311.
  [13] [14] [15] (./paper.bbl
 LaTeX Font Info:    Font shape `T1/SourceCodePro-TLF/regular/n' aliased to
 (Font)              `T1/SourceCodePro-TLF/m/n' on input line 10.
@@ -1146,7 +1146,7 @@ LaTeX Font Info:    Font shape `T1/SourceSerifPro-LF/m/it' will be
 ) [16] [17] [18]
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 8>
-Package pdftex.def Info: figures.pdf , page8 used on input line 467.
+Package pdftex.def Info: figures.pdf , page8 used on input line 466.
 (pdftex.def)             Requested size: 308.35437pt x 231.26578pt.
  [19] [20] [21] (./paper.aux)
  ***********
@@ -1163,9 +1163,9 @@ Here is how much of TeX's memory you used:
  50054 multiletter control sequences out of 15000+600000
  1280639 words of font info for 452 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 89i,12n,131p,1383b,789s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 89i,12n,131p,1819b,789s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol9.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourcecodepro/SourceCodePro-Regular.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-Bold.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-BoldIt.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-It.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-Regular.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eurb10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eurm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eusb10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eusm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/fourier/fourier-bb.pfb>
-Output written on paper.pdf (22 pages, 534483 bytes).
+Output written on paper.pdf (22 pages, 535491 bytes).
 PDF statistics:
  598 PDF objects out of 1000 (max. 8388607)
  507 compressed objects within 6 object streams
