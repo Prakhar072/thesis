@@ -1,15 +1,15 @@
 # Fdb version 4
-["bibtex paper"] 1790333153.97835 "paper.aux" "paper.bbl" "paper" 1790333155.27409 0
+["bibtex paper"] 0 "paper.aux" "paper.bbl" "paper" 1790333743.94043 -1
   "./paper.bib" 1790333073.84686 2974 6754d0c59ddbaca45e0bac1348db4495 ""
   "./paper.bst" 1790333073.85076 30065 f0c12868970347fc92f221b0f6417720 ""
-  "paper.aux" 1790333154.96809 10150 5abd31a101163cf511823b0ee985cf35 "pdflatex"
+  "paper.aux" 1790333743.61999 10150 5abd31a101163cf511823b0ee985cf35 "pdflatex"
   (generated)
   "paper.bbl"
   "paper.blg"
   (rewritten before read)
-["pdflatex"] 1790333154.08193 "/home/prakharu/projects/thesis/paper/paper.tex" "paper.pdf" "paper" 1790333155.2743 0
+["pdflatex"] 1790333742.63905 "/home/prakharu/projects/thesis/paper/paper.tex" "paper.pdf" "paper" 1790333743.94063 0
   "/etc/texmf/web2c/texmf.cnf" 1790331341.47242 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/prakharu/projects/thesis/paper/paper.tex" 1790333073.86446 50545 8f0c978f00a4484307fe1fd548fad14f ""
+  "/home/prakharu/projects/thesis/paper/paper.tex" 1790333742.50399 50563 90ec245fcbfa1fe3e295f81b05a89975 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolA.enc" 1177804218 3341 78e600b269762aa2a25a5293cc4535c0 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolC.enc" 1177804218 3275 8d7166dfdbc31ffdc8aba0c31b3bd5c8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolD.enc" 1177804218 3375 808c88761dbdc66fc653d18f42765b64 ""
@@ -248,11 +248,11 @@
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1790331376 5541477 3118940318599480888143717dd32d64 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1790331417 3640185 24f505f026c55d78c38e9fb19bdb5ec8 ""
   "figures.pdf" 1790333073.83121 346947 4406b69e6642bb5dce3ea2e8b56a2855 ""
-  "paper.aux" 1790333154.96809 10150 5abd31a101163cf511823b0ee985cf35 "pdflatex"
-  "paper.bbl" 1790333154.06809 2853 7a4860715dce7d8589b9603ce83263ec "bibtex paper"
-  "paper.out" 1790333154.97209 7229 a61545965c389181dfe88c34b841ef22 "pdflatex"
+  "paper.aux" 1790333743.61999 10150 5abd31a101163cf511823b0ee985cf35 "pdflatex"
+  "paper.bbl" 1790333298.53207 2853 7a4860715dce7d8589b9603ce83263ec "bibtex paper"
+  "paper.out" 1790333743.61999 7229 a61545965c389181dfe88c34b841ef22 "pdflatex"
   "paper.sty" 1790333073.86446 7692 852fa0936ab43d2ff1534f0a13fbdbd9 ""
-  "paper.tex" 1790333073.86446 50545 8f0c978f00a4484307fe1fd548fad14f ""
+  "paper.tex" 1790333742.50399 50563 90ec245fcbfa1fe3e295f81b05a89975 ""
   (generated)
   "paper.aux"
   "paper.log"

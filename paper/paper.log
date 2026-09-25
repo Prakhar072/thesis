@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.25)  25 SEP 2026 10:45
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.25)  25 SEP 2026 10:55
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1157,15 +1157,15 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: A61545965C389181DFE88C34B841EF22;7229.
  ) 
 Here is how much of TeX's memory you used:
- 22039 strings out of 467533
- 356258 string characters out of 5422138
- 783474 words of memory out of 5000000
+ 22033 strings out of 467533
+ 356066 string characters out of 5422138
+ 783372 words of memory out of 5000000
  50054 multiletter control sequences out of 15000+600000
- 1281313 words of font info for 456 fonts, out of 8000000 for 9000
+ 1280639 words of font info for 452 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 89i,12n,131p,1383b,792s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 89i,12n,131p,1383b,789s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol9.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourcecodepro/SourceCodePro-Regular.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-Bold.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-BoldIt.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-It.pfb></usr/share/texlive/texmf-dist/fonts/type1/adobe/sourceserifpro/SourceSerifPro-Regular.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eurb10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eurm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eusb10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/euler/eusm10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/fourier/fourier-bb.pfb>
-Output written on paper.pdf (22 pages, 533206 bytes).
+Output written on paper.pdf (22 pages, 534483 bytes).
 PDF statistics:
  598 PDF objects out of 1000 (max. 8388607)
  507 compressed objects within 6 object streams
