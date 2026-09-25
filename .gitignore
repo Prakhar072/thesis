@@ -6,4 +6,3 @@ __pycache__/
 .venv/
 *.pyc
 .pytest_cache/
-paper/
