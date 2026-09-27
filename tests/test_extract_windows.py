@@ -240,12 +240,13 @@ def test_non_candidates(sentence):
 
 
 def test_context_word_needs_period_before_the_range():
-    # 101184 / 103044: when the inspection or investigation was carried out.
-    for s in ["Inspection of books and records of Axis Trustee Services Ltd conducted from "
-              "August 22, 2012 to August 24, 2012 Administrative Warning.",
-              "July 2021 - October 2022: IA conducted a detailed investigation; summons were issued."]:
-        r = ew.score_sentence(s, 0.5)
-        assert r["label_kind"] == ew.CONTEXT and r["confidence"] is None
+    # 103044: when the investigation ran, with no "period" before the range.
+    r = ew.score_sentence(
+        "July 2021 - October 2022: IA conducted a detailed investigation; summons were issued.", 0.5)
+    assert r["label_kind"] == ew.CONTEXT and r["confidence"] is None
+    # 101184: an inspection visit is not even a candidate.
+    assert ew.score_sentence("Inspection of books and records of Axis Trustee Services Ltd conducted "
+                             "from August 22, 2012 to August 24, 2012 Administrative Warning.", 0.5) is None
     r = ew.score_sentence("An inspection of the books of account of MSL was conducted by SEBI for "
                           "the period April 2002 to March 2004.", 0.05)
     assert (r["confidence"], r["window"].start) == ("medium", D(2002, 4, 1))
@@ -293,6 +294,109 @@ def test_label_picks_the_nearest_range():
         "period of inspection was from February 15, 2023 to June 30, 2024 (hereinafter referred to "
         "as “Inspection Period”).", 0.05)
     assert (r["window"].start, r["window"].end) == (D(2023, 2, 15), D(2024, 6, 30))
+
+
+# --------------------------------------------------------------------------
+# The window is the activity SEBI examined, never the time the probe took
+# --------------------------------------------------------------------------
+
+@pytest.mark.parametrize("sentence, start, end", [
+    # SEBI's usual wording: "conducted investigation during" means the activity period
+    ("SEBI conducted an investigation during February 5, 2003 to June 6, 2003 (hereinafter referred to "
+     "as investigation period) into the trading.", D(2003, 2, 5), D(2003, 6, 6)),
+    ("The investigation in the irregular trading activities was conducted during the period May 1, "
+     "2008 to September 30, 2009.", D(2008, 5, 1), D(2009, 9, 30)),
+    ("SEBI conducted investigation in the matter of GLLFL during the period January 01, 2013 to February "
+     "15, 2014 (hereinafter referred to as “investigation period”).", D(2013, 1, 1), D(2014, 2, 15)),
+    # a long covered period phrased with "during" is still the covered period
+    ("SEBI had carried out inspection in respect of the Noticee during the period April 2021 to July "
+     "2022 (hereinafter referred to as “Inspection Period”).", D(2021, 4, 1), D(2022, 7, 31)),
+    # "inspection in the scrip" examines trading
+    ("SEBI conducted an inspection in the scrip of International Conveyors Ltd. during the period "
+     "June 12, 2009 to July 1, 2009 to ascertain any violation.", D(2009, 6, 12), D(2009, 7, 1)),
+    # 30665: an inspection *into the dealings* during a period covers that period
+    ("In view of this, a joint inspection was conducted by SEBI and NSE into the dealings of the Noticee "
+     "as a stock broker during the period January and February 2005.", D(2005, 1, 1), D(2005, 2, 28)),
+    # 5163: a 35-day visit beside the period it covered
+    ("M/s. Agarwal Sanjiv & Co. conducted an inspection of books and records of the Noticee on behalf of "
+     "SEBI during the period January 12, 2005 to February 15, 2005 covering the period from January 1, "
+     "2004 to December 31, 2004.", D(2004, 1, 1), D(2004, 12, 31)),
+    # a short investigation period is real (the listing day, a few days of trades)
+    ("SEBI conducted an investigation which revealed that during the period February 22, 2008 to "
+     "February 27, 2008, APPL had acquired shares.", D(2008, 2, 22), D(2008, 2, 27)),
+])
+def test_activity_period_is_kept(sentence, start, end):
+    w = ew.score_sentence(sentence, 0.05)["window"]
+    assert (w.start, w.end) == (start, end)
+
+
+@pytest.mark.parametrize("sentence", [
+    # 7790: a six-day visit
+    "SEBI conducted an inspection of the Company during the period February 28, 2005 to March 5, 2005.",
+    # 19924: a visit even when labelled "inspection period"
+    "SEBI conducted inspection of the broker, a member of NSE, from October 26, 2009 to October 30, 2009 "
+    "(hereinafter referred to as ‘inspection period’).",
+    # 40883: labelled before the dates
+    "The documents were prepared in the presence of inspection team during inspection period between "
+    "22.09.2015 to 28.09.2015.",
+    # 52537: "Shares" in the company name is not trading
+    "SEBI conducted an inspection of books of accounts of Shreni Shares Private Limited (Stock Broker in "
+    "NSE) during September 16, 2019 to September 20, 2019 (hereinafter referred to as “inspection period/IP”).",
+    # 6214: a two-month visit; the covered period is given in words regex cannot read
+    "I note that SEBI conducted the inspection during the period May 2003 – June 2003 and the period "
+    "covered under the inspection was 2001-2002.",
+])
+def test_inspection_visits_are_never_the_window(sentence):
+    r = ew.score_sentence(sentence, 0.05)
+    assert r is None or r["window"] is None
+
+
+def test_covered_period_closes_at_the_date_of_inspection():
+    # 33103: the covered period runs "till the date of inspection", the visit gives that date.
+    r = ew.score_sentence(
+        "SEBI conducted a limited purpose inspection of Investmentor Securities Limited (hereinafter "
+        "referred to as ‘Noticee’) during 16.01.2014 - 17.01.2014 for the period 01.04.2012 till the date "
+        "of inspection (hereinafter referred to as “inspection period”).", 0.05)
+    w = r["window"]
+    assert (w.start, w.end, w.rule, r["confidence"]) == (
+        D(2012, 4, 1), D(2014, 1, 17), "range_till_inspection", "medium")
+    # 103720: the date is written out
+    r = ew.score_sentence("The inspection was conducted during February 11-15, 2020, and the period of "
+                          "inspection was from April 1, 2018 till the date of inspection, February 15, 2020.",
+                          0.05)
+    assert (r["window"].start, r["window"].end) == (D(2018, 4, 1), D(2020, 2, 15))
+
+
+@pytest.mark.parametrize("sentence, start, end", [
+    # 15024
+    ("1.2 An Inspection of the Books of Accounts, Documents and other records maintained by the broker "
+     "during the period 2000-2001, 2001-2002 and from April 2002 till the date of inspection i.e. "
+     "24.05.2002 was conducted.", D(2000, 4, 1), D(2002, 5, 24)),
+    # 15017
+    ("An Inspection of the Books of Accounts maintained by the sub-broker during the period 2001-2002, "
+     "2002 - April 2003 till the date of inspection i.e. June 3, 2003 was carried out by SEBI.",
+     D(2001, 4, 1), D(2003, 6, 3)),
+])
+def test_financial_years_listed_before_the_range_move_its_start(sentence, start, end):
+    r = ew.score_sentence(sentence, 0.05)
+    assert (r["window"].start, r["window"].end, r["window"].rule, r["confidence"]) == (
+        start, end, "range_fy_list", "medium")
+
+
+def test_a_lone_year_after_period_does_not_move_the_start():
+    r = ew.score_sentence("the investigation period in 2012 was from April 1, 2013 to March 31, 2014.", 0.05)
+    assert r["window"].start == D(2013, 4, 1)
+
+
+def test_trading_observed_during_an_inspection_is_activity():
+    r = ew.score_sentence("In the inspection it was observed that the noticee executed trades during the "
+                          "period March 1, 2010 to March 10, 2010.", 0.05)
+    assert (r["window"].start, r["window"].end) == (D(2010, 3, 1), D(2010, 3, 10))
+
+
+def test_ip_telephony_is_not_a_label():
+    assert ew.score_sentence("The personal hearing was held through Video IP telephony on 15/10/2018.",
+                             0.5) is None
 
 
 def test_patches_are_merged():

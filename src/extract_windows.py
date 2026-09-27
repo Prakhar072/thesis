@@ -10,6 +10,16 @@ Reads ``derived/text_documents.parquet`` and each order's text file, and writes
   with ``violation_confidence`` and a ``window_status`` that routes the order to
   the Day 2 model fallback.
 
+What the window is
+------------------
+The suspected violation period: the period of business activity SEBI
+examined. The order may call it the investigation, examination, inspection or
+relevant period — one quantity under four names, filling one
+``violation_start``/``violation_end`` pair. SEBI's "conducted investigation
+during the period X to Y" means that activity period. The dates the probe
+itself took appear as a range only for on-site inspection visits, which
+``inspection_visit`` removes before a range can become the window.
+
 How orders state the period (corpus survey, 2026-09-27)
 -------------------------------------------------------
 The defining sentence usually puts the dates *before* the label::
@@ -95,7 +105,7 @@ DERIVED_DIR = REPO_ROOT / "derived"
 TEXT_DOCUMENTS_IN = DERIVED_DIR / "text_documents.parquet"
 LOGS_DIR = REPO_ROOT / "logs"
 
-RULES_VERSION = "regex-v1"
+RULES_VERSION = "regex-v1.1"
 TOP_K = 3
 #: Sentences longer than this (tables flattened into one "sentence") are
 #: re-split at blank lines, then at line breaks. Real legal sentences reach
@@ -299,7 +309,9 @@ RANGE = re.compile(
     rf"(?:(?P<pre>from|between|beginning|starting|commencing|period(?:\s+of)?(?:\s*[-–:,]|\s+i\.?\s?e\.?,?)?)"
     rf"\s+(?:(?:on|from)\s+)?)?"
     rf"(?<![A-Za-z0-9])(?P<a>{_FULL}|{_PARTIAL})"
-    rf"\s*,?\s*(?:\(\s*[^)]{{0,30}}\)\s*)?(?P<conn>{_CONNECTOR})\s*(?:the\s+)?(?:on\s+)?"
+    rf"\s*,?\s*(?:\(\s*[^)]{{0,30}}\)\s*)?(?P<conn>{_CONNECTOR})\s*(?:the\s+)?"
+    # "from April 1, 2018 till the date of inspection, February 15, 2020"
+    rf"(?:date\s+of\s+(?:the\s+)?inspection\s*[,(]?\s*(?:i\.?\s?e\.?\s*,?\s*)?)?(?:on\s+)?"
     rf"(?P<b>{_FULL})",
     re.IGNORECASE,
 )
@@ -463,6 +475,124 @@ def parse_fy(m: re.Match) -> Window | None:
                   "fy_range" if m.group(3) else "fy", m.group(0), m.span())
 
 
+# --------------------------------------------------------------------------
+# Inspection visits
+# --------------------------------------------------------------------------
+#
+# The window wanted is the period of business activity SEBI examined — under
+# any of its names (investigation, examination, inspection, relevant period).
+# SEBI's usual "conducted investigation during the period X to Y" means that
+# activity period, and is kept. The one place the dates of the probe itself
+# appear is the on-site inspection of an intermediary: "SEBI conducted an
+# inspection of the Company during the period February 28, 2005 to March 5,
+# 2005" (a six-day visit), sometimes even labelled "inspection period". In the
+# corpus every inspection window of a month or less read as a visit; the
+# periods inspections cover run for months or years.
+
+MAX_VISIT_DAYS = 31
+#: A longer window counts as a visit only when phrased as one ("conducted the
+#: inspection during the period May 2003 – June 2003 and the period covered
+#: under the inspection was 2001-2002").
+MAX_PHRASED_VISIT_DAYS = 100
+_INSPECT = re.compile(r"\binspect\w*|\bexamination\s+of\s+(?:the\s+)?books", re.IGNORECASE)
+#: Between "inspection" and the dates, words that make the dates the activity:
+#: "inspection in the scrip of X", "in the inspection it was observed that the
+#: noticee executed trades during …". Company names such as "Shreni Shares
+#: Private Limited" must not count, hence "shares of", not "shares".
+_ACTIVITY = re.compile(
+    r"\b(?:observed|found|noted|revealed|executed|traded|bought|sold|dealt|transactions?|trades|scrip"
+    r"|dealings?\s+(?:in|of)|trading\s+(?:in|of|activit\w*)|shares\s+of)\b", re.IGNORECASE)
+_CONDUCTED = re.compile(r"\b(?:conduct\w*|carri\w*\s+out|undert\w*|taken\s+up|take\s+up|held|done)\b", re.IGNORECASE)
+_COVERING = re.compile(r"\b(?:for|covering|covered|pertaining|relating|respect)\b", re.IGNORECASE)
+_LABEL_GAP = re.compile(r"\s*period\s*(?:(?:was|is|of|i\.?\s?e\.?|between|from|being)\b|[:,(\-–])*\s*",
+                        re.IGNORECASE)
+#: How far back "inspection" may be: broker orders put long registration
+#: details between the entity and the dates.
+VISIT_LOOKBACK = 700
+_TILL_INSPECTION = re.compile(
+    rf"(?<![A-Za-z0-9])(?P<a>{_FULL})\s*,?\s*(?:till|to|until|upto|up\s+to)\s+(?:the\s+)?"
+    rf"date\s+of\s+(?:the\s+)?inspection", re.IGNORECASE)
+
+
+def inspection_visit(sentence: str, window: Window) -> bool:
+    """Are these the dates an inspection was carried out, not the period it covered?
+
+    A visit is (a) an inspection window of ``MAX_VISIT_DAYS`` or less, stated
+    as an inspection being conducted/carried out or labelled the inspection
+    period; or (b) up to ``MAX_PHRASED_VISIT_DAYS`` when phrased as "conducted
+    the inspection during …" with no "for/covering" before the dates. Either
+    way, nothing between "inspection" and the dates may make them the activity
+    ("in the scrip", "observed that … traded").
+    """
+    s, e = window.span
+    before = sentence[max(0, s - VISIT_LOOKBACK):s]
+    hits = list(_INSPECT.finditer(before))
+    last = hits[-1] if hits else None
+    between = before[last.end():] if last else ""
+    # "… (hereinafter referred to as 'inspection period')" after the dates, or
+    # "during inspection period between 22.09.2015 to 28.09.2015" right before.
+    labelled = (bool(_INSPECT.search(sentence[e:e + 80]))
+                or (last is not None and bool(_LABEL_GAP.fullmatch(between))))
+    if last is None and not labelled:
+        return False
+    if _ACTIVITY.search(between):
+        return False
+    conducted = bool(_CONDUCTED.search(sentence[:s]))
+    days = (window.end - window.start).days + 1
+    if days <= MAX_VISIT_DAYS:
+        return conducted or labelled
+    return (days <= MAX_PHRASED_VISIT_DAYS and last is not None and conducted
+            and not _COVERING.search(between + window.text[:12]))
+
+
+def till_inspection(sentence: str, visits: list[Window]) -> list[Window]:
+    """ "for the period 01.04.2012 till the date of inspection", with the visit
+    dates elsewhere in the sentence: the covered period ends when the visit does."""
+    if not visits:
+        return []
+    last = max(visits, key=lambda w: w.end)
+    out = []
+    for m in _TILL_INSPECTION.finditer(sentence):
+        a = parse_date(m.group("a"))
+        if a is None or a.year is None:
+            continue
+        start = as_start(a)
+        if start < last.end:
+            out.append(Window(start, last.end, a.precision, "day", "range_till_inspection",
+                              m.group(0), m.span()))
+    return out
+
+
+_BARE_FY = re.compile(r"(?<!\d)((?:19|20)\d{2})\s*[-–]\s*(\d{2}|(?:19|20)\d{2})(?!\d)")
+_FY_LIST_FILLER = re.compile(r"^[\s,&\-–]*(?:(?:and|from|of|the)\b[\s,&\-–]*)*$", re.IGNORECASE)
+
+
+def extend_with_fy_list(sentence: str, window: Window) -> Window:
+    """ "the period 2000-2001, 2001-2002 and from April 2002 till the date of
+    inspection i.e. 24.05.2002": the range read is only the last part; the
+    financial years listed after "period" move its start back."""
+    s = window.span[0]
+    before = sentence[max(0, s - 80):s]
+    at = before.lower().rfind("period")
+    if at < 0:
+        return window
+    listed = before[at + len("period"):]
+    starts = []
+    for m in _BARE_FY.finditer(listed):
+        y1, second = int(m.group(1)), m.group(2)
+        y2 = int(second) if len(second) == 4 else (y1 // 100) * 100 + int(second)
+        if y2 == y1 + 1:
+            starts.append(dt.date(y1, 4, 1))
+    rest = _FILLER_YEARS.sub(" ", _BARE_FY.sub(" ", listed))
+    if not starts or not _FY_LIST_FILLER.match(rest) or min(starts) >= window.start:
+        return window
+    return Window(min(starts), window.end, "month", window.end_precision, "range_fy_list",
+                  sentence[max(0, s - len(listed)):window.span[1]], (s - len(listed), window.span[1]))
+
+
+_FILLER_YEARS = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
+
+
 def find_windows(sentence: str) -> list[Window]:
     """Every date range and financial-year span in a sentence, in order."""
     found = [w for m in RANGE.finditer(sentence) if (w := parse_range(m))]
@@ -491,7 +621,7 @@ LABELS: list[tuple[str, re.Pattern]] = [
         r"(?<!pre-)(?<!post-)(?<!pre )(?<!post )"
         r"\b(?:investigation|examination|inspection|investigating)\s+period\b"
         r"|\bperiod\s+(?:of|under)\s+(?:the\s+)?(?:investigation|examination|inspection)\b", _I)),
-    (STRONG, re.compile(r"(?<![A-Za-z])(?<!TCP/)IP(?![A-Za-z])(?!\s+address)")),
+    (STRONG, re.compile(r"(?<![A-Za-z])(?<!TCP/)IP(?![A-Za-z])(?!\s+(?:address|telephony))")),
     # "SEBI conducted investigation into dealings in the shares of X for the
     # period from ..." — the older orders' way of stating the window.
     (STRONG, re.compile(
@@ -635,9 +765,13 @@ def score_sentence(sentence: str, rel_pos: float) -> dict | None:
     if not _PREFILTER.search(sentence):
         return None
     dates = DATE.findall(sentence)
-    windows = find_windows(sentence)
-    if not dates and not windows:
+    found = find_windows(sentence)
+    if not dates and not found:
         return None
+    # Inspection visits are never the window; they can still close a covered
+    # period that runs "till the date of inspection".
+    visits = [w for w in found if inspection_visit(sentence, w)]
+    windows = [w for w in found if w not in visits] + till_inspection(sentence, visits)
     labels = _labels(sentence)
     best = _best_kind(labels)
     if best is None:
@@ -654,6 +788,8 @@ def score_sentence(sentence: str, rel_pos: float) -> dict | None:
     if rel_pos < 0.25:
         score += EARLY_WEIGHT
     window, clear = pick_window(windows, label if kind != GENERIC else None, sentence)
+    if window is not None:
+        window = extend_with_fy_list(sentence, window)
     return {
         "score": score, "label_kind": kind, "label_text": label.group(0),
         "n_dates": len(dates), "n_ranges": len(windows),

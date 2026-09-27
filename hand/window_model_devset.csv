@@ -1,0 +1,61 @@
+text_stem,regex_status,gold_kind,gold_start,gold_end,ambiguous,alt_start,alt_end,note
+15039,UNCONFIRMED_RANGE,stated_period,2000-04-01,2002-05-21,0,,,inspection for FY 2000-01 and 2001-02 and April 2002 till May 21 2002
+4533,UNCONFIRMED_RANGE,none,,,0,,,bank and demat statement periods
+5816,UNCONFIRMED_RANGE,conduct_dates,2000-04-01,2001-06-30,1,,,ICDs given during the period; conduct but not clearly the violation
+31238,UNCONFIRMED_RANGE,none,,,0,,,volume analysis by merchant bankers
+30467,UNCONFIRMED_RANGE,none,,,0,,,director tenure
+104510,UNCONFIRMED_RANGE,conduct_dates,2023-01-01,2023-09-30,0,,,non-compliance for the period
+15138,UNCONFIRMED_RANGE,conduct_dates,2001-04-01,2001-12-31,0,,,broker trades for client during the period
+13580,UNCONFIRMED_RANGE,stated_period,2002-12-19,2003-01-23,0,,,conducted investigations into price movement during
+47853,UNCONFIRMED_RANGE,none,,,1,,,trading details sought for a period; violation is a quarter
+9495,UNCONFIRMED_RANGE,conduct_dates,2000-09-01,2001-05-30,1,,,noticee denies transactions during the period
+42451,UNCONFIRMED_RANGE,conduct_dates,2013-05-01,2013-06-02,0,,,UPSI period
+32913,UNCONFIRMED_RANGE,conduct_dates,2001-03-01,2014-03-31,1,2011-10-01,2011-12-13,alleged public issue March 2001-March 2014; allotments Oct-Dec 2011
+48309,UNCONFIRMED_RANGE,conduct_dates,2018-04-04,2018-07-14,0,2018-04-04,2018-07-13,no NISM certification for the period
+6546,UNCONFIRMED_RANGE,conduct_dates,2004-07-07,2004-07-28,0,,,artificial trades during the period
+5034,UNCONFIRMED_RANGE,none,,,0,,,dates the inspection was conducted
+42419,UNCONFIRMED_RANGE,stated_period,2013-05-22,2015-01-30,0,,,preliminary enquiry into dealings during the period
+48388,UNCONFIRMED_RANGE,none,,,1,2013-10-21,2020-11-24,credits in bank accounts of an unregistered adviser
+29356,UNCONFIRMED_RANGE,none,,,0,,,director tenure
+28274,UNCONFIRMED_RANGE,none,,,0,,,bank account periods
+31706,UNCONFIRMED_RANGE,none,,,0,,,debenture repayment
+36599,UNCONFIRMED_RANGE,conduct_dates,2011-04-01,2012-03-31,0,,,IPO money transferred during the period
+10262,UNCONFIRMED_RANGE,none,,,0,,,dates the inspection was conducted
+28303,UNCONFIRMED_RANGE,conduct_dates,2003-04-01,2011-03-31,1,,,RCPS offers in listed financial years
+35214,UNCONFIRMED_RANGE,conduct_dates,2009-04-01,2009-06-30,0,,,failed disclosures during April to June 2009
+47175,UNCONFIRMED_RANGE,none,,,1,,,counterparty table period
+2916,UNCONFIRMED_RANGE,conduct_dates,2006-03-27,2006-05-03,0,,,disclosure non-compliance during the period
+9948,UNCONFIRMED_RANGE,conduct_dates,1995-09-25,1995-11-01,0,,,unusual price movement during the period
+56499,UNCONFIRMED_RANGE,none,,,0,,,bank statement analysis
+33725,UNCONFIRMED_RANGE,none,,,0,,,bank statement requested
+32345,UNCONFIRMED_RANGE,conduct_dates,2011-08-01,2011-12-31,0,,,acquisitions between the dates
+16617,UNCONFIRMED_RANGE,none,,,1,,,trading data observations on exchanges
+65681,UNCONFIRMED_RANGE,none,,,1,,,inspection period from April 1 2019 till the date of inspection (end not in sentence)
+10319,UNCONFIRMED_RANGE,none,,,0,,,supersession of an exchange board
+299,UNCONFIRMED_RANGE,none,,,1,,,acquisition over eight months in FY 2008 (truncated)
+41458,UNCONFIRMED_RANGE,none,,,0,,,related party transactions of a financial year
+14046,UNCONFIRMED_RANGE,conduct_dates,2003-04-01,2004-03-31,0,,,promoters sold shares during the period
+29343,UNCONFIRMED_RANGE,conduct_dates,2012-10-01,2013-01-10,1,2012-04-01,2013-03-31,allotments in FY 2012-13
+14840,UNCONFIRMED_RANGE,none,,,0,,,interest calculation
+71900,UNCONFIRMED_RANGE,none,,,1,2014-06-24,2018-02-22,amount received in bank account; alt added 2026-09-27 after the target was clarified as the suspected violation window: money received for unregistered activity is that window (as for 48388)
+100663,UNCONFIRMED_RANGE,conduct_dates,2019-11-01,2023-04-10,0,,,fees for unregistered services collected during the period
+40889,UNPARSED,none,,,1,2016-05-30,2016-05-30,examination period mentioned without dates; relabelled ambiguous after the first model run: a single trade during trading-window closure is arguably a one-day violation
+27023,UNPARSED,none,,,0,,,
+55739,UNPARSED,none,,,0,,,
+42757,UNPARSED,none,,,0,,,
+27816,UNPARSED,stated_period,2013-11-14,2013-11-14,0,,,single day defined as Period of Examination
+10178,UNPARSED,stated_period,1998-01-01,2001-12-31,0,,,relevant period 1998 to 2001
+51080,UNPARSED,stated_period,2017-01-01,2017-01-31,0,,,examination in the period January 2017
+396,UNPARSED,none,,,1,,,start date garbled (30.1.20100); end 29.6.2001
+11819,UNPARSED,none,,,0,,,
+41249,UNPARSED,none,,,0,,,"Video IP telephony, not an investigation period"
+103720,UNPARSED,stated_period,2018-04-01,2020-02-15,0,,,period of inspection from April 1 2018 till the date of inspection February 15 2020
+48274,UNPARSED,none,,,0,,,
+27639,UNPARSED,none,,,0,,,
+42690,UNPARSED,none,,,0,,,
+23751,UNPARSED,stated_period,2002-07-08,2002-07-23,0,,,OCR stray bar: July | 08 2002
+38424,UNPARSED,none,,,0,,,
+36136,UNPARSED,stated_period,2013-06-13,2013-06-13,0,,,single day investigation period
+8391,UNPARSED,none,,,0,,,trade table
+76872,UNPARSED,none,,,0,,,
+51605,UNPARSED,stated_period,2016-01-01,2016-06-30,1,2016-03-31,2016-06-30,quarter ending March 31 2016 to quarter ending June 30 2016

@@ -38,11 +38,13 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/fetch_pdfs.py` | stage 2: detail page → the order's PDF or inline text | — | code |
 | `src/extract_text.py` | stage 3: text layer, OCR fallback, quality checks | — | code |
 | `src/extract_windows.py` | stage 4: violation-window candidate sentences + regex v1 | — | code |
-| `tests/` | 318 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `src/window_model.py`, `src/llm.py` | stage 5: local-model fallback for windows regex could not settle; cached model calls | — | code |
+| `tests/` | 382 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
 | `raw/ocr/` | OCR results per PDF page | 35 MB | yes, ~45 min of OCR |
+| `raw/llm/` | every model answer, keyed by model digest + prompt | ~10 MB | yes, ~55 min of GPU, but a re-pulled model may answer differently |
 | `derived/listings.parquet` | one row per listed order | 1.7 MB | yes, 10 s offline |
 | `derived/order_documents.parquet` | where each order's document is, and whether it was fetched | 3.5 MB | yes, ~3 min offline |
 | `derived/text/<order_id>.txt` | order text, pages separated by form feed `\f` | 0.73 GB | yes, ~5 min + OCR cache |
@@ -50,11 +52,14 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `derived/text_pages.parquet` | one row per PDF page: how its text was obtained | 1.6 MB | with the text |
 | `derived/window_candidates.parquet` | top 3 candidate sentences per order, with what regex v1 read from each | 5.5 MB | yes, ~1 min |
 | `derived/windows.parquet` | one row per order: regex v1 violation window, confidence, source sentence, routing status | 1.4 MB | yes, ~1 min |
+| `derived/window_model.parquet` | one row per order sent to the model: its answer, the checks, why rejected | small | from `raw/llm/` in seconds |
+| `derived/violation_windows.parquet` | one row per order: regex window, else verified model window — what Day 3 reads | small | with stage 5 |
 | `derived/fetch_failures.csv` | the orders whose document could not be fetched | tiny | with stage 2 |
 | `reports/listing_*.csv` | per-page scrape log, duplicate conflicts (none), rows needing review | tiny | with stage 1 |
 | `logs/` | run logs for each stage | small | — |
 | `results_log.md` | every figure with its source and date | — | git |
 | `hand/recon_notes.md` | SEBI protocol notes; §7 how orders state the violation period | — | git |
+| `hand/window_model_devset.csv`, `hand/window_model_holdout.csv` | 90 agent-labelled orders used to choose the model and prompt — keep them out of the Week 3 blind sample | — | git |
 
 Git tracks code, tests, `hand/`, `paper/` and the `.md` files. `raw/`,
 `derived/`, `logs/`, `reports/` are ignored: rebuildable, or too big.
@@ -167,11 +172,13 @@ Full column list: [context.md §8](context.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 318 passed
+python -m pytest tests -q                                   # 382 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
 python -m src.extract_windows                               # stage 4, ~1 min
+python -m src.window_model                                  # stage 5, ~55 min on the GPU (Ollama must be serving)
+python -m src.window_model --offline                        # stage 5 again, from raw/llm/ in seconds
 ```
 
 Every stage is resumable and safe to interrupt. For a job that should outlive the
@@ -198,8 +205,12 @@ downloads only the new orders' documents, then stage 3.
 
 ## 6. Next
 
-- Week 2 Day 2: model fallback for the 2,732 orders regex v1 could not settle
-  (`window_status` `UNCONFIRMED_RANGE` / `UNPARSED`), then Day 3 sanity rules.
+- Re-run stage 4 (`python -m src.extract_windows`, now regex v1.1), then stage 5
+  (`python -m src.window_model`), then Week 2 Day 3: sanity rules on
+  `derived/violation_windows.parquet` and the extraction rate.
+- The window is the period of business activity SEBI examined — "investigation /
+  examination / inspection / relevant period" are one quantity; inspection
+  *visit* dates are never it. See CLAUDE.md §1.
 - Read ~10 orders next to their PDFs before the Week 3 blind validation;
   `hand/recon_notes.md` §7 lists the phrasings and traps to look for.
 - Settle the unit of analysis (order / matter / noticee), given the ISO cluster.

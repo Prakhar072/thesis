@@ -76,6 +76,41 @@ scratch run of the committed code; the output is deterministic (identical with 4
 | Candidate sentences kept | 28,140 | top 3 per order |
 | Development spot check (not validation) | ~35 of 40 parsed non-ISO windows read correctly | errors were medium-confidence misreads and two label bugs, both fixed after the check |
 
+## 2026-09-27 — Week 2 Day 2: model fallback (evaluation before the full run)
+
+`src/window_model.py` (prompt `wm-v1`) with `qwen3.5:4b` (Ollama 0.34.4, Q4_K_M, 4.7B, RTX 4050 6 GB,
+thinking off, temperature 0, seed 7). The model picks the sentence and kind and **quotes** the dates;
+code checks the quotes are in the sentence, parses them day-first, and rejects known non-windows.
+Labels are the agent's, made from the same sentences the model sees — development figures for choosing
+the model and prompt, **not** the Week 3 blind validation.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Dev set (tuned on) | real windows 20/21 · no-window 22/24 · ambiguous 10/15 | 60 orders (40 `UNCONFIRMED_RANGE`, 20 `UNPARSED`); `hand/window_model_devset.csv` |
+| Held-out set (not tuned on) | real windows 10/11 · no-window 9/10 · ambiguous 6/9 | 30 orders labelled before the model ran; `hand/window_model_holdout.csv` |
+| Precision of accepted windows, unambiguous | **30 of 33 (91%)** | dev + held-out; no accepted window had wrong dates — errors are windows where the gold is none |
+| Recall of real windows, unambiguous | 30 of 32 (94%) | |
+| Agreement with regex-high windows | 75 of 80 (94%) | 70 non-ISO + 10 ISO; of the 5, regex was wrong once, the model 2–3 times, 1 a toss-up |
+| Speed | 1.2 s/order; thinking mode 83 s/order (~4,300 tokens) | thinking dropped: 60× slower, no gain seen |
+| Prompt v2 (adds a "what happened" field) | 19/21 · 20/25 on dev | no better than v1; not used |
+| Dry run, 150 random sent orders | window 91 (61%): conduct dates 58, stated period 33 · none 49 · unverified 8 · rejected 2 | after the visit/statement fixes below; full run: `python -m src.window_model` |
+
+## 2026-09-27 — Regex v1.1: the window is the activity examined, never the probe's own dates
+
+Prompted by the user's check that "investigation / examination / inspection / relevant period" all mean
+the period of business activity SEBI examined (the suspected violation window), not the time the probe
+took. Audit of `derived/windows.parquet` (v1) and the model's dry run against that definition.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Regex v1 windows phrased "conducted … investigation/inspection during X to Y" | 102 | read one by one: investigations are the activity period (hereinafter label, months–years); the errors were all inspection *visits* |
+| Inspection windows of ≤ 31 days in v1 | 26, of which ~23 visits | 2–20-day on-site visits, several labelled "inspection period" by SEBI itself |
+| Orders whose window changes, v1 → v1.1 | **76 of 20,861** | 16 windows removed, all visits (→ model or no candidate) · 20 re-dated (the covered period instead of the visit, "from X till the date of inspection i.e. Y" read in full, financial-year lists) · 11 newly parsed · 29 changes among candidates only (25 visit-only candidates dropped). Every change reviewed |
+| Regex v1.1 windows | 10,516 of 20,849 with text (50.4%) | high 8,845 · medium 1,671; the Day 1 figures above are v1 |
+| Model-side rule that would have rejected "SEBI conducted an investigation during X to Y" | fixed before any full run | replaced by the shared visit test; bank *credits* over a period (fees collected without registration) now count as conduct dates |
+| Model checks re-scored (cached answers) | unambiguous: dev 20/21 · 22/24, held-out 10/11 · 9/10, silver 75/80 | unchanged by the fixes |
+| Known wrong after v1.1 | 40883 (a noticee's remark about a different NSE inspection, medium) | v1 had the visit; neither is right |
+
 ### Method notes for the data section
 
 - SEBI's listing endpoint paginates on `doDirect` (0-based), not the `nextValue` a browser capture suggests; verified by exact count reconciliation.

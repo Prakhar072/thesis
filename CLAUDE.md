@@ -1,6 +1,6 @@
 # context.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-27 (Week 2, Day 1). Read this before touching code or data.
+Last updated: 2026-09-27 (Week 2, Day 2). Read this before touching code or data.
 Companion docs: `paper/timeline.md` (the thesis runbook: weekly plan, 8 rules,
 target schema), `results_log.md` (every published figure with provenance),
 `hand/recon_notes.md` (verified SEBI protocol notes), `PROJECT_GUIDE.md` (the
@@ -26,11 +26,27 @@ and fraud prediction (Stage 2) — see `paper/timeline.md`.
   Courts (77), Reg. 30A (138) — appellate/judicial follow-ups.
 - Future document labels (not built yet): `INTERIM`, `CONFIRMATION_OR_EXTENSION`,
   `FINAL`, `SETTLEMENT_FINAL`, `APPELLATE`, `JUDICIAL`, `UNKNOWN`, `NEEDS_REVIEW`.
-- A generic date range is **not** an investigation period ("during the period
-  from 1.4.2000 to 31.3.2004" about funds collected is not one). "SEBI examined
-  the matter" without dates must be kept distinct from a stated examination period.
+- **The window is one quantity: the suspected violation period**, i.e. the
+  period of business activity SEBI examined. "Investigation period",
+  "examination period", "inspection period" and "relevant period" are alternate
+  names for it and all fill the single `violation_start`/`violation_end` pair.
+  SEBI's usual "conducted investigation **during** the period X to Y" means that
+  activity period too, *not* the time the investigation took — keep it. The
+  true fraud start is unknowable; the examined period is the proxy.
+- **Never the time the probe itself took.** The only place those dates appear
+  as a range is an on-site *inspection visit* ("conducted an inspection of the
+  Company during the period February 28, 2005 to March 5, 2005"), sometimes even
+  labelled "inspection period". `extract_windows.inspection_visit` screens them
+  out on the regex and model paths (inspection windows ≤ 31 days, or ≤ 100 days
+  phrased "conducted the inspection during …").
+- Where no period is named, the dates of the alleged conduct are the same
+  quantity (`window_kind = conduct_dates`; e.g. fees collected without
+  registration, trades during a UPSI period). A generic date range that is
+  neither (funds raised, bank statement periods, letters) is not a window.
+  "SEBI examined the matter" without dates must be kept distinct from a stated
+  examination period.
 
-## 2. Status (Week 2, Day 1)
+## 2. Status (Week 2, Day 2)
 
 Done: listing scrape → document fetch → text extraction + OCR (full re-run with
 the rotation/vector fix finished 2026-09-24: 708 OCR orders, 7,782 OCR pages,
@@ -39,16 +55,30 @@ the rotation/vector fix finished 2026-09-24: 708 OCR orders, 7,782 OCR pages,
 survey, recorded in `hand/recon_notes.md` §7; the ten-order close reading and
 the Day 5 spot-check of 10 text files are still worth doing before Week 3.
 
-Regex v1 (scratch run, deterministic): 50.5% of orders with text get a window
-(8,845 high, 1,676 medium); 11.5% `UNCONFIRMED_RANGE` and 1.6% `UNPARSED` go to
-the Day 2 model; 36.4% have no candidate (mostly settlement, exemption, SCORES
-orders). **Pending:** the user runs `python -m src.extract_windows` to write
-`derived/windows.parquet` and `derived/window_candidates.parquet`.
+Regex v1 (`derived/windows.parquet`, run by the user 2026-09-27): 50.5% of
+orders with text get a window (8,845 high, 1,676 medium). **Regex v1.1**
+(2026-09-27, scratch-verified, not yet in `derived/`) drops inspection-visit
+dates, reads "from X till the date of inspection [i.e. Y]" and listed financial
+years; 76 orders change, every change reviewed. v1.1: 10,516 windows (50.4%);
+11.3% `UNCONFIRMED_RANGE` and 1.7% `UNPARSED` go to the model; 36.6% have no candidate.
+
+Day 2 model fallback (`src/window_model.py`, `src/llm.py`) is built and tested:
+local `qwen3.5:4b` via Ollama, thinking off, answers verified in code. On
+agent-labelled hard cases ~91% of accepted windows are right (dev 20/22 after
+tuning, held-out 10/11); 94% agreement with regex-high windows (75/80). A
+150-order dry run gave a window for 61% of sent orders at 1.2 s/order.
+**Pending, in order:** the user re-runs `python -m src.extract_windows` (v1.1,
+~1 min), then `python -m src.window_model` (~55 min, Ollama must be serving) to
+write `derived/window_model.parquet` and `derived/violation_windows.parquet`;
+Day 3 reads the latter.
 
 ## 3. Hard rules — do not break these
 
 1. **All HTTP goes through `src/cache.py`** (`cache.get` / `cache.post` /
    `cache.fetch`). Never call httpx/requests/urllib directly in pipeline code.
+   The one exception is the local model server (Ollama, localhost only), reached
+   only through `src/llm.py`, which caches every answer permanently under
+   `raw/llm/` keyed by model digest + options + prompts + schema.
 2. **SEBI politeness:** sequential only, never parallel; 1.5 s delay is built into
    the cache. Set `SEBI_CONTACT=<email>` so the User-Agent carries a contact.
 3. **`raw/` is append-only.** Never delete or modify under `raw/`.
@@ -63,7 +93,7 @@ orders). **Pending:** the user runs `python -m src.extract_windows` to write
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (318 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (382 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 
 ## 4. Environment
@@ -121,12 +151,15 @@ orders). **Pending:** the user runs `python -m src.extract_windows` to write
 | 2 documents | `SEBI_CONTACT=… python -m src.fetch_pdfs` | listings | `derived/order_documents.parquet`, `derived/fetch_failures.csv`, `raw/pdfs/`, `logs/fetch_pdfs.log` | ~40k GETs (cached) |
 | 3 text | `python -m src.extract_text` | order_documents, `raw/pdfs`, cache | `derived/text/*.txt`, `derived/text_documents.parquet`, `derived/text_pages.parquet`, `raw/ocr/`, `logs/extract_text.log` | none |
 | 4 windows | `python -m src.extract_windows` | text_documents, `derived/text/` | `derived/window_candidates.parquet`, `derived/windows.parquet`, `logs/extract_windows.log` | none (~1 min) |
+| 5 model | `python -m src.window_model [--offline]` | windows, window_candidates | `derived/window_model.parquet`, `derived/violation_windows.parquet`, `raw/llm/`, `logs/window_model.log` | localhost Ollama only (~55 min; seconds when cached) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
-`scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`.
+`scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
+→ `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it).
 Useful flags: `--category`, `--order-id` (repeatable), `--limit`, `--start-page/--end-page`
 (listings), `--resolve-only` (fetch), `--sample N`, `--no-ocr`, `--scratch DIR`,
-`--workers`, `--nice` (extract), `--top-k` (windows). Checkpoints: fetch every 500, extract every 2000.
+`--workers`, `--nice` (extract), `--top-k` (windows), `--model`, `--think`, `--status`,
+`--stem` (model). Checkpoints: fetch every 500, extract every 2000.
 
 ## 7. Text extraction details (`src/extract_text.py`)
 
@@ -193,7 +226,8 @@ blanks lines in place, so they stay valid), `page_no`, `rel_pos`, `sentence` (ve
 whitespace collapsed), `label_kind` ∈ `defined, strong, relevant, context, generic`,
 `label_text`, `n_dates`, `n_ranges`, `negative` (open offer / letter dated / … cue),
 `range_text`, `parsed_start`, `parsed_end`, `start_precision`/`end_precision` ∈ `day, month`,
-`parse_rule` ∈ `range, range_year_inferred, fy, fy_range, patches_union`, `confidence`
+`parse_rule` ∈ `range, range_year_inferred, fy, fy_range, patches_union,
+range_till_inspection, range_fy_list`, `confidence`
 (null = a range the regex will not call the window).
 
 `derived/windows.parquet` — one row per order (20,861)
@@ -204,6 +238,29 @@ NO_TEXT`, `violation_start`, `violation_end`, `start_precision`, `end_precision`
 (`none` is never assigned by regex), `violation_method` (`regex` or null),
 `violation_rule`, `cand_rank`, `char_start`, `rules_version`, `error`. Dates are not
 sanity-checked yet (runbook Day 3).
+
+`derived/window_model.parquet` — one row per order sent to the model (2,732)
+: `text_stem`, `order_id`, `order_type`, `order_date`, `regex_status`, `n_sentences_sent`,
+`model`, `model_digest`, `prompt_version`, `think`, `cache_key` (file under `raw/llm/`),
+`raw_response` (the model's JSON), `model_status` ∈ `MODEL_WINDOW, MODEL_NONE,
+MODEL_UNVERIFIED` (quotes not in the sentence / unreadable / start after end / open-ended),
+`MODEL_REJECTED` (verified, but a known non-window: correspondence dates, an
+inspection visit, a statement or ledger period), `MODEL_ERROR`; `window_kind` ∈
+`stated_period, conduct_dates` (null when no window; the model's own word —
+`investigation`/`violation`/`none` — stays in `raw_response`); `sentence_no`, `start_text`/`end_text` (verbatim quotes),
+`violation_start`, `violation_end`, `start_precision`/`end_precision` ∈ `day, month, year, fy`,
+`violation_raw`, `note`, `seconds`, `from_cache`.
+
+`derived/violation_windows.parquet` — one row per order (20,861); **the table Day 3 reads**
+: regex window where `window_status = PARSED`, else the verified model window. Columns:
+`text_stem`, `order_id`, `order_type`, `order_date`, `text_status`, `window_status`,
+`model_status`, `violation_start`, `violation_end`, `start_precision`, `end_precision`,
+`violation_raw`, `violation_confidence` (model windows are `medium`),
+`violation_method` ∈ `regex, model`, `violation_rule` (`model:<kind>` for model rows),
+`window_kind` — *how the order states the one quantity*, not a different quantity:
+`stated_period` (the order names it: investigation/examination/inspection/relevant
+period; all regex windows) or `conduct_dates` (model only: no period named, the dates
+of the alleged conduct are given); `char_start` (regex only).
 
 **Joins.** `order_id` is unique where non-null, but **pandas `merge` matches
 nulls to nulls**: joining on `order_id` cross-joins the 76 id-less orders (20,785
@@ -253,13 +310,31 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
   1-bit sideways scans; the real-engine test uses an upside-down page.
 - 1-bit ~200-dpi scans upsampled to 300 dpi OCR worse than at 200 dpi.
 
+**Week 2 (model).**
+- Ollama here runs `llama-server -np 1`: one request at a time, so extra workers
+  only queue. Thinking mode (`--think`) spends ~4,300 tokens and ~83 s per order
+  (vs 1.2 s) with no measured gain on the dev set — leave it off.
+- Killing a background eval: `kill` the python PID, not its bash wrapper, or the
+  run keeps the GPU busy and every other call queues behind it.
+- The model must *quote* dates; code verifies the quote (letters+digits, leading
+  zeros ignored) and parses it day-first. Never take a date the model wrote itself.
+- `hand/window_model_devset.csv` (60) and `hand/window_model_holdout.csv` (30) are
+  agent-labelled and were seen while tuning: **exclude them from the Week 3 blind
+  validation sample.**
+- Do not "fix" SEBI's "conducted investigation during the period X to Y" into a
+  desk-time reading: in 102 such regex windows the hereinafter label and months-to-
+  years durations show the activity period. Only inspection visits are desk time;
+  a first draft of the model-side rule rejected the activity phrasing — caught by
+  a test now (`test_real_windows_pass_the_rejection_rules`).
+- Still unread by regex: glued text "fromApril01, 2018" (reaches the model).
+
 ## 11. Next steps (runbook Week 2 onward)
 
-1. Week 2 Day 2: model fallback for `UNCONFIRMED_RANGE` + `UNPARSED` orders
-   (2,732), sending their `window_candidates` sentences; cache every response
-   (rule 1) and set `violation_method = model`. Day 3: sanity rules →
-   `derived/window_flagged.csv`, then the extraction rate. Day 4: prior-action
-   dates and penalties. Day 5: regulations, parties → `derived/orders.parquet`.
+1. Week 2 Day 3: sanity rules on `derived/violation_windows.parquet` →
+   `derived/window_flagged.csv`, then the extraction rate, reported by
+   `violation_method` and `window_kind`. Day 4: prior-action dates and penalties.
+   Day 5: regulations, parties → `derived/orders.parquet`. Both `window_kind`s are
+   the suspected violation window; `stated_period` only is a robustness cut.
 2. Regex v1 dates use an explicit day-first grammar, not `dateutil` (which fills
    a missing day from today's date); keep it that way.
 3. Decide the unit of analysis (order / matter / noticee) before modelling;

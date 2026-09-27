@@ -158,7 +158,18 @@ April 30, 2002* (130), *from June to December 1996* (134). Month-only ends:
 | "conducted inspection from 12 to 22 Feb 2012 for the period April 2010 to Feb 2012" | — | the inspection's own dates beside the period covered |
 | "July 2021 - October 2022: IA conducted a detailed investigation" | — | when the investigation ran |
 | "during the period from 1.4.2000 to 31.3.2004" (funds collected) | — | a generic period, not an investigation period |
-| "TCP/IP format", "pre-/post-examination period" | — | look like labels, are not |
+| "TCP/IP format", "Video IP telephony", "pre-/post-examination period" | — | look like labels, are not |
+| "SEBI conducted an inspection of the Company during the period February 28, 2005 to March 5, 2005" | — | an on-site inspection *visit* — the probe's own dates, sometimes even labelled "inspection period" |
+
+**What the window is.** One quantity: the period of business activity SEBI
+examined, the proxy for the violation window. "Investigation / examination /
+inspection / relevant period" are alternate names for it. SEBI's standard
+"SEBI conducted investigation **during** the period X to Y (hereinafter
+'investigation period')" reads like desk time but is the activity period (in
+102 such sentences the label and months-to-years durations show it). The
+probe's own dates only appear for inspection visits: days to a few weeks,
+usually beside the period covered ("during 16.01.2014 - 17.01.2014 for the
+period 01.04.2012 till the date of inspection").
 
 **Orders that state no period.** 7,596 orders (36%) have no sentence with a
 period keyword and a date; only 113 of them mention an investigation/inspection

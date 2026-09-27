@@ -1,0 +1,31 @@
+text_stem,regex_status,gold_kind,gold_start,gold_end,ambiguous,alt_start,alt_end,note
+7051,UNCONFIRMED_RANGE,conduct_dates,2005-06-17,2005-09-20,0,2005-06-17,2005-09-16,sharp price rise during the period; transactions to 16-09-2005
+25050,UNCONFIRMED_RANGE,none,,,0,,,letters sent during a preliminary enquiry
+67672,UNCONFIRMED_RANGE,none,,,1,,,products offered and sold during periods
+32660,UNCONFIRMED_RANGE,none,,,0,,,cross-examination dates
+68478,UNCONFIRMED_RANGE,none,,,1,,,products offered and sold during periods
+3806,UNCONFIRMED_RANGE,stated_period,2001-04-30,2001-08-03,0,,,conducted investigations into trading during
+24893,UNCONFIRMED_RANGE,conduct_dates,2011-10-15,2011-10-17,1,2011-10-13,2011-10-17,IPO proceeds transferred Oct 13 and routed Oct 15-17
+14057,UNCONFIRMED_RANGE,conduct_dates,2003-04-01,2004-03-31,0,,,promoters sold shares during the period
+39429,UNCONFIRMED_RANGE,none,,,0,,,IPO bid period; documents requested
+10345,UNCONFIRMED_RANGE,none,,,1,2003-12-01,2004-01-23,price volume analysis period before results
+45517,UNCONFIRMED_RANGE,stated_period,2005-04-01,2012-03-31,1,,,investigation of financial statements for FY 2005-06 to 2011-12
+40979,UNCONFIRMED_RANGE,none,,,1,2006-04-01,2016-03-31,physical share transfers in the period referred to in a SEBI order
+1721,UNCONFIRMED_RANGE,stated_period,1994-08-01,1994-12-31,0,,,conducted investigations into dealings during August - December 1994
+36625,UNCONFIRMED_RANGE,conduct_dates,2014-06-06,2015-09-30,0,,,alleged PIT violations during the period
+7887,UNCONFIRMED_RANGE,none,,,0,,,certificate on physical shares lodged in a period
+2103,UNCONFIRMED_RANGE,conduct_dates,2001-03-13,2001-03-18,0,,,period when acquisition information was unpublished
+17462,UNCONFIRMED_RANGE,conduct_dates,2000-03-01,2001-03-31,0,,,off the floor transactions during the period
+49275,UNCONFIRMED_RANGE,conduct_dates,2015-10-01,2018-08-31,0,,,promoters' transactions during the period
+84971,UNCONFIRMED_RANGE,conduct_dates,2019-10-01,2020-08-31,0,,,trading tips given for the period
+48325,UNCONFIRMED_RANGE,none,,,1,2015-06-01,2015-09-30,shareholding change between quarters
+26578,UNPARSED,none,,,0,,,trading volumes by quarter
+89971,UNPARSED,none,,,0,,,
+28925,UNPARSED,none,,,0,,,AGM dates
+45073,UNPARSED,none,,,0,,,
+9776,UNPARSED,none,,,0,,,
+43343,UNPARSED,none,,,0,,,
+61396,UNPARSED,none,,,1,2021-03-26,2021-03-26,examination of stakes held as on a date
+5737,UNPARSED,stated_period,2001-04-10,2002-06-28,1,,,first and second period of investigation given by price points
+40857,UNPARSED,stated_period,2012-04-01,2015-02-28,0,,,inspection period from April 2012-13 to February 2015
+15079,UNPARSED,stated_period,1999-04-01,2001-03-31,0,,,inspection for 1999-2000 and 2000-2001; visit in July 2001
