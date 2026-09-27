@@ -37,7 +37,8 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/scrape_listings.py` | stage 1: listing pages → one row per order | — | code |
 | `src/fetch_pdfs.py` | stage 2: detail page → the order's PDF or inline text | — | code |
 | `src/extract_text.py` | stage 3: text layer, OCR fallback, quality checks | — | code |
-| `tests/` | 242 tests, with real SEBI pages as fixtures | — | code |
+| `src/extract_windows.py` | stage 4: violation-window candidate sentences + regex v1 | — | code |
+| `tests/` | 318 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -47,11 +48,13 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `derived/text/<order_id>.txt` | order text, pages separated by form feed `\f` | 0.73 GB | yes, ~5 min + OCR cache |
 | `derived/text_documents.parquet` | one row per order: text source, OCR stats, status | 3.7 MB | with the text |
 | `derived/text_pages.parquet` | one row per PDF page: how its text was obtained | 1.6 MB | with the text |
+| `derived/window_candidates.parquet` | top 3 candidate sentences per order, with what regex v1 read from each | 5.5 MB | yes, ~1 min |
+| `derived/windows.parquet` | one row per order: regex v1 violation window, confidence, source sentence, routing status | 1.4 MB | yes, ~1 min |
 | `derived/fetch_failures.csv` | the orders whose document could not be fetched | tiny | with stage 2 |
 | `reports/listing_*.csv` | per-page scrape log, duplicate conflicts (none), rows needing review | tiny | with stage 1 |
 | `logs/` | run logs for each stage | small | — |
 | `results_log.md` | every figure with its source and date | — | git |
-| `hand/recon_notes.md` | SEBI protocol notes (and, next, your reading notes) | — | git |
+| `hand/recon_notes.md` | SEBI protocol notes; §7 how orders state the violation period | — | git |
 
 Git tracks code, tests, `hand/`, `paper/` and the `.md` files. `raw/`,
 `derived/`, `logs/`, `reports/` are ignored: rebuildable, or too big.
@@ -164,10 +167,11 @@ Full column list: [context.md §8](context.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 242 passed
+python -m pytest tests -q                                   # 318 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
+python -m src.extract_windows                               # stage 4, ~1 min
 ```
 
 Every stage is resumable and safe to interrupt. For a job that should outlive the
@@ -184,18 +188,20 @@ downloads only the new orders' documents, then stage 3.
 ## 5. Known gaps
 
 - 12 orders have no text: 5 dead links on SEBI's side, 7 pages with no PDF (listed by the query above).
-- Running headers and footers are still in the text, often at the top of each
-  page. Strip lines that repeat on every page before splitting into sentences.
-- OCR quirks: bullets come out as `e`; ~25 pages stay under 70% confidence,
+- Running headers and footers are still in the text files, often at the top of each
+  page; `extract_windows.strip_repeated_lines` blanks them (offsets unchanged)
+  before splitting into sentences — reuse it in later stages.
+- OCR quirks: bullets come out as `e`; 27 pages stay under 70% confidence,
   mostly dense tables; handwriting and diagrams are noise.
 - 70 PDFs are shared by 145 orders (double listings, or one combined order per noticee).
 - SAT appeal annotations exist only for orders dated 2003–2022.
 
 ## 6. Next
 
-- Read ~10 orders from `derived/text/` next to their PDFs and write the
-  phrasings you find into `hand/recon_notes.md` (runbook Day 1, still open).
-  This also covers the Day 5 spot-check.
+- Week 2 Day 2: model fallback for the 2,732 orders regex v1 could not settle
+  (`window_status` `UNCONFIRMED_RANGE` / `UNPARSED`), then Day 3 sanity rules.
+- Read ~10 orders next to their PDFs before the Week 3 blind validation;
+  `hand/recon_notes.md` §7 lists the phrasings and traps to look for.
 - Settle the unit of analysis (order / matter / noticee), given the ISO cluster.
-- Week 2: extract violation windows, prior SCN/interim-order dates, penalties,
-  regulations and parties into `derived/orders.parquet`.
+- Rest of Week 2: prior SCN/interim-order dates, penalties, regulations and
+  parties into `derived/orders.parquet`.

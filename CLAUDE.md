@@ -1,6 +1,6 @@
 # context.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-24 (end of Week 1). Read this before touching code or data.
+Last updated: 2026-09-27 (Week 2, Day 1). Read this before touching code or data.
 Companion docs: `paper/timeline.md` (the thesis runbook: weekly plan, 8 rules,
 target schema), `results_log.md` (every published figure with provenance),
 `hand/recon_notes.md` (verified SEBI protocol notes), `PROJECT_GUIDE.md` (the
@@ -30,18 +30,20 @@ and fraud prediction (Stage 2) — see `paper/timeline.md`.
   from 1.4.2000 to 31.3.2004" about funds collected is not one). "SEBI examined
   the matter" without dates must be kept distinct from a stated examination period.
 
-## 2. Status at end of Week 1
+## 2. Status (Week 2, Day 1)
 
-Done: listing scrape → document fetch → text extraction + OCR, all verified.
-**Pending at time of writing:** the user was re-running `python -m src.extract_text`
-to apply the OCR rotation/vector fix (started 2026-09-24 18:46). If
-`derived/text_documents.parquet` lacks the `n_ocr_rotated` column, that run has
-not finished or failed — check `logs/extract_text.log`. After it, expect
-`pdf_docs_needing_ocr 708`, `ocr_done_pages 7782`, `ocr_rotated_pages 180`.
+Done: listing scrape → document fetch → text extraction + OCR (full re-run with
+the rotation/vector fix finished 2026-09-24: 708 OCR orders, 7,782 OCR pages,
+182 rotated) → **window candidates + regex v1** (`src/extract_windows.py`,
+2026-09-27). The Week 1 close reading was replaced by a corpus-wide phrasing
+survey, recorded in `hand/recon_notes.md` §7; the ten-order close reading and
+the Day 5 spot-check of 10 text files are still worth doing before Week 3.
 
-Not done (runbook Week 1): the Day 1 close reading of ~10 orders with the
-phrasings recorded in `hand/recon_notes.md` (and the Day 5 spot-check of 10
-text files). Week 2 regex work depends on it; the user does the reading.
+Regex v1 (scratch run, deterministic): 50.5% of orders with text get a window
+(8,845 high, 1,676 medium); 11.5% `UNCONFIRMED_RANGE` and 1.6% `UNPARSED` go to
+the Day 2 model; 36.4% have no candidate (mostly settlement, exemption, SCORES
+orders). **Pending:** the user runs `python -m src.extract_windows` to write
+`derived/windows.parquet` and `derived/window_candidates.parquet`.
 
 ## 3. Hard rules — do not break these
 
@@ -61,7 +63,7 @@ text files). Week 2 regex work depends on it; the user does the reading.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (242 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (318 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 
 ## 4. Environment
@@ -118,12 +120,13 @@ text files). Week 2 regex work depends on it; the user does the reading.
 | 1 listings | `python -m src.scrape_listings [--offline]` | cache | `derived/listings.parquet`, `reports/listing_*.csv`, `logs/scrape_listings.log` | 836 POSTs (cached) |
 | 2 documents | `SEBI_CONTACT=… python -m src.fetch_pdfs` | listings | `derived/order_documents.parquet`, `derived/fetch_failures.csv`, `raw/pdfs/`, `logs/fetch_pdfs.log` | ~40k GETs (cached) |
 | 3 text | `python -m src.extract_text` | order_documents, `raw/pdfs`, cache | `derived/text/*.txt`, `derived/text_documents.parquet`, `derived/text_pages.parquet`, `raw/ocr/`, `logs/extract_text.log` | none |
+| 4 windows | `python -m src.extract_windows` | text_documents, `derived/text/` | `derived/window_candidates.parquet`, `derived/windows.parquet`, `logs/extract_windows.log` | none (~1 min) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
-`scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text`.
+`scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`.
 Useful flags: `--category`, `--order-id` (repeatable), `--limit`, `--start-page/--end-page`
 (listings), `--resolve-only` (fetch), `--sample N`, `--no-ocr`, `--scratch DIR`,
-`--workers`, `--nice` (extract). Checkpoints: fetch every 500, extract every 2000.
+`--workers`, `--nice` (extract), `--top-k` (windows). Checkpoints: fetch every 500, extract every 2000.
 
 ## 7. Text extraction details (`src/extract_text.py`)
 
@@ -183,6 +186,25 @@ diagnostic only; tables score low); `error`; `extracted_at`.
 ocr_pending, ocr_failed`, `native_chars`, `quality`, `image_cover`, `ocr_conf`,
 `out_chars`, `drawings` (only for would-be sparse pages), `ocr_variant`.
 
+`derived/window_candidates.parquet` — top 3 candidate sentences per order (28,140)
+: `text_stem`, `order_id`, `order_type`, `order_date`, `cand_rank` (1 = best), `score`,
+`sent_index`, `char_start`/`char_end` (offsets into the `.txt` file — header stripping
+blanks lines in place, so they stay valid), `page_no`, `rel_pos`, `sentence` (verbatim,
+whitespace collapsed), `label_kind` ∈ `defined, strong, relevant, context, generic`,
+`label_text`, `n_dates`, `n_ranges`, `negative` (open offer / letter dated / … cue),
+`range_text`, `parsed_start`, `parsed_end`, `start_precision`/`end_precision` ∈ `day, month`,
+`parse_rule` ∈ `range, range_year_inferred, fy, fy_range, patches_union`, `confidence`
+(null = a range the regex will not call the window).
+
+`derived/windows.parquet` — one row per order (20,861)
+: `text_stem`, `order_id`, `order_type`, `order_date`, `text_status`, `n_sentences`,
+`n_candidates`, `window_status` ∈ `PARSED, UNCONFIRMED_RANGE, UNPARSED, NO_CANDIDATES,
+NO_TEXT`, `violation_start`, `violation_end`, `start_precision`, `end_precision`,
+`violation_raw` (the source sentence, rule 2), `violation_confidence` ∈ `high, medium, low`
+(`none` is never assigned by regex), `violation_method` (`regex` or null),
+`violation_rule`, `cand_rank`, `char_start`, `rules_version`, `error`. Dates are not
+sanity-checked yet (runbook Day 3).
+
 **Joins.** `order_id` is unique where non-null, but **pandas `merge` matches
 nulls to nulls**: joining on `order_id` cross-joins the 76 id-less orders (20,785
 → 25,700 rows). Join on `text_stem` instead — build it for listings/documents
@@ -233,13 +255,16 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 
 ## 11. Next steps (runbook Week 2 onward)
 
-1. User reads ~10 orders from `derived/text/` next to the PDFs; phrasings go in
-   `hand/recon_notes.md`.
-2. Decide the unit of analysis (order / matter / noticee) before modelling;
-   handle the ISO cluster and `pdf_sha256` duplicates explicitly.
-3. Week 2 (runbook): sentence candidates for violation windows (keep the source
-   sentence, rule 2), regex v1 with `dateutil` `dayfirst=True`, model fallback
-   with cached responses, sanity rules, prior-action (SCN/interim) dates,
-   penalties (Indian digit grouping), regulations, parties → `derived/orders.parquet`.
-4. Strip repeated header/footer lines per document before sentence splitting.
+1. Week 2 Day 2: model fallback for `UNCONFIRMED_RANGE` + `UNPARSED` orders
+   (2,732), sending their `window_candidates` sentences; cache every response
+   (rule 1) and set `violation_method = model`. Day 3: sanity rules →
+   `derived/window_flagged.csv`, then the extraction rate. Day 4: prior-action
+   dates and penalties. Day 5: regulations, parties → `derived/orders.parquet`.
+2. Regex v1 dates use an explicit day-first grammar, not `dateutil` (which fills
+   a missing day from today's date); keep it that way.
+3. Decide the unit of analysis (order / matter / noticee) before modelling;
+   handle the ISO cluster (2,418 orders share one window) and `pdf_sha256`
+   duplicates explicitly.
+4. User's ten-order close reading (recon_notes §7 lists what to look for) before
+   the Week 3 blind validation.
 5. Build the finality classifier from order text; use `sat_appeals` as metadata.

@@ -36,15 +36,16 @@ Figures are from the verified outputs in `derived/` unless marked otherwise.
 | Pages with a usable native text layer | **97.55%** | 310,058 pages |
 | Orders needing OCR | **708 (3.67% of PDF orders)** | runbook Day 5: under 10%, so OCR only these; no study-period restriction |
 | Pages OCR'd | 7,782 (2.45%) | 7,534 scanned · 242 broken text layer · 6 text drawn as vector outlines |
-| OCR mean word confidence | **93.1** (median 94.2, p5 87.0) | tesseract 5.5.0, English, 300 dpi; 25 pages below 70, 8 below 50 (mostly dense tables) |
-| Pages recovered by rotation/re-render retry | 203 (180 rotated) | sideways or upside-down scans, and 1-bit scans blurred by upsampling |
+| OCR mean word confidence | **93.1** (median 94.2, p5 87.0) | tesseract 5.5.0, English, 300 dpi; 27 pages below 70, 10 below 50 (mostly dense tables) |
+| Pages recovered by rotation/re-render retry | 205 (182 rotated) | sideways or upside-down scans, and 1-bit scans blurred by upsampling |
 | Orders with broken text layers | 15 | 2013 AO orders from Ghostscript 7.06: text layer of control codes over a perfectly legible page |
 | Where OCR need concentrates | 2000–01 (all 28 orders), 2013–15 (10–14%) | not the oldest years generally: 2003–10 range 0–1.1% |
 | Orders with Hindi text | 9 | English OCR is sufficient |
 | Text recovered | 716 M characters, 0.72 GB | median 23,414 characters per order |
 
-The OCR rows reflect the retry and vector-text fixes, verified by re-extracting the 32 affected orders
-(affected pages under 70% confidence: 207 → 25). `derived/` matches them once `python -m src.extract_text` is re-run.
+The OCR rows reflect the retry and vector-text fixes (full re-run finished 2026-09-24 19:15). The 32-order
+verification had given 203/180 recovered/rotated and 25 pages under 70; the full run's `derived/text_pages.parquet`
+gives the figures above (checked 2026-09-27).
 
 ### Corpus composition — affects the unit of analysis
 
@@ -54,6 +55,26 @@ The OCR rows reflect the retry and vector-text fixes, verified by re-extracting 
 | Orders per year, peak and after | 1,710 (2023) → 551 (2024) | mostly the ISO wave ending: excluding ISO, 850 → 490. Not evidence of a general enforcement decline |
 | Other large clusters | investor-grievance non-redressal ~228, Titan Company 80, NSEL 52 | titles grouped by "in the matter of" |
 | WTM titles naming the order type | 15.5% (998 of 6,424) | the rest say neither final, interim/ex-parte nor confirmatory: finality must be read from the text |
+
+## 2026-09-27 — Week 2 Day 1: violation-window candidates, regex v1
+
+`src/extract_windows.py` (`RULES_VERSION = regex-v1`), full corpus of 20,861 orders. Figures are from a
+scratch run of the committed code; the output is deterministic (identical with 4 or 8 workers), so
+`derived/windows.parquet` reproduces them once `python -m src.extract_windows` is run.
+**These are not the extraction rate**: the Day 3 sanity rules and the Week 3 blind validation come first.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders with a regex v1 window | **10,521 of 20,849 with text (50.5%)** | high 8,845 · medium 1,676. AO 66.3% · ED/CGM 43.0% · WTM 31.3% · Settlement 18.6% |
+| …of which the ISO window (1 Apr 2014 – 30 Sep 2015) | 2,418 | one matter; excluding ISO-sentence orders the regex share is 44.4% |
+| Orders with a date range but no label strong enough (`UNCONFIRMED_RANGE`) | 2,394 (11.5%) | Day 2 model fallback |
+| Orders with a labelled period regex cannot read (`UNPARSED`) | 338 (1.6%) | Day 2 model fallback |
+| Orders with no candidate sentence (`NO_CANDIDATES`) | 7,596 (36.4%) | Settlement 71%, WTM 48%, AO 25%; only 113 mention an investigation/inspection period anywhere |
+| Regex window share by order year | 2000–05 22% · 2006–10 54% · 2011–15 38% · 2016–20 41% · 2021–26 71% | |
+| Window precision | day/day 9,258 · month/month 1,205 · mixed 58 | month-precision ends resolve to the month's last day |
+| Windows ending after the order date | 2 | Day 3 sanity rule 1 will flag these |
+| Candidate sentences kept | 28,140 | top 3 per order |
+| Development spot check (not validation) | ~35 of 40 parsed non-ISO windows read correctly | errors were medium-confidence misreads and two label bugs, both fixed after the check |
 
 ### Method notes for the data section
 
