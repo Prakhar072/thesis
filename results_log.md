@@ -131,6 +131,27 @@ answers (0 model calls) and match `derived/` once `python -m src.window_model --
 | Illiquid Stock Options orders with a window | 2,363 (19.4% of windows), one window 1 Apr 2014 – 30 Sep 2015 | order dates 2018–2026; order date − window end: median 7.5 years (IQR 6.1–7.9) vs 5.0 for other orders |
 | Titles naming a matter ("in the matter of …") | 10,399 of the windowed orders; 4,903 distinct matter strings; 1,122 with > 1 order holding 6,618 orders | crude string grouping, for scale only |
 
+## 2026-09-27 — Week 2 Day 3: sanity rules and the extraction rate
+
+`src/check_windows.py` on the full chain (regex v1.1 with the fixes below → model answers re-read from
+`raw/llm/`, 0 calls → sanity rules), scratch run; deterministic, so `derived/` reproduces it once the
+user runs the chain. Before hand review of the flagged windows.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Windows checked | 12,150 | regex 10,516 + model 1,634 |
+| Flagged | **43** | end after order 2 · lag ≤ 0 1 · lag ≥ 20 years 14 · start before 1995 27 (one window has two flags). Impossible 3, unusual 40 |
+| First reading of the flags | keep 36 · drop 7 | drops: a statutory Special Court Act period, two share lock-in periods, a no-trading period, a complaints table, a registration validity period, a Union Budget year. Keeps: 1994–95 manipulation cases and 1998–2002 trading re-adjudicated in 2021–23 |
+| Parser bug exposed | "period i.e." matched as "Period-I", merging a window with a later range | 1 order (16938: Aug–Dec 1994 had become Aug 1994–Mar 1995). Fixed |
+| Label fix exposed | regex financial-year windows carried `month` precision | 130 orders; now `fy`, which the rules treat strictly |
+| Day/month inversion | none found | 25 windows from documents that also hold month-first dates (trade logs); in 23 a window date has a day > 12 and reads one way only; 2 are day-first by context (40889 a single trade date, 20449 "04.04.2005 to 12.05.2005") |
+| **Extraction rate** (high/medium window, after the rules, before review) | **58.1%** (12,107 of 20,849 with text) | runbook band 50–70%: proceed; report the drop-out and test it |
+| …excluding Illiquid Stock Options orders | 53.1% (9,876 of 18,606) | |
+| …by order type | AO 71.6% · ED/CGM 60.7% · WTM 42.1% · Settlement 27.3% | |
+| …by order year | 2000–05 30.7% · 2006–10 62.6% · 2011–15 45.4% · 2016–20 48.6% · 2021–26 77.7% | |
+| Drop-out is systematic | by type Cramér's V 0.34, by year 0.30 (χ² p ≈ 0) | moderate associations: orders without a window are mostly Settlement and WTM, and older. Report in the data section; consider weighting or controls in Stage 1 |
+| Windows by method | regex 10,486 · model 1,621 (after flags) | model share 13.4% |
+
 ### Method notes for the data section
 
 - SEBI's listing endpoint paginates on `doDirect` (0-based), not the `nextValue` a browser capture suggests; verified by exact count reconciliation.

@@ -1,7 +1,7 @@
 """Week 3 validation sample: 150 orders to hand-code blind (runbook Week 3, Days 3–4).
 
-Reads ``derived/violation_windows.parquet`` (after Day 2), the listings and the
-document table, and writes
+Reads ``derived/windows_checked.parquet`` (the Week 2 window table, after the
+Day 3 sanity rules and review), the listings and the document table, and writes
 
 * ``hand/validation_sample.csv`` — the coding sheet: order identity, SEBI's own
   title and date, links to the order, and empty columns to fill in. **No
@@ -42,7 +42,7 @@ from src.extract_text import assert_safe_output, setup_logging, text_stem
 log = logging.getLogger("validation_sample")
 
 REPO_ROOT = cache.REPO_ROOT
-WINDOWS_IN = REPO_ROOT / "derived" / "violation_windows.parquet"
+WINDOWS_IN = REPO_ROOT / "derived" / "windows_checked.parquet"
 LISTINGS_IN = REPO_ROOT / "derived" / "listings.parquet"
 DOCUMENTS_IN = REPO_ROOT / "derived" / "order_documents.parquet"
 SEEN = (REPO_ROOT / "hand" / "window_model_devset.csv", REPO_ROOT / "hand" / "window_model_holdout.csv")

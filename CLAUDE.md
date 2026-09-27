@@ -1,6 +1,6 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-27 (Week 2, Day 2 complete). Read this before touching code or data.
+Last updated: 2026-09-27 (Week 2, Day 3 built). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -47,7 +47,7 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 2, Day 2 complete)
+## 2. Status (Week 2, Day 3 built)
 
 Done: listing scrape → document fetch → text extraction + OCR (708 OCR orders,
 7,782 OCR pages, 182 rotated) → window candidates + **regex v1.1**
@@ -68,8 +68,22 @@ calls) so `derived/` holds the fixed reading. A review of 50 random model
 windows judged 42–45 of 50 right after the fixes (84–90%; agent-judged, not
 blind; the dev/held-out figure of 91% was on only 33 windows).
 
+**Day 3 (sanity rules, extraction rate)**: `src/check_windows.py`, scratch-verified
+on the full chain. It exposed one parser bug ("period i.e." read as "Period-I",
+merging a window with its settlement months; 1 order) and regex financial-year
+windows labelled `month` precision instead of `fy` (130 orders; labels only).
+Both fixed. Result: 43 windows flagged (2 impossible + 1 lag ≤ 0 + 40 unusual:
+27 start before 1995, 14 lags ≥ 20 years); extraction rate **58.1%** (12,107 of
+20,849) — the runbook's 50–70% band; drop-out differs by category (Cramér's V
+0.34) and year (0.30). Review sheet `hand/window_review.csv` holds the 43 with a
+`suggested` reading (36 keep, 7 drop); `decision` is empty for the user.
+**Pending, in order:** `python -m src.extract_windows` (~1 min),
+`python -m src.window_model --offline` (seconds), `python -m src.check_windows`
+(seconds); fill `decision` in `hand/window_review.csv`; re-run `check_windows`.
+
 Built, not yet run into `hand/`: `src/validation_sample.py` (Week 3 blind
-sample, see §11).
+sample, see §11); it reads `derived/windows_checked.parquet`, so run it after the
+Day 3 review.
 
 ## 3. Hard rules — do not break these
 
@@ -92,7 +106,7 @@ sample, see §11).
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (410 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (431 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 
 ## 4. Environment
@@ -151,10 +165,11 @@ sample, see §11).
 | 3 text | `python -m src.extract_text` | order_documents, `raw/pdfs`, cache | `derived/text/*.txt`, `derived/text_documents.parquet`, `derived/text_pages.parquet`, `raw/ocr/`, `logs/extract_text.log` | none |
 | 4 windows | `python -m src.extract_windows` | text_documents, `derived/text/` | `derived/window_candidates.parquet`, `derived/windows.parquet`, `logs/extract_windows.log` | none (~1 min) |
 | 5 model | `python -m src.window_model [--offline]` | windows, window_candidates | `derived/window_model.parquet`, `derived/violation_windows.parquet`, `raw/llm/`, `logs/window_model.log` | localhost Ollama only (~55 min; seconds when cached) |
+| 6 sanity | `python -m src.check_windows` | violation_windows, `hand/window_review.csv` | `derived/windows_checked.parquet`, `derived/window_flagged.csv`, `derived/extraction_rate.csv`, appends to `hand/window_review.csv`, `logs/check_windows.log` | none (seconds) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
-→ `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it).
+→ `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it) → `check_windows`.
 Useful flags: `--category`, `--order-id` (repeatable), `--limit`, `--start-page/--end-page`
 (listings), `--resolve-only` (fetch), `--sample N`, `--no-ocr`, `--scratch DIR`,
 `--workers`, `--nice` (extract), `--top-k` (windows), `--model`, `--think`, `--status`,
@@ -226,7 +241,7 @@ whitespace collapsed), `label_kind` ∈ `defined, strong, relevant, context, gen
 `label_text`, `n_dates`, `n_ranges`, `negative` (open offer / letter dated / … cue),
 `range_text`, `parsed_start`, `parsed_end`, `start_precision`/`end_precision` ∈ `day, month`,
 `parse_rule` ∈ `range, range_year_inferred, fy, fy_range, patches_union,
-range_till_inspection, range_fy_list`, `confidence`
+range_till_inspection, range_fy_list` (precision `fy` for financial years), `confidence`
 (null = a range the regex will not call the window).
 
 `derived/windows.parquet` — one row per order (20,861)
@@ -260,6 +275,21 @@ inspection visit, a statement or ledger period), `MODEL_ERROR`; `window_kind` �
 `stated_period` (the order names it: investigation/examination/inspection/relevant
 period; all regex windows) or `conduct_dates` (model only: no period named, the dates
 of the alleged conduct are given); `char_start` (regex only).
+
+`derived/windows_checked.parquet` — one row per order (20,861); **the Week 2 window table**
+: every `violation_windows` column, plus `sanity_status` ∈ `PASS, FLAGGED, REVIEWED_KEEP,
+REVIEWED_FIX, REVIEWED_DROP, NO_WINDOW`, `sanity_flags` (`end_after_order`,
+`start_after_end`, `lag_not_positive`, `lag_20_years`, `start_before_1995`, `;`-joined),
+`sanity_severity` ∈ `impossible, implausible`, `flagged_start`/`flagged_end` (the
+flagged window, kept for reference), `review_note`. FLAGGED and REVIEWED_DROP rows
+have no `violation_start`/`violation_end` (not in the dataset). REVIEWED_FIX rows
+carry the hand dates with `violation_method = hand`. Month-precision ends get the
+benefit of their month in R1/R3; years and financial years do not.
+
+`hand/window_review.csv` — the durable review of flagged windows: `decision` ∈ `keep,
+fix, drop` (the only column applied), `violation_start`/`violation_end` for `fix`,
+`note`, `suggested` (an optional pre-reading, never applied), and reference columns.
+New flags are appended; existing rows are never changed.
 
 **Joins.** `order_id` is unique where non-null, but **pandas `merge` matches
 nulls to nulls**: joining on `order_id` cross-joins the 76 id-less orders (20,785
@@ -329,14 +359,13 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 
 ## 11. Next steps (runbook Week 2 onward)
 
-1. Week 2 Day 3: sanity rules on `derived/violation_windows.parquet` →
-   `derived/window_flagged.csv`, then the extraction rate, reported by
-   `violation_method`, `window_kind`, order type and year. Settlement orders stay
-   in the main sample (user decision); only 27.4% of them state a window, so report
-   their under-representation, do not drop them. Day 4: prior-action dates
-   (earliest SCN / interim order — needed for the lag's end point) and penalties.
-   Day 5: regulations, parties → `derived/orders.parquet`. Both `window_kind`s are
-   the suspected violation window; `stated_period` only is a robustness cut.
+1. Finish Week 2 Day 3 (user: run the chain, review `hand/window_review.csv`).
+   Settlement orders stay in the main sample (user decision); only 27.3% of them
+   state a window, so report their under-representation, do not drop them. Day 4:
+   prior-action dates (earliest SCN / interim order — needed for the lag's end
+   point) and penalties. Day 5: regulations, parties → `derived/orders.parquet`,
+   built on `derived/windows_checked.parquet`. Both `window_kind`s are the suspected
+   violation window; `stated_period` only is a robustness cut.
 2. Week 3: draw the blind sample with `python -m src.validation_sample` (writes
    `hand/validation_sample.csv` + `derived/validation_key.parquet`; strata 60
    regex / 25 model stated / 25 model conduct / 40 no window; refuses to

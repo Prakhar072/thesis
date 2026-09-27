@@ -471,7 +471,7 @@ def parse_fy(m: re.Match) -> Window | None:
         y_end = fy(m.group(3), m.group(4))
         if y_end is None or y_end < y_start:
             return None
-    return Window(dt.date(y_start, 4, 1), dt.date(y_end + 1, 3, 31), "month", "month",
+    return Window(dt.date(y_start, 4, 1), dt.date(y_end + 1, 3, 31), "fy", "fy",
                   "fy_range" if m.group(3) else "fy", m.group(0), m.span())
 
 
@@ -586,7 +586,7 @@ def extend_with_fy_list(sentence: str, window: Window) -> Window:
     rest = _FILLER_YEARS.sub(" ", _BARE_FY.sub(" ", listed))
     if not starts or not _FY_LIST_FILLER.match(rest) or min(starts) >= window.start:
         return window
-    return Window(min(starts), window.end, "month", window.end_precision, "range_fy_list",
+    return Window(min(starts), window.end, "fy", window.end_precision, "range_fy_list",
                   sentence[max(0, s - len(listed)):window.span[1]], (s - len(listed), window.span[1]))
 
 
@@ -691,7 +691,9 @@ def _best_kind(labels: list[tuple[str, re.Match]]) -> tuple[str, re.Match] | Non
 
 _PERIOD_BEFORE = re.compile(r"\bperiods?\b[^.;]{0,40}$", _I)
 #: "Patch 1: … Patch 2: …", "first period … second period", "Period-I/II".
-_PATCHES = re.compile(r"\bpatch|\b(?:first|second|third)\s+period\b|\bperiod[- ]?(?:i{1,3}|[123])\b", _I)
+#: Not "period i.e." — a check found "period i" there merging a manipulation
+#: window with the months its trades settled in (16938).
+_PATCHES = re.compile(r"\bpatch|\b(?:first|second|third)\s+period\b|\bperiod[- ]?(?:i{1,3}|[123])(?![.\w])", _I)
 
 
 def period_introduced(sentence: str, window: Window) -> bool:

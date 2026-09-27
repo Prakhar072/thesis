@@ -39,8 +39,9 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/extract_text.py` | stage 3: text layer, OCR fallback, quality checks | — | code |
 | `src/extract_windows.py` | stage 4: violation-window candidate sentences + regex v1 | — | code |
 | `src/window_model.py`, `src/llm.py` | stage 5: local-model fallback for windows regex could not settle; cached model calls | — | code |
+| `src/check_windows.py` | stage 6: sanity rules, flagged windows, extraction rate | — | code |
 | `src/validation_sample.py` | Week 3: draws the 150-order blind coding sheet | — | code |
-| `tests/` | 410 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `tests/` | 431 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -55,6 +56,10 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `derived/windows.parquet` | one row per order: regex v1 violation window, confidence, source sentence, routing status | 1.4 MB | yes, ~1 min |
 | `derived/window_model.parquet` | one row per order sent to the model: its answer, the checks, why rejected | small | from `raw/llm/` in seconds |
 | `derived/violation_windows.parquet` | one row per order: regex window, else verified model window — what Day 3 reads | small | with stage 5 |
+| `derived/windows_checked.parquet` | one row per order: the window after the sanity rules and your review — the Week 2 window table | small | with stage 6 |
+| `derived/window_flagged.csv` | windows that failed a sanity rule | tiny | with stage 6 |
+| `derived/extraction_rate.csv` | extraction rate overall and by type, year, method | tiny | with stage 6 |
+| `hand/window_review.csv` | your keep / fix / drop decision on each flagged window | — | git (your decisions) |
 | `derived/fetch_failures.csv` | the orders whose document could not be fetched | tiny | with stage 2 |
 | `reports/listing_*.csv` | per-page scrape log, duplicate conflicts (none), rows needing review | tiny | with stage 1 |
 | `logs/` | run logs for each stage | small | — |
@@ -173,13 +178,14 @@ Full column list: [CLAUDE.md §8](CLAUDE.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 410 passed
+python -m pytest tests -q                                   # 431 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
 python -m src.extract_windows                               # stage 4, ~1 min
 python -m src.window_model                                  # stage 5, ~55 min on the GPU (Ollama must be serving)
 python -m src.window_model --offline                        # stage 5 again, from raw/llm/ in seconds
+python -m src.check_windows                                 # stage 6, sanity rules + extraction rate, seconds
 ```
 
 Every stage is resumable and safe to interrupt. For a job that should outlive the
@@ -206,9 +212,9 @@ downloads only the new orders' documents, then stage 3.
 
 ## 6. Next
 
-- Re-read the model answers with the fixed reader: `python -m src.window_model
-  --offline` (seconds, no model calls). Then Week 2 Day 3: sanity rules on
-  `derived/violation_windows.parquet` and the extraction rate.
+- Finish Week 2 Day 3: run stages 4 → 5 (`--offline`) → 6, then fill `decision`
+  (keep / fix / drop) for the 43 rows in `hand/window_review.csv` — a `suggested`
+  column has a first reading — and run stage 6 again.
 - Week 3: `python -m src.validation_sample` writes the blind coding sheet
   `hand/validation_sample.csv` (150 orders); don't open `derived/validation_key.parquet`
   while coding.

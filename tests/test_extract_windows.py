@@ -394,6 +394,21 @@ def test_trading_observed_during_an_inspection_is_activity():
     assert (r["window"].start, r["window"].end) == (D(2010, 3, 1), D(2010, 3, 10))
 
 
+def test_period_ie_is_not_a_patch():
+    # 16938: sold at rigged prices in one period, settled in the next
+    r = ew.score_sentence(
+        "During investigations it was found that the member also sold substantial quantities of SLML "
+        "shares at the rigged prices during the same period i.e., 1.8.1994 to 31.12.1994 by way of "
+        "off-the-floor Spot transactions, but deliveries and payments of these transactions were "
+        "effected during 1.1.95 to 31.3.95.", 0.1)
+    assert (r["window"].start, r["window"].end) == (D(1994, 8, 1), D(1994, 12, 31))
+    # real patches are still merged
+    r = ew.score_sentence("SEBI conducted an investigation in the scrip of STL during the period from May 29, "
+                          "2001 to September 07, 2001 (hereinafter referred to as “Period I”) and February 25, "
+                          "2002 to May 09, 2002 (hereinafter referred to as “Period II”).", 0.1)
+    assert (r["window"].start, r["window"].end, r["window"].rule) == (D(2001, 5, 29), D(2002, 5, 9), "patches_union")
+
+
 def test_ip_telephony_is_not_a_label():
     assert ew.score_sentence("The personal hearing was held through Video IP telephony on 15/10/2018.",
                              0.5) is None
