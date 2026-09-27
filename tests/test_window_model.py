@@ -145,6 +145,43 @@ def test_resolve_date(text, start, end, precision):
     assert (r.start, r.end, r.precision) == (start, end, precision)
 
 
+@pytest.mark.parametrize("text, start, end, precision", [
+    # a day range inside one quote is those days, not the whole year
+    ("January 21-25, 2008", D(2008, 1, 21), D(2008, 1, 25), "day"),
+    ("May 8–9, 2014", D(2014, 5, 8), D(2014, 5, 9), "day"),
+    ("February 14 - 15 of 2014", D(2014, 2, 14), D(2014, 2, 15), "day"),
+    ("21-25 January 2008", D(2008, 1, 21), D(2008, 1, 25), "day"),
+    # a whole range quoted as one date (7900, 17053, 48993)
+    ("May 3 to May 20, 2004", D(2004, 5, 3), D(2004, 5, 20), "day"),
+    ("May-June 1998", D(1998, 5, 1), D(1998, 6, 30), "month"),
+    ("May- July 2008", D(2008, 5, 1), D(2008, 7, 31), "month"),
+    ("December 1999 – March 2000", D(1999, 12, 1), D(2000, 3, 31), "month"),
+    # spans of years
+    ("2003-05", D(2003, 1, 1), D(2005, 12, 31), "year"),
+    ("2013-2017", D(2013, 1, 1), D(2017, 12, 31), "year"),
+    ("the year 1992", D(1992, 1, 1), D(1992, 12, 31), "year"),
+    ("2003 to 2014", D(2003, 1, 1), D(2014, 12, 31), "year"),
+    # 33576: a list of financial years runs from the first to the last
+    ("Financial Years 2011–12, 2012–13 and 2013–14", D(2011, 4, 1), D(2014, 3, 31), "fy"),
+    # a bare "2011-12" stays a financial year
+    ("2011-12", D(2011, 4, 1), D(2012, 3, 31), "fy"),
+])
+def test_quotes_holding_a_span(text, start, end, precision):
+    a, b = wm.resolve_date(text, "start"), wm.resolve_date(text, "end")
+    assert (a.start, b.end, a.precision) == (start, end, precision)
+
+
+@pytest.mark.parametrize("text", ["31/04/2003", "Match 30, 2000", "IP", "the date of inspection"])
+def test_malformed_dates_are_not_widened_to_a_year(text):
+    assert wm.resolve_date(text, "start") is None and wm.resolve_date(text, "end") is None
+
+
+def test_dates_in_a_trade_log_are_rejected():
+    s = ("NARESH CHAND CHANDAK 5/11/1999 15:02:15 25000 742.00 DINESH KUMAR SINGHANIA & CO. "
+         "15:02:10 25000 742.00 SANJAY KHEMANI 10/15/1999 14:06:29 6500 1156.50")
+    assert _reason(s, "5/11/1999", "5/11/1999") == "row of a trade log"
+
+
 def test_resolve_date_rejects_garbage():
     assert wm.resolve_date("30.1.20100") is None
     assert wm.resolve_date("the date of inspection") is None

@@ -1,10 +1,11 @@
-# context.md — briefing for AI agents working on this repository
+# CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-27 (Week 2, Day 2). Read this before touching code or data.
-Companion docs: `paper/timeline.md` (the thesis runbook: weekly plan, 8 rules,
-target schema), `results_log.md` (every published figure with provenance),
-`hand/recon_notes.md` (verified SEBI protocol notes), `PROJECT_GUIDE.md` (the
-human-facing guide).
+Last updated: 2026-09-27 (Week 2, Day 2 complete). Read this before touching code or data.
+Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
+schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
+`results_log.md` (every published figure with provenance), `hand/recon_notes.md`
+(verified SEBI protocol notes and how orders state the window), `PROJECT_GUIDE.md`
+(the human-facing guide).
 
 ---
 
@@ -16,7 +17,7 @@ matter, the **final/last SEBI order that closes it**, and to extract from the te
 the violation (investigation/examination) period, earlier SCNs and interim
 orders with dates, and how SEBI came to look at the matter (detection channel).
 Those feed survival models of detection lag (Stage 1), an event study (Stage 3)
-and fraud prediction (Stage 2) — see `paper/timeline.md`.
+and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
 
 - **In scope (primary corpus):** Orders of Chairperson/Members (`WTM`, smid 2),
   Settlement Orders (`SETTLEMENT`, smid 3), Orders of AO (`AO`, smid 6),
@@ -46,31 +47,29 @@ and fraud prediction (Stage 2) — see `paper/timeline.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 2, Day 2)
+## 2. Status (Week 2, Day 2 complete)
 
-Done: listing scrape → document fetch → text extraction + OCR (full re-run with
-the rotation/vector fix finished 2026-09-24: 708 OCR orders, 7,782 OCR pages,
-182 rotated) → **window candidates + regex v1** (`src/extract_windows.py`,
-2026-09-27). The Week 1 close reading was replaced by a corpus-wide phrasing
-survey, recorded in `hand/recon_notes.md` §7; the ten-order close reading and
-the Day 5 spot-check of 10 text files are still worth doing before Week 3.
+Done: listing scrape → document fetch → text extraction + OCR (708 OCR orders,
+7,782 OCR pages, 182 rotated) → window candidates + **regex v1.1**
+(`derived/windows.parquet`, run 2026-09-27 13:08: 10,516 windows, 50.4% of
+orders with text) → **model fallback** (`derived/window_model.parquet`,
+`derived/violation_windows.parquet`, run 2026-09-27 13:09–14:06: 2,712 orders
+sent, 1,641 windows). Combined: **12,157 of 20,849 orders with text (58.3%)**.
+The Week 1 reading tasks were replaced by the corpus-wide phrasing survey
+(`hand/recon_notes.md` §7) and are closed.
 
-Regex v1 (`derived/windows.parquet`, run by the user 2026-09-27): 50.5% of
-orders with text get a window (8,845 high, 1,676 medium). **Regex v1.1**
-(2026-09-27, scratch-verified, not yet in `derived/`) drops inspection-visit
-dates, reads "from X till the date of inspection [i.e. Y]" and listed financial
-years; 76 orders change, every change reviewed. v1.1: 10,516 windows (50.4%);
-11.3% `UNCONFIRMED_RANGE` and 1.7% `UNPARSED` go to the model; 36.6% have no candidate.
+After that run, an analysis of its output found five bugs in how model quotes
+are read (a malformed date widened to its whole year; "January 21-25, 2008",
+"May-June 1998", "2003-05", "May 3 to May 20, 2004" read wrongly) and trade-log
+rows taken as windows. Fixed and tested (410 tests); re-reading the cached
+answers changes 70 windows, all reviewed: combined **12,150 (58.3%)**. **Pending:**
+the user re-runs `python -m src.window_model --offline` (seconds, 0 model
+calls) so `derived/` holds the fixed reading. A review of 50 random model
+windows judged 42–45 of 50 right after the fixes (84–90%; agent-judged, not
+blind; the dev/held-out figure of 91% was on only 33 windows).
 
-Day 2 model fallback (`src/window_model.py`, `src/llm.py`) is built and tested:
-local `qwen3.5:4b` via Ollama, thinking off, answers verified in code. On
-agent-labelled hard cases ~91% of accepted windows are right (dev 20/22 after
-tuning, held-out 10/11); 94% agreement with regex-high windows (75/80). A
-150-order dry run gave a window for 61% of sent orders at 1.2 s/order.
-**Pending, in order:** the user re-runs `python -m src.extract_windows` (v1.1,
-~1 min), then `python -m src.window_model` (~55 min, Ollama must be serving) to
-write `derived/window_model.parquet` and `derived/violation_windows.parquet`;
-Day 3 reads the latter.
+Built, not yet run into `hand/`: `src/validation_sample.py` (Week 3 blind
+sample, see §11).
 
 ## 3. Hard rules — do not break these
 
@@ -93,7 +92,7 @@ Day 3 reads the latter.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (382 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (410 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 
 ## 4. Environment
@@ -278,7 +277,7 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
   links, 404), 31359 (detail page 404); 31687 (.doc), 31543 (.htm), 16864
   (multi-page HTML), 15272 (722-char inline order), 15254 (SAT order page), 13589,
   16655 (empty pages).
-- ~25 OCR pages remain <70 conf (mostly dense tables). OCR slips: bullets → `e`,
+- 27 OCR pages remain <70 conf (mostly dense tables). OCR slips: bullets → `e`,
   "IA" read as "JA" once, handwriting and diagrams are noise.
 - Evidence screenshots inside digital orders (e.g. WhatsApp chats in 67218) are
   partly OCR'd; their timestamps could pose as dates — filter OCR pages of mixed
@@ -332,14 +331,27 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 
 1. Week 2 Day 3: sanity rules on `derived/violation_windows.parquet` →
    `derived/window_flagged.csv`, then the extraction rate, reported by
-   `violation_method` and `window_kind`. Day 4: prior-action dates and penalties.
+   `violation_method`, `window_kind`, order type and year. Settlement orders stay
+   in the main sample (user decision); only 27.4% of them state a window, so report
+   their under-representation, do not drop them. Day 4: prior-action dates
+   (earliest SCN / interim order — needed for the lag's end point) and penalties.
    Day 5: regulations, parties → `derived/orders.parquet`. Both `window_kind`s are
    the suspected violation window; `stated_period` only is a robustness cut.
-2. Regex v1 dates use an explicit day-first grammar, not `dateutil` (which fills
-   a missing day from today's date); keep it that way.
-3. Decide the unit of analysis (order / matter / noticee) before modelling;
-   handle the ISO cluster (2,418 orders share one window) and `pdf_sha256`
-   duplicates explicitly.
-4. User's ten-order close reading (recon_notes §7 lists what to look for) before
-   the Week 3 blind validation.
-5. Build the finality classifier from order text; use `sat_appeals` as metadata.
+2. Week 3: draw the blind sample with `python -m src.validation_sample` (writes
+   `hand/validation_sample.csv` + `derived/validation_key.parquet`; strata 60
+   regex / 25 model stated / 25 model conduct / 40 no window; refuses to
+   overwrite a started sheet). Weight accuracy back with the key.
+3. Regex dates use an explicit day-first grammar, not `dateutil` (which fills a
+   missing day from today's date); keep it that way.
+4. **Unit of analysis = what one row of the Stage 1 data stands for.** The
+   pipeline has one row per *order*; the plan's lag is per *fraud* ("for each
+   fraud i … first regulatory action", technical_plan §5.1; one event per firm,
+   timeline Week 7; `cluster_col="firm_id"` because firms recur, timeline Week 5).
+   SEBI issues one order per noticee in mass matters: 12,150 windowed orders
+   hold only 3,394 distinct windows; ISO alone is 2,363 orders (19.4%) sharing
+   one window with order dates 2018–2026, so order-level lags there measure the
+   adjudication queue. Before Week 5 decide: order, matter (group orders of one
+   case; lag = window end → earliest action), or matter × noticee. Needs a
+   matter-grouping step (not built).
+5. Build the finality classifier (interim / final / confirmatory) from order text;
+   use `sat_appeals` as metadata. Stage 3 needs the event types by Week 7.

@@ -1,7 +1,7 @@
 # Project guide — what we built in Week 1, where it lives, how to use it
 
 *As of 2026-09-24.* Figures with provenance: [results_log.md](results_log.md).
-Technical briefing for AI agents: [context.md](context.md). Runbook: [paper/timeline.md](paper/timeline.md).
+Technical briefing for AI agents: [CLAUDE.md](CLAUDE.md). Runbook: [timeline.md](timeline.md). Thesis design: [technical_plan.md](technical_plan.md).
 
 ---
 
@@ -39,7 +39,8 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/extract_text.py` | stage 3: text layer, OCR fallback, quality checks | — | code |
 | `src/extract_windows.py` | stage 4: violation-window candidate sentences + regex v1 | — | code |
 | `src/window_model.py`, `src/llm.py` | stage 5: local-model fallback for windows regex could not settle; cached model calls | — | code |
-| `tests/` | 382 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `src/validation_sample.py` | Week 3: draws the 150-order blind coding sheet | — | code |
+| `tests/` | 410 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -167,12 +168,12 @@ html = cache.get(L.loc[L.order_id == 104570, "source_url"].iloc[0], offline=True
 - After your re-run: `text_documents.n_ocr_rotated`, `text_pages.ocr_variant`
   (e.g. `r90_200` = rotated 90°, 200 dpi) and `text_pages.drawings`.
 
-Full column list: [context.md §8](context.md#8-data-dictionary).
+Full column list: [CLAUDE.md §8](CLAUDE.md#8-data-dictionary).
 
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 382 passed
+python -m pytest tests -q                                   # 410 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
@@ -205,14 +206,15 @@ downloads only the new orders' documents, then stage 3.
 
 ## 6. Next
 
-- Re-run stage 4 (`python -m src.extract_windows`, now regex v1.1), then stage 5
-  (`python -m src.window_model`), then Week 2 Day 3: sanity rules on
+- Re-read the model answers with the fixed reader: `python -m src.window_model
+  --offline` (seconds, no model calls). Then Week 2 Day 3: sanity rules on
   `derived/violation_windows.parquet` and the extraction rate.
+- Week 3: `python -m src.validation_sample` writes the blind coding sheet
+  `hand/validation_sample.csv` (150 orders); don't open `derived/validation_key.parquet`
+  while coding.
 - The window is the period of business activity SEBI examined — "investigation /
   examination / inspection / relevant period" are one quantity; inspection
   *visit* dates are never it. See CLAUDE.md §1.
-- Read ~10 orders next to their PDFs before the Week 3 blind validation;
-  `hand/recon_notes.md` §7 lists the phrasings and traps to look for.
 - Settle the unit of analysis (order / matter / noticee), given the ISO cluster.
 - Rest of Week 2: prior SCN/interim-order dates, penalties, regulations and
   parties into `derived/orders.parquet`.

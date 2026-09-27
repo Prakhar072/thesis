@@ -84,9 +84,9 @@ Any one stage alone gives a misleading policy conclusion. High predictability wi
 
 ### 4.1 The SEBI enforcement corpus
 
-The spine of the thesis is a machine-readable corpus built from [SEBI's enforcement orders database](https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=2&ssid=9&smid=2), which currently holds **6,424 order records**. The database is searchable by title, keyword and entity name, filterable by date range and issuing department, and paginated at 25 records per page. Order documents are served as PDFs under a stable path pattern (`sebi.gov.in/sebi_data/attachdocs/<month-year>/<id>.pdf`), which makes systematic retrieval straightforward.
+The spine of the thesis is a machine-readable corpus built from [SEBI's enforcement orders database](https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=2&ssid=9&smid=2). Its four primary categories held **20,861 orders** when scraped on 23 September 2026: Orders of the Chairperson/Members 6,424, Orders of the Adjudicating Officer 12,003, Settlement Orders 1,994 and Orders of ED/CGM 440, reconciling exactly with SEBI's published counts. The database is searchable by title, keyword and entity name, filterable by date range and issuing department, and paginated at 25 records per page. Each order has a detail page; the PDF sits in an embedded viewer on that page under an opaque, timestamp-based file name, so it must be read off the page rather than constructed. 1,582 orders from 2002–2011 have no PDF: the order text is printed on the detail page itself. 20,849 of the 20,861 orders (99.94%) yielded a document.
 
-The database mixes ten order categories. Orders under the RTI Act and orders on corporatization and demutualization schemes are excluded as irrelevant. The analytical sample is drawn from Orders of the Adjudicating Officer, Orders of the Chairperson and Whole-Time Members, Orders of ED/CGM quasi-judicial authorities, and Settlement Orders. Orders of SAT and of the courts are retained separately, as appellate outcomes rather than sample members — they are needed to identify sanctions later reversed.
+The orders listing has eight categories. The analytical sample is drawn from the four above. The other four — Orders of SAT (2,447), Courts (1,118), Special Courts (90) and Regulation 30A (46) — are appellate, judicial or intermediary-procedure outcomes rather than SEBI's own enforcement decisions, and are not in the corpus. SAT appeals are captured instead from the listing itself, which annotates 1,414 orders (2003–2022 only) with their SAT appeal numbers; SAT and court orders can be added later if reversals need to be identified directly.
 
 Two supplementary official sources sharpen the corpus. SEBI publishes downloadable **11B order summary spreadsheets by year for 2014–2022**, which give structured metadata for cross-validating the extraction. And SEBI's Annual Report carries its own categorized enforcement tables, including Table 10.5 (Fraudulent and Unfair Trade Practices cases), Table 10.6 (Financial Statements Fraud cases), and age-wise analyses of adjudication and prosecution proceedings in Tables 10.10 and 10.11. The [2025–26 Annual Report](https://www.sebi.gov.in/reports-and-statistics/publications/aug-2026/SEBI%20ANNUAL%20REPORT%202025_26.pdf) records 402 investigations taken up and 338 completed in that year. These tables provide an independent benchmark: if the constructed corpus does not reproduce SEBI's own published counts by year and category, the extraction is wrong.
 
@@ -132,7 +132,7 @@ The fallback column is not decoration. Section 10 sets out why every stage is de
 
 The target analytical sample is orders concerning **listed issuers** over roughly 2010–2025, which is the period for which both order coverage and firm financials are reliable. Orders against individual intermediaries, brokers and unconnected traders are retained in the corpus but excluded from the firm-level stages, since they have no issuer to match to financial data.
 
-The corpus scoping exercise in the first month establishes the realised counts. On the basis of the 6,424 total and the category mix, a listed-issuer sample in the high hundreds to low thousands is the working expectation, against a control panel of all listed non-fraud firm-years over the same period. Precise figures are deliberately not asserted here; the scoping deliverable reports them before the empirical work is committed.
+The corpus scoping exercise in the first month establishes the realised counts. On the basis of the 20,861 orders and the category mix — of which about 2,400 are adjudication orders in a single matter (illiquid stock options at BSE) — a listed-issuer sample in the high hundreds to low thousands is the working expectation, against a control panel of all listed non-fraud firm-years over the same period. Precise figures are deliberately not asserted here; the scoping deliverable reports them before the empirical work is committed.
 
 ## 5. Stage 1 — Detection lags
 
@@ -531,7 +531,7 @@ Three changes account for most of the difference.
 
 **The control group.** The draft's fifty established frauds cannot support any statement about what distinguishes fraud from non-fraud, because they contain no non-fraud. Every predictive claim in the original hypotheses requires a comparison population, and the corpus-plus-panel design supplies one.
 
-**The sample size.** SEBI's database holds 6,424 order records. Fifty hand-read cases is a sound way to understand the institution and a poor way to estimate anything. The corpus approach keeps the close reading — the hand-validated subsample and the coding protocol both require it — while putting the estimation on the full population.
+**The sample size.** SEBI's database holds 20,861 orders in the four enforcement categories used here. Fifty hand-read cases is a sound way to understand the institution and a poor way to estimate anything. The corpus approach keeps the close reading — the hand-validated subsample and the coding protocol both require it — while putting the estimation on the full population.
 
 **The deliverable.** A framework proposed is not a finding. Reframing the output from a recommended preventive architecture to a measured diagnosis of where the chain leaks is what makes the work assessable as economics, and it is also what makes the eventual recommendations credible, since they will rest on estimates rather than on the plausibility of the argument.
 
@@ -569,7 +569,7 @@ Fine, J.P., & Gray, R.J. (1999). [A Proportional Hazards Model for the Subdistri
 
 ### Primary and institutional sources
 
-[SEBI Enforcement Orders database](https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=2&ssid=9&smid=2) — 6,424 order records as at September 2026; includes downloadable 11B order summary spreadsheets for 2014–2022.
+[SEBI Enforcement Orders database](https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=2&ssid=9&smid=2) — 20,861 orders in the four primary categories as scraped on 23 September 2026 (Chairperson/Members 6,424; Adjudicating Officer 12,003; Settlement 1,994; ED/CGM 440); the Chairperson/Members pages link downloadable 11B order summary spreadsheets for 2014–2022.
 
 [SEBI Annual Report 2025–26](https://www.sebi.gov.in/reports-and-statistics/publications/aug-2026/SEBI%20ANNUAL%20REPORT%202025_26.pdf) — enforcement statistics including 402 investigations taken up and 338 completed; Tables 10.5, 10.6, 10.10 and 10.11.
 

@@ -106,10 +106,8 @@ Two supplementary official sources sharpen the corpus. SEBI publishes downloadab
 
 ## 7. How orders state the violation period (corpus survey, 2026-09-27)
 
-Survey of all 20,849 order texts, done in place of the Week 1 Day 1 close
-reading so Week 2 could start. It tells us what the text *says*, not whether
-the reading is right: the ten-order close reading is still worth doing before
-the Week 3 blind validation. Implemented in `src/extract_windows.py`.
+Survey of all 20,849 order texts (replaces the runbook's Week 1 Day 1 reading).
+Implemented in `src/extract_windows.py`.
 
 **The defining sentence puts the dates before the label.** The runbook's
 patterns assume "investigation period … from X to Y"; the corpus mostly writes

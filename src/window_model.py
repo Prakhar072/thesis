@@ -196,32 +196,94 @@ def _fy(m: re.Match) -> Resolved | None:
     return Resolved(dt.date(y1, 4, 1), dt.date(y2, 3, 31), "fy") if y2 == y1 + 1 else None
 
 
-def resolve_date(text: str, which: str = "start") -> Resolved | None:
-    """Read one quoted date: a day, a month, a financial year, or a bare year.
+#: A day range inside one quote: "January 21-25, 2008", "May 8–9, 2014",
+#: "February 14 - 15 of 2014", "21-25 January 2008".
+_DAY_SPAN = re.compile(
+    rf"(?:(?P<m1>{ew._MON})\s*(?P<a1>\d{{1,2}}){ew._ORD}\s*[-–]\s*(?P<b1>\d{{1,2}}){ew._ORD}\s*,?\s*(?:of\s+)?(?P<y1>(?:19|20)\d{{2}})"
+    rf"|(?P<a2>\d{{1,2}}){ew._ORD}\s*[-–]\s*(?P<b2>\d{{1,2}}){ew._ORD}\s+(?:of\s+)?(?P<m2>{ew._MON})\s*,?\s*(?P<y2>(?:19|20)\d{{2}}))",
+    re.IGNORECASE)
+#: A span of years: "2003-05", "2009-16", "2013-2017" (a bare "2011-12" is a
+#: financial year and is read by _FY).
+_YEAR_SPAN = re.compile(r"((?:19|20)\d{2})\s*[-–]\s*(\d{2}|(?:19|20)\d{2})")
+#: What may surround bare years for a quote to count as years only.
+_YEAR_WORDS = re.compile(r"\b(?:the|calendar|financial|years?|and|to|from|till|upto|between|of|i\.?\s?e\.?)\b|[\s,.;:&\-–/]", re.I)
 
-    A quote is normally one date. When the model quotes a whole phrase
+
+def _day_span(t: str) -> Resolved | None:
+    m = _DAY_SPAN.fullmatch(t)
+    if not m:
+        return None
+    mon = ew.MONTHS.get((m.group("m1") or m.group("m2")).lower().rstrip("."))
+    y = int(m.group("y1") or m.group("y2"))
+    a, b = int(m.group("a1") or m.group("a2")), int(m.group("b1") or m.group("b2"))
+    try:
+        start, end = dt.date(y, mon, a), dt.date(y, mon, b)
+    except (TypeError, ValueError):
+        return None
+    return Resolved(start, end, "day") if start <= end else None
+
+
+def _year_span(t: str) -> Resolved | None:
+    m = _YEAR_SPAN.fullmatch(t)
+    if not m:
+        return None
+    y1, second = int(m.group(1)), m.group(2)
+    y2 = int(second) if len(second) == 4 else (y1 // 100) * 100 + int(second)
+    if y2 <= y1 + 1:
+        return None  # "2011-12" is a financial year; handled elsewhere
+    return Resolved(dt.date(y1, 1, 1), dt.date(y2, 12, 31), "year")
+
+
+def resolve_date(text: str, which: str = "start") -> Resolved | None:
+    """Read one quoted date: a day, a month, a financial year, a year, or a
+    short span written as one ("January 21-25, 2008", "2003-05").
+
+    A quote is normally one date. A quoted range ("May 3 to May 20, 2004",
+    "May-June 1998") is read with the regex range grammar. When the model
+    quotes a whole phrase
     ("financial years 2000-2001, 2001-2002 and April 2002 till May 21, 2002"),
-    the start is read from its first date and the end from its last.
+    the start is read from its first date and the end from its last. A quote
+    is read as bare years only when it holds nothing else ("the year 1992",
+    "2003 to 2014"); a malformed date ("31/04/2003", "Match 30, 2000") is
+    unreadable rather than silently widened to its whole year.
     """
     t = ew.normalise_sentence(_JUNK.sub(" ", text)).strip(" ,.;:-")
     whole = ew.parse_date(t)
     if whole is None:
-        found: list[tuple[int, Resolved]] = []
+        if (r := _day_span(t) or _year_span(t)) is not None:
+            return r
+        # Everything readable in the quote, in order: whole ranges ("May 3 to
+        # May 20, 2004", "May-June 1998", read with the regex grammar), single
+        # dates, financial years. The start comes from the first, the end from
+        # the last ("financial years 2000-2001, 2001-2002 and April 2002 till
+        # May 21, 2002" runs from April 2000 to May 21, 2002).
+        found: list[tuple[int, Resolved, Resolved]] = []
+        taken: list[tuple[int, int]] = []
+        for w in ew.find_windows(t):
+            if w.rule.startswith("range"):
+                found.append((w.span[0], Resolved(w.start, w.end, w.start_precision),
+                              Resolved(w.start, w.end, w.end_precision)))
+                taken.append(w.span)
+
+        def free(a: int, b: int) -> bool:
+            return not any(s0 < b and a < e0 for s0, e0 in taken)
         for m in ew.DATE.finditer(t):
-            if (p := ew.parse_date(m.group(0))) is not None and p.year is not None:
-                found.append((m.start(), Resolved(ew.as_start(p), ew.as_end(p), p.precision)))
-        taken = [pos for pos, _ in found]
+            if free(*m.span()) and (p := ew.parse_date(m.group(0))) is not None and p.year is not None:
+                r = Resolved(ew.as_start(p), ew.as_end(p), p.precision)
+                found.append((m.start(), r, r))
+                taken.append(m.span())
         for m in _FY.finditer(t):
-            if not any(m.start() <= pos < m.end() for pos in taken) and (r := _fy(m)):
-                found.append((m.start(), r))
+            if free(*m.span()) and (r := _fy(m)):
+                found.append((m.start(), r, r))
         if found:
-            found.sort(key=lambda pr: pr[0])
-            return found[0][1] if which == "start" else found[-1][1]
-        if len(years := _YEAR_ONLY.findall(t)) >= 1:
+            found.sort(key=lambda item: item[0])
+            return found[0][1] if which == "start" else found[-1][2]
+        years = _YEAR_ONLY.findall(t)
+        if years and not _YEAR_WORDS.sub("", _YEAR_ONLY.sub("", t)):
             y = int(years[0] if which == "start" else years[-1])
             return Resolved(dt.date(y, 1, 1), dt.date(y, 12, 31), "year")
-        if (partial := ew.DATE.search(t) or re.search(ew._PARTIAL, t, re.I)) is not None:
-            whole = ew.parse_date(partial.group(0))
+        if not _YEAR_ONLY.search(t) and (partial := re.fullmatch(ew._PARTIAL, t, re.I)) is not None:
+            whole = ew.parse_date(partial.group(0))  # "November" in "from November to February 2012"
     if whole is None:
         return None
     if whole.year is None:
@@ -245,6 +307,8 @@ _DATED = re.compile(r"\b(?:dated|dt\.?)\s*$", re.I)
 #: *credits* or *transactions* over a period can be the activity itself (fees
 #: collected without registration), so "bank" alone does not trigger this.
 _STATEMENTS = re.compile(r"\b(?:statements?|ledgers?)\b", re.I)
+#: "5/11/1999 15:02:15 25000 742.00": a date in a row of an order or trade log.
+_CLOCK = re.compile(r"\s*\d{1,2}:\d{2}(?::\d{2})?\b")
 
 
 def _locate(sentence: str, quote: str) -> int | None:
@@ -281,6 +345,9 @@ def false_window_reason(sentence: str, start_text: str, end_text: str,
         return "dates of an inspection visit"
     if _STATEMENTS.search(before) and not re.search(r"investigat|inspect|examin", before, re.I):
         return "period of a statement or ledger"
+    if _CLOCK.match(sentence, at + len(start_text)) or (
+            end_at is not None and _CLOCK.match(sentence, stop)):
+        return "row of a trade log"
     return None
 
 

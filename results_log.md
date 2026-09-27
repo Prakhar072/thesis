@@ -111,6 +111,26 @@ took. Audit of `derived/windows.parquet` (v1) and the model's dry run against th
 | Model checks re-scored (cached answers) | unambiguous: dev 20/21 · 22/24, held-out 10/11 · 9/10, silver 75/80 | unchanged by the fixes |
 | Known wrong after v1.1 | 40883 (a noticee's remark about a different NSE inspection, medium) | v1 had the visit; neither is right |
 
+## 2026-09-27 — Week 2 Day 2: full model run and its analysis
+
+Run by the user: `python -m src.extract_windows` (regex v1.1, 13:08) then `python -m src.window_model`
+(13:09–14:06, 56.7 min, qwen3.5:4b, 2,513 model calls, 199 answers shared between orders with identical
+sentences). Analysis afterwards found reader bugs; figures after the fix come from re-reading the same cached
+answers (0 model calls) and match `derived/` once `python -m src.window_model --offline` is run.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders sent to the model | 2,712 | `UNCONFIRMED_RANGE` 2,362 + `UNPARSED` 350 |
+| Model outcome, as run | window 1,641 (stated period 652 · conduct dates 989) · none 907 · unverified 131 · rejected 33 | 14:06 run |
+| Model outcome, after the reader fixes | window 1,634 (stated 647 · conduct 987) · none 907 · unverified 135 · rejected 36 | 70 windows changed: 63 re-dated (month spans "May-June 1998", day spans "January 21-25, 2008", year spans "2003-05", quoted ranges), 3 more inspection visits caught, 4 malformed quotes no longer widened to a whole year |
+| **Orders with a window, regex + model** | **12,150 of 20,849 with text (58.3%)** | before the Day 3 sanity rules; 12,157 as run |
+| …by order type | AO 71.7% · ED/CGM 61.1% · WTM 42.6% · Settlement 27.4% | settlement kept in the main sample (user decision) |
+| …by order year | 2000–05 31.9% · 2006–10 62.7% · 2011–15 45.5% · 2016–20 48.8% · 2021–26 78.0% | as run |
+| Model window precision, 50 random windows (25 per kind) | 42–45 of 50 (84–90%) | agent-judged from the source sentence, after the fixes; errors are the model's choice of sentence (tables, repayment or legal-threshold periods). The Week 3 blind sample will measure it properly |
+| Distinct windows among the 12,150 | 3,394 | 188 windows are shared by ≥ 10 orders, covering 5,789 orders |
+| Illiquid Stock Options orders with a window | 2,363 (19.4% of windows), one window 1 Apr 2014 – 30 Sep 2015 | order dates 2018–2026; order date − window end: median 7.5 years (IQR 6.1–7.9) vs 5.0 for other orders |
+| Titles naming a matter ("in the matter of …") | 10,399 of the windowed orders; 4,903 distinct matter strings; 1,122 with > 1 order holding 6,618 orders | crude string grouping, for scale only |
+
 ### Method notes for the data section
 
 - SEBI's listing endpoint paginates on `doDirect` (0-based), not the `nextValue` a browser capture suggests; verified by exact count reconciliation.
