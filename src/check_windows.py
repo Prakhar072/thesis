@@ -42,6 +42,7 @@ import datetime as dt
 import logging
 import os
 import pathlib
+import re
 
 import numpy as np
 import pandas as pd
@@ -136,11 +137,30 @@ def read_review(path: pathlib.Path) -> pd.DataFrame:
     return df
 
 
+#: Spreadsheets re-save dates in the local format; this one writes 29-12-2005.
+#: Read day-first, like the orders; write back as YYYY-MM-DD.
+_DAY_FIRST = re.compile(r"(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})")
+
+
 def _date(text: str) -> dt.date | None:
+    """A review date: YYYY-MM-DD, or DD-MM-YYYY / DD/MM/YYYY as a spreadsheet saves it."""
+    t = (text or "").strip()
     try:
-        return dt.date.fromisoformat(text.strip())
-    except (ValueError, AttributeError):
-        return None
+        return dt.date.fromisoformat(t)
+    except ValueError:
+        pass
+    if m := _DAY_FIRST.fullmatch(t):
+        try:
+            return dt.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        except ValueError:
+            return None
+    return None
+
+
+def _iso(text: str) -> str:
+    """A date cell normalised to YYYY-MM-DD; anything else left as it is."""
+    d = _date(text)
+    return d.isoformat() if d else text
 
 
 def decisions(review: pd.DataFrame) -> tuple[dict[str, tuple], list[str]]:
@@ -156,7 +176,9 @@ def decisions(review: pd.DataFrame) -> tuple[dict[str, tuple], list[str]]:
         if d == FIX:
             a, b = _date(r.violation_start), _date(r.violation_end)
             if a is None or b is None or a > b:
-                problems.append(f"{r.text_stem}: 'fix' needs violation_start <= violation_end as YYYY-MM-DD")
+                problems.append(f"{r.text_stem}: 'fix' needs dates (YYYY-MM-DD or DD-MM-YYYY) "
+                                f"with violation_start <= violation_end; got {r.violation_start!r} .. "
+                                f"{r.violation_end!r}")
                 continue
             out[r.text_stem] = (FIX, a, b, r.note)
         else:
@@ -175,7 +197,10 @@ def update_review(review: pd.DataFrame, flagged: pd.DataFrame) -> pd.DataFrame:
         "flagged_window": new.flagged_start.astype(str) + " .. " + new.flagged_end.astype(str),
         "violation_method": new.violation_method, "sentence": new.violation_raw,
     })
-    return pd.concat([review, rows], ignore_index=True)[REVIEW_COLUMNS]
+    out = pd.concat([review, rows], ignore_index=True)[REVIEW_COLUMNS]
+    for col in ("violation_start", "violation_end", "order_date"):
+        out[col] = out[col].astype(str).map(_iso)
+    return out
 
 
 # --------------------------------------------------------------------------

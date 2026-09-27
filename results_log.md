@@ -152,6 +152,34 @@ user runs the chain. Before hand review of the flagged windows.
 | Drop-out is systematic | by type Cramér's V 0.34, by year 0.30 (χ² p ≈ 0) | moderate associations: orders without a window are mostly Settlement and WTM, and older. Report in the data section; consider weighting or controls in Stage 1 |
 | Windows by method | regex 10,486 · model 1,621 (after flags) | model share 13.4% |
 
+**Day 3 final, after the user's review of the 43 flags** (`hand/window_review.csv`: 33 keep, 8 drop, 2 fix with
+hand dates): **12,142 windows, 58.2%** of orders with text (regex 10,508 · model 1,632 · hand 2). By type AO 71.7% ·
+ED/CGM 61.1% · WTM 42.5% · Settlement 27.4%; excluding Illiquid Stock Options orders 53.3%; drop-out vs type
+Cramér's V 0.334, vs year 0.298.
+
+## 2026-09-27 — Week 2 Day 4: prior actions and sanctions
+
+`src/extract_actions.py` (actions-v1) with `src/amounts.py`, full corpus, scratch run (deterministic; `derived/`
+reproduces it once the user runs `python -m src.extract_actions`). Agent-checked samples, not validation.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders with a prior action recited (plausible) | **16,918 of 20,849 (81%)** | earliest kind: SCN 13,550 · interim / ex-parte 3,347 · confirmatory 21. AO 90% · ED/CGM 94% · WTM 68% · Settlement 68% |
+| …among orders with a window | 10,821 of 12,142 (89.1%) | |
+| Mentions found | 51,925 | implausible (after the order, before the SEBI Act, or before the window starts — mostly another matter's date) are kept but not used |
+| AO-appointment dates (robustness only) | 10,245 orders | SEBI's internal decision to adjudicate |
+| **Lag split, windowed orders (medians)** | window end → order **5.50 y** (IQR 3.55–7.61) · → first action **3.15 y** (1.48–5.35) · → first SCN or order 3.86 y (2.42–5.98) · first action → order **1.19 y** (0.42–3.01) | the plan's detection vs resolution lag. First action is the matter's (e.g. the ISO interim order of 20 Aug 2015 against 59 entities); first SCN is the entity's |
+| First action on or before the window end | 1,250 (10.3%) | almost all ISO orders citing the Aug 2015 interim order, 41 days before the window closed; Week 5 flags non-positive lags |
+| Orders with a penalty imposed | **8,039** | AO 7,912 (66%) · ED/CGM 80 · WTM 46 · Settlement 1 |
+| Penalty per order | median ₹5 lakh; p5 ₹50,000; p25 ₹2 lakh; p75 ₹6 lakh; p95 ₹45 lakh; max ₹7,269 crore (30700, PACL, 2015) | distinct amounts imposed; restatements counted once; Total rows not added |
+| Figure vs words | 9,704 amounts with words; 32 disagree (0.3%) | typos in the orders ("5,00,000/- (Rupees Eight Lakh only)"): figure kept, flagged. Malformed figures ("2,00,00/-") take their words |
+| "each" / "jointly and severally" | 560 orders | "each" with no Total left for Day 5 (`rows_each_unresolved`) |
+| AO outcome | penalty 7,912 · no penalty stated 2,481 · unknown 1,604 | |
+| Settlement amounts | 1,717 of 1,994 settlement orders (86%) | |
+| Restraint (debarment) | 3,111 orders (WTM 2,511) | duration in months where stated |
+| Registration action / disgorgement / warning | suspension 462, cancellation 223 / 219 / 348 | |
+| Development checks | 20/20 random penalty totals and 20/20 random first prior actions read correctly (after fixes) | fixes came from checking the largest penalties, every figure/words disagreement and the rejected mentions |
+
 ### Method notes for the data section
 
 - SEBI's listing endpoint paginates on `doDirect` (0-based), not the `nextValue` a browser capture suggests; verified by exact count reconciliation.

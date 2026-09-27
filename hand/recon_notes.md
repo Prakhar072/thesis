@@ -176,3 +176,33 @@ settlement orders (71% of Settlement has no candidate), SAST exemption orders,
 SCORES/investor-grievance non-redressal, CIS/deemed-public-issue and
 registration matters. Settlement orders typically name the alleged violation
 without its dates — expect them to drop out of Stage 1 disproportionately.
+
+
+## 8. How orders state prior actions and sanctions (corpus survey, 2026-09-27)
+
+Implemented in `src/extract_actions.py` and `src/amounts.py`.
+
+**Prior actions.** "Show Cause Notice (hereinafter "SCN") bearing ref no EAD/… dated
+October 6, 2017" (10,542 orders say "show cause notice … dated"); "the SCN was issued on
+17.12.2021"; "ex-parte ad-interim order dated March 22, 2016"; "Interim order was passed
+by SEBI on August 20, 2015 which was confirmed vide Orders dated July 30, 2016 and August 22,
+2016"; "Confirmatory Order April 25, 2018" (no "dated"). Traps — the date belongs to
+something else: "SCN was served … by email dated", "reply to the SCN vide letter dated",
+"interim order … disposed of vide final order dated", "reply to the SCN, a circular
+resolution dated", "SCN … a purported MOU dated". AO orders also give "SEBI appointed … as
+Adjudicating Officer vide order / communique dated" (11,739) — internal, kept separately.
+
+**Sanctions.** "I hereby impose a (monetary) penalty of ₹ 5,00,000/- (Rupees Five Lakh
+only) on the Noticee (Name) under section 15HA" (7,547 orders say "hereby impose"); tables
+("I hereby impose the following penalty … Name of the Noticee | Penalty | ₹ …"), often with
+a "Total" row, sometimes with no rupee sign at all ("1, 00, 00,000/- (Rupees One Crore
+Only)"); "₹ 50,00,000 each upon Noticee No. 3 & 4"; "jointly and severally liable to pay";
+settlement "remitted a sum of `2,00,000/- … towards the settlement terms"; "directed to
+disgorge the unlawful gain of ₹54,61,127"; "restrained from accessing the securities
+market … for a period of 4 (four) years"; "suspend / cancel the certificate of
+registration". Traps: the statute quoted in 6,121 orders ("not be less than five lakh
+rupees but which may extend to twenty-five crore rupees"); a penalty stated twice (in the
+quantum discussion and again in the ORDER); other money in the imposing sentence
+("misutilisation amount extends upto Rs 294.73 crores"); a redundant unit ("Rs. 10,00,000
+lakhs (Rupees Ten Lakhs only)"); the backtick an old rupee font renders as (3,637 orders);
+Indian number words ("Seven Thousand Two Hundred Sixty Nine Crore" = ₹7,269 crore).

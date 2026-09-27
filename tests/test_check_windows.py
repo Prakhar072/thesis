@@ -137,3 +137,34 @@ def test_main_end_to_end_keeps_decisions_across_runs(tmp_path, monkeypatch):
     kept = pd.read_csv(out / "window_review.csv", dtype=str, keep_default_na=False).set_index("text_stem")
     assert kept.loc["old", "decision"] == "keep" and len(kept) == 2
     assert (out / "extraction_rate.csv").exists()
+
+
+@pytest.mark.parametrize("text, expected", [
+    ("2002-01-01", D(2002, 1, 1)),
+    ("01-06-1994", D(1994, 6, 1)),      # as a spreadsheet re-saves it: day first
+    ("31/03/1996", D(1996, 3, 31)),
+    ("31-02-1996", None),
+    ("", None),
+    ("June 1994", None),
+])
+def test_review_dates_accept_spreadsheet_format(text, expected):
+    assert cw._date(text) == expected
+
+
+def test_review_sheet_is_written_back_in_iso_format():
+    review = pd.DataFrame([{c: "" for c in cw.REVIEW_COLUMNS}])
+    review.loc[0, ["text_stem", "decision", "violation_start", "violation_end", "order_date"]] = [
+        "16659", "fix", "01-06-1994", "31-03-1996", "10-04-2003"]
+    empty = cw.check(_windows(), {}).iloc[0:0]
+    out = cw.update_review(review, empty)
+    assert out.loc[0, ["violation_start", "violation_end", "order_date"]].tolist() == [
+        "1994-06-01", "1996-03-31", "2003-04-10"]
+    decided, problems = cw.decisions(out)
+    assert decided["16659"][1:3] == (D(1994, 6, 1), D(1996, 3, 31)) and not problems
+
+
+def test_a_backwards_fix_is_refused():
+    review = pd.DataFrame({"text_stem": ["57126"], "decision": ["fix"], "violation_start": ["01-01-2022"],
+                           "violation_end": ["31-12-2002"], "note": [""]})
+    decided, problems = cw.decisions(review)
+    assert not decided and "2022" in problems[0]

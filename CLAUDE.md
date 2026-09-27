@@ -1,6 +1,6 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-27 (Week 2, Day 3 built). Read this before touching code or data.
+Last updated: 2026-09-27 (Week 2, Day 4 built). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -47,7 +47,7 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 2, Day 3 built)
+## 2. Status (Week 2, Day 4 built)
 
 Done: listing scrape → document fetch → text extraction + OCR (708 OCR orders,
 7,782 OCR pages, 182 rotated) → window candidates + **regex v1.1**
@@ -75,11 +75,18 @@ windows labelled `month` precision instead of `fy` (130 orders; labels only).
 Both fixed. Result: 43 windows flagged (2 impossible + 1 lag ≤ 0 + 40 unusual:
 27 start before 1995, 14 lags ≥ 20 years); extraction rate **58.1%** (12,107 of
 20,849) — the runbook's 50–70% band; drop-out differs by category (Cramér's V
-0.34) and year (0.30). Review sheet `hand/window_review.csv` holds the 43 with a
-`suggested` reading (36 keep, 7 drop); `decision` is empty for the user.
-**Pending, in order:** `python -m src.extract_windows` (~1 min),
-`python -m src.window_model --offline` (seconds), `python -m src.check_windows`
-(seconds); fill `decision` in `hand/window_review.csv`; re-run `check_windows`.
+0.34) and year (0.30). **Day 3 final** (user reviewed all 43 in
+`hand/window_review.csv`: 33 keep, 8 drop, 2 fix → `violation_method = hand`):
+12,142 windows, **58.2%**, in `derived/windows_checked.parquet`.
+
+**Day 4 (prior actions, sanctions)**: `src/extract_actions.py` + `src/amounts.py`,
+scratch-verified on the full corpus (1 min). Prior action (earliest plausible SCN /
+interim / confirmatory date) for 16,918 orders (81%; 89% of windowed orders);
+penalties in 8,039 orders (AO 7,912), median ₹5 lakh, figure vs words disagree on
+32 of 9,704; settlement amounts in 1,717 of 1,994 settlement orders; restraints in
+2,511 WTM orders. Lag split (windowed orders, medians): window end → order 5.50 y;
+→ first action 3.15 y; → first SCN (entity-level) 3.86 y; first action → order 1.19 y.
+**Pending:** `python -m src.extract_actions` (~1 min) to write `derived/`.
 
 Built, not yet run into `hand/`: `src/validation_sample.py` (Week 3 blind
 sample, see §11); it reads `derived/windows_checked.parquet`, so run it after the
@@ -106,7 +113,7 @@ Day 3 review.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (431 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (513 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 
 ## 4. Environment
@@ -166,10 +173,12 @@ Day 3 review.
 | 4 windows | `python -m src.extract_windows` | text_documents, `derived/text/` | `derived/window_candidates.parquet`, `derived/windows.parquet`, `logs/extract_windows.log` | none (~1 min) |
 | 5 model | `python -m src.window_model [--offline]` | windows, window_candidates | `derived/window_model.parquet`, `derived/violation_windows.parquet`, `raw/llm/`, `logs/window_model.log` | localhost Ollama only (~55 min; seconds when cached) |
 | 6 sanity | `python -m src.check_windows` | violation_windows, `hand/window_review.csv` | `derived/windows_checked.parquet`, `derived/window_flagged.csv`, `derived/extraction_rate.csv`, appends to `hand/window_review.csv`, `logs/check_windows.log` | none (seconds) |
+| 7 actions | `python -m src.extract_actions` | text_documents, `derived/text/`, windows_checked | `derived/order_actions.parquet`, `derived/prior_action_mentions.parquet`, `derived/sanction_mentions.parquet`, `logs/extract_actions.log` | none (~1 min) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
-→ `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it) → `check_windows`.
+→ `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it) → `check_windows`
+→ `extract_actions`.
 Useful flags: `--category`, `--order-id` (repeatable), `--limit`, `--start-page/--end-page`
 (listings), `--resolve-only` (fetch), `--sample N`, `--no-ocr`, `--scratch DIR`,
 `--workers`, `--nice` (extract), `--top-k` (windows), `--model`, `--think`, `--status`,
@@ -291,6 +300,37 @@ fix, drop` (the only column applied), `violation_start`/`violation_end` for `fix
 `note`, `suggested` (an optional pre-reading, never applied), and reference columns.
 New flags are appended; existing rows are never changed.
 
+`derived/order_actions.parquet` — one row per order (20,861); prior actions and sanctions
+: `prior_action_date` (earliest *plausible* SCN / interim / confirmatory date recited:
+not after the order, not before 30 Jan 1992, not before the window starts),
+`prior_action_kind` ∈ `scn, interim, confirmatory`, `prior_action_raw` (snippet),
+`n_prior_mentions`, `n_prior_implausible`, `earliest_scn_date`, `earliest_interim_date`,
+`ao_appointment_date` (robustness only), `first_action_date = min(prior_action_date,
+order_date)`, `first_action_source` ∈ `prior_action, order`; `penalty_total` (₹, imposing
+sentences in the operative part; restatements counted once; Total rows not added),
+`penalty_total_basis` ∈ `rows, stated_total, rows_each_unresolved`, `penalty_n`,
+`penalty_max`, `penalty_each`, `penalty_joint`, `penalty_words_checked`,
+`penalty_words_disagree`, `penalty_raw`, `penalty_outcome` ∈ `penalty, no_penalty,
+unknown`, `settlement_amount` (settlement orders), `disgorgement_total`, `debarred`,
+`debarment_months_max`, `debarment_indefinite`, `registration_action` ∈ `suspension,
+cancellation`, `warned`, `no_penalty_stated`, `rules_version`, `error`.
+
+`derived/prior_action_mentions.parquet` — every recited SCN / interim / confirmatory /
+AO-appointment date (51,925): `text_stem`, `kind`, `date`, `precision`, `match_text`,
+`snippet`, `rel_pos`, `plausible`, `reason`.
+
+`derived/sanction_mentions.parquet` — every sanction statement in the operative part
+(one row per amount): `text_stem`, `kind` ∈ `penalty, settlement, disgorgement,
+debarment, registration, warning, no_penalty`, `sentence`, `rel_pos`, `amount_rupees`,
+`amount_text`, `words_rupees`, `words_agree`, `is_total`, `each`, `joint`, `who_text`
+(text after the amount naming whom it is imposed on — for Day 5), `amount_pos`,
+`months`, `indefinite`, `action`.
+
+`src/amounts.py` — the one rupee normaliser (runbook Day 4): Indian and western
+grouping, crore/lakh, "/-", ₹/Rs./INR/backtick, typos ("1,00.000", "2,00,00"), a
+redundant unit after a full figure ("10,00,000 lakhs"), and Indian number words
+("Seven Thousand Two Hundred Sixty Nine Crore") to check every figure.
+
 **Joins.** `order_id` is unique where non-null, but **pandas `merge` matches
 nulls to nulls**: joining on `order_id` cross-joins the 76 id-less orders (20,785
 → 25,700 rows). Join on `text_stem` instead — build it for listings/documents
@@ -359,13 +399,17 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 
 ## 11. Next steps (runbook Week 2 onward)
 
-1. Finish Week 2 Day 3 (user: run the chain, review `hand/window_review.csv`).
-   Settlement orders stay in the main sample (user decision); only 27.3% of them
-   state a window, so report their under-representation, do not drop them. Day 4:
-   prior-action dates (earliest SCN / interim order — needed for the lag's end
-   point) and penalties. Day 5: regulations, parties → `derived/orders.parquet`,
-   built on `derived/windows_checked.parquet`. Both `window_kind`s are the suspected
-   violation window; `stated_period` only is a robustness cut.
+1. Week 2 Day 5: regulations and parties → `derived/orders.parquet` (built on
+   `windows_checked` + `order_actions`) and `order_entities` (link
+   `sanction_mentions.who_text` to parties; resolve `penalty_each`). Settlement orders
+   stay in the main sample (user decision); only 27.4% of them state a window, so
+   report their under-representation, do not drop them. Both `window_kind`s are the
+   suspected violation window; `stated_period` only is a robustness cut. First-action
+   definition for Stage 1: `first_action_date` is the matter's first public action
+   (ISO: the Aug 2015 interim order against 59 entities, 41 days before the window
+   closed — 10.3% of windowed orders have their first action on/before the window
+   end); `earliest_scn_date` is the action against the entity. Decide with the unit
+   of analysis (item 4).
 2. Week 3: draw the blind sample with `python -m src.validation_sample` (writes
    `hand/validation_sample.csv` + `derived/validation_key.parquet`; strata 60
    regex / 25 model stated / 25 model conduct / 40 no window; refuses to
