@@ -1,6 +1,6 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-27 (Week 2, Day 4 built). Read this before touching code or data.
+Last updated: 2026-09-28 (Week 2, Day 5 built). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -47,7 +47,7 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 2, Day 4 built)
+## 2. Status (Week 2, Day 5 built)
 
 Done: listing scrape → document fetch → text extraction + OCR (708 OCR orders,
 7,782 OCR pages, 182 rotated) → window candidates + **regex v1.1**
@@ -86,7 +86,20 @@ penalties in 8,039 orders (AO 7,912), median ₹5 lakh, figure vs words disagree
 32 of 9,704; settlement amounts in 1,717 of 1,994 settlement orders; restraints in
 2,511 WTM orders. Lag split (windowed orders, medians): window end → order 5.50 y;
 → first action 3.15 y; → first SCN (entity-level) 3.86 y; first action → order 1.19 y.
-**Pending:** `python -m src.extract_actions` (~1 min) to write `derived/`.
+Run into `derived/` on 2026-09-27.
+
+**Day 5 (regulations, parties, Week 2 checkpoint)**: `src/regulations.py` +
+`src/extract_parties.py` (stage 8) + `src/build_orders.py` (stage 9),
+scratch-verified on the full corpus (0.7 min + 1 s). Parties for 19,451 of 20,849
+orders with text (93.3%; AO 99.4%, settlement 98.3%, ED/CGM 96.8%, WTM 80.0%):
+47,972 party rows, 67% with a PAN; roles are a first guess (33.6% UNKNOWN, mostly
+individuals in mass orders named only in the header). Penalties linked to parties
+in 7,819 of 8,039 penalty orders (97.3%); per-party amounts sum to the order total
+in all 7,320 checkable orders. Violated provisions (`regulations`, the runbook's JSON
+list) for 16,865 orders (80.9%): PFUTP 8,451, SEBI Act 4,532, SAST 2,610, PIT 2,223.
+Agent review (not blind): party lists right in 15 of 18 random orders with parties.
+`derived/orders.parquet`: 20,861 × 62. **Pending:** the user runs
+`python -m src.extract_parties` then `python -m src.build_orders`.
 
 Built, not yet run into `hand/`: `src/validation_sample.py` (Week 3 blind
 sample, see §11); it reads `derived/windows_checked.parquet`, so run it after the
@@ -113,7 +126,7 @@ Day 3 review.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (513 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (591 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 
 ## 4. Environment
@@ -174,11 +187,13 @@ Day 3 review.
 | 5 model | `python -m src.window_model [--offline]` | windows, window_candidates | `derived/window_model.parquet`, `derived/violation_windows.parquet`, `raw/llm/`, `logs/window_model.log` | localhost Ollama only (~55 min; seconds when cached) |
 | 6 sanity | `python -m src.check_windows` | violation_windows, `hand/window_review.csv` | `derived/windows_checked.parquet`, `derived/window_flagged.csv`, `derived/extraction_rate.csv`, appends to `hand/window_review.csv`, `logs/check_windows.log` | none (seconds) |
 | 7 actions | `python -m src.extract_actions` | text_documents, `derived/text/`, windows_checked | `derived/order_actions.parquet`, `derived/prior_action_mentions.parquet`, `derived/sanction_mentions.parquet`, `logs/extract_actions.log` | none (~1 min) |
+| 8 parties | `python -m src.extract_parties` | text_documents, `derived/text/`, listings, sanction_mentions, order_actions | `derived/order_entities.parquet`, `derived/order_parties.parquet`, `derived/regulation_mentions.parquet`, `logs/extract_parties.log` | none (~1 min) |
+| 9 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
 → `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it) → `check_windows`
-→ `extract_actions`.
+→ `extract_actions` → `extract_parties` → `build_orders`.
 Useful flags: `--category`, `--order-id` (repeatable), `--limit`, `--start-page/--end-page`
 (listings), `--resolve-only` (fetch), `--sample N`, `--no-ocr`, `--scratch DIR`,
 `--workers`, `--nice` (extract), `--top-k` (windows), `--model`, `--think`, `--status`,
@@ -326,6 +341,52 @@ debarment, registration, warning, no_penalty`, `sentence`, `rel_pos`, `amount_ru
 (text after the amount naming whom it is imposed on — for Day 5), `amount_pos`,
 `months`, `indefinite`, `action`.
 
+`derived/order_entities.parquet` — one row per (order, party) (47,972); the runbook's `order_entities`
+: `party_no` (1-based, header order), `noticee_no` (the serial the order prints, or from a
+"Noticee No. 2" definition), `entity_name` (as printed), `entity_name_clean` (upper case,
+honorifics and "(formerly …)" dropped, Ltd → LIMITED, Pvt → PRIVATE), `entity_type` ∈
+`individual, company, firm, huf, trust, other` (PAN 4th letter first, else the name), `pan`,
+`din`, `cin`, `sebi_reg_no`, `entity_role` ∈ `ISSUER, PROMOTER, DIRECTOR, AUDITOR,
+INTERMEDIARY, TRADER, UNKNOWN` (first guess), `role_basis` (the evidence: `registration_no`,
+`matter`, `din`, `list`, `context:<word>`, `trading_matter`, `suffix` = weak company default,
+`none`), `is_issuer_guess`, `source` ∈ `header, header_numbered, header_pan, header_list,
+header_matter, definition, title, matter`, `aliases` (JSON: defined short names, "Noticee No. 2",
+former/current names), `penalty_amount` (₹ imposed on this party; null = none linked),
+`penalty_rows`, `penalty_each`, `penalty_joint` (**a joint amount sits on every party liable —
+never sum `penalty_amount` for money; use `orders.penalty_total`**), `sanction_types` (JSON:
+`PENALTY, DEBARMENT, DISGORGEMENT, WARNING, SETTLEMENT, SUSPENSION, CANCELLATION`).
+Week 4 adds `ticker`, `isin`, `match_confidence`.
+
+`derived/order_parties.parquet` — one row per order (20,861): `matter_raw` ("In the matter of …",
+title first), `matter_source`, `issuer_guess` (the company in the matter, else a party with an
+ISSUER role), `issuer_source`, `parties_source`, `n_parties`, `n_parties_by_role` (JSON),
+`parties_raw` (the header text the list came from, ≤1,500 chars), `penalty_link_status` ∈
+`single_party, all_rows, partial, none`, `penalty_rows_n`, `penalty_rows_linked`,
+`penalty_unassigned`, `penalty_total_resolved` (Day 4's total with "₹X each" counted once per
+party named, when every row is linked), `regulations` (JSON: provisions *violated*, e.g.
+`["PFUTP 3(a)", "SEBI Act 12A(a)"]`), `regimes` (JSON: instruments violated), `regimes_cited`
+(JSON: every substantive instrument cited), `penalty_provisions` (JSON: `"SEBI Act 15HA"` …),
+`n_citations`, `n_citations_unresolved`, `rules_version`, `error`.
+
+`derived/regulation_mentions.parquet` — every provision cited (861,082): `text_stem`, `regime`
+(PFUTP, PIT, SAST, ICDR, DIP, LODR, LISTING_AGREEMENT, INTERMEDIARIES, STOCK_BROKERS, …,
+SEBI_ACT, SCRA, SCRR, DEPOSITORIES_ACT, COMPANIES_ACT; procedural ADJUDICATION_RULES,
+ENQUIRY_REGS, SETTLEMENT), `regime_year`, `provision` ("4(2)(a)"), `keyword`, `role` ∈
+`violation, penalty, power, cited`, `how` (title / act / abbrev / alias / generic / default),
+`rel_pos`, `citation` (as written), `context` (120 chars before it).
+
+`derived/orders.parquet` — **the Week 2 checkpoint**, one row per order (20,861 × 62): the
+runbook `orders` table. Listing (title, category, source URL, SAT appeals), PDF URL, text
+(path, text layer, pages, OCR pages), the window from `windows_checked` (start, end,
+precision, raw sentence, confidence, method, kind, sanity status), prior and first action
+and sanctions from `order_actions`, and matter / issuer / parties / regulations from
+`order_parties`. Built by joins only (on `text_stem`, one-to-one, row count asserted).
+`fraud_category` and `detection_channel` come in Week 3.
+
+`src/regulations.py` — the citation parser: instrument catalogue (full titles, abbreviations,
+the order's own "hereinafter" aliases), provision lists ("3(a), (b), 4(1) and 4(2)(e)"), and the
+role of each citation (see `hand/recon_notes.md` §9).
+
 `src/amounts.py` — the one rupee normaliser (runbook Day 4): Indian and western
 grouping, crore/lakh, "/-", ₹/Rs./INR/backtick, typos ("1,00.000", "2,00,00"), a
 redundant unit after a full figure ("10,00,000 lakhs"), and Indian number words
@@ -361,6 +422,14 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
   ≠ not appealed for recent orders.
 - Only 15.5% of WTM titles say final/interim/ex-parte/confirmatory: classify
   finality from text, not titles.
+- Parties: 1,398 orders have none (1,283 WTM) — mostly WTM orders whose noticee
+  table is an image or sits in an annexure ("In respect of: – ____ The aforesaid
+  entities …"). Names in all capitals joined by "AND" without honorifics stay one
+  party ("BHAVESH THAKKAR AND BIMAL THAKKAR"). A proprietor's PAN is printed for each
+  of his firms, so PANs repeat across parties of one order.
+- Roles are a first guess: 33.6% UNKNOWN; `role_basis = suffix` (any company with no
+  other evidence → ISSUER) is weak. Penalty links fail in 162 penalty orders and are
+  partial in 58 (party named in a form the list does not use).
 
 ## 10. Gotchas that cost time in Week 1
 
@@ -397,11 +466,19 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
   a test now (`test_real_windows_pass_the_rejection_rules`).
 - Still unread by regex: glued text "fromApril01, 2018" (reaches the model).
 
+**Week 2 (Day 5).**
+- A regex with nested repetition anchored at `$` (`(?:[\s,]+|\s+and)+$`) backtracked
+  for minutes on one 15,000-character header entry and stalled the whole pool (the
+  rest of the corpus took 40 s). Strip tails in a loop; cap entry length; time every
+  order (`signal.alarm`) when a full run is unexpectedly slow.
+- `name_pattern` drops company suffix words; never drop single letters ("Kailash S
+  Chaudhary" stopped matching when "S" — meant for "M/S" — was dropped).
+- "Recovery proceedings may be initiated under Section 28A" is boilerplate in every AO
+  order; 28A is a power, not a violated provision (it had entered 2,717 lists).
+
 ## 11. Next steps (runbook Week 2 onward)
 
-1. Week 2 Day 5: regulations and parties → `derived/orders.parquet` (built on
-   `windows_checked` + `order_actions`) and `order_entities` (link
-   `sanction_mentions.who_text` to parties; resolve `penalty_each`). Settlement orders
+1. Week 2 is built (Day 5: `derived/orders.parquet`, `order_entities`). Settlement orders
    stay in the main sample (user decision); only 27.4% of them state a window, so
    report their under-representation, do not drop them. Both `window_kind`s are the
    suspected violation window; `stated_period` only is a robustness cut. First-action
@@ -428,3 +505,12 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    matter-grouping step (not built).
 5. Build the finality classifier (interim / final / confirmatory) from order text;
    use `sat_appeals` as metadata. Stage 3 needs the event types by Week 7.
+6. Week 3 Day 1 auto-codes fraud category from `orders.regulations` / `regimes`
+   (PIT → insider trading, LODR 23 → RPT, LODR 30/33 and SAST → disclosure,
+   Intermediaries and broker/adviser regimes → intermediary misconduct, ICDR → fund
+   diversion, PFUTP 3/4 → read the narrative). 19% of orders have no violated list
+   (charges written as circulars, or phrasing the parser misses): fall back to
+   `regimes_cited` and `penalty_provisions` (15C = investor grievances, 15G = insider
+   trading, 15HA = fraud/manipulation).
+7. Week 4 matching: `order_entities.pan` / `cin` and `orders.issuer_guess` are the
+   hooks; entity roles are a first guess to correct during validation.

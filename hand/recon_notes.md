@@ -206,3 +206,67 @@ quantum discussion and again in the ORDER); other money in the imposing sentence
 ("misutilisation amount extends upto Rs 294.73 crores"); a redundant unit ("Rs. 10,00,000
 lakhs (Rupees Ten Lakhs only)"); the backtick an old rupee font renders as (3,637 orders);
 Indian number words ("Seven Thousand Two Hundred Sixty Nine Crore" = ₹7,269 crore).
+
+## 9. How orders name their parties and cite regulations (corpus survey, 2026-09-28)
+
+Implemented in `src/extract_parties.py` and `src/regulations.py`.
+
+**Parties.** 97% of orders name the noticees in the header, after "In respect of",
+"Against", "filed / submitted by", or "Noticees:", and before "In the matter of" or the
+first paragraph. The forms are:
+- **Single:** "In respect of: Rajeev Kansal PAN: AAGHR0927R In the matter of Dealings in
+  Illiquid Stock Options at the BSE".
+- **Numbered table:** "Noticee No. Noticee Name PAN 1 M/s. Aksh Optifibre Limited
+  AAACA0062F 2 Dr. Kailash S Chaudhary AAHPC7797B …". Some add DIN / CIN / SEBI
+  registration columns, or group labels such as "Promoters" / "Directors" / "Preferential
+  Allottees".
+- **PAN-separated:** "against M/s Grishma Securities Pvt. Ltd. (PAN:AABCG1300K), Shri
+  Chandrika H. Gandhi (PAN: AAMPG4546M), … and Shri Vanraj Kahor (PAN; AGDPK4812F)".
+- **Settlement:** "Settlement Application No. 6390/2021 submitted by Shri Aayush Agarwal
+  (PAN: AJNPA5555E)".
+- **Company and directors:** "Parivar Dairies and Allied Limited (CIN: …) and its Directors
+  viz., Shri A (DIN: …), Shri B (DIN: …)".
+
+Traps:
+- **Addresses** between parties, containing honorifics and "Ltd": "Shri Ghanshyam Park
+  Co-Op. H. Soc. Ltd", "Level 7 Maximus Towers". A PIN code ends an address, and a party's
+  entry ends at its PAN or "PAN: Not Available".
+- **The first paragraph** can look like list item 1: "1. M/s. Parnax Lab Limited
+  (hereinafter referred to as the 'applicant') filed …".
+- **Former names in brackets:** "(Erstwhile M/s Nova Petrochemicals Limited)", "(Presently
+  known as Mansukh Stock Brokers Ltd.)".
+- **SEBI's own officers** in the header: "Mr. K.R.C.V. Seshachalam, Dy. Legal Advisor as the
+  Adjudicating Officer".
+- **Shared PANs:** a proprietor's PAN printed for each of his firms.
+- **Missing tables:** in WTM orders the noticee table is often an image or annexure ("In
+  respect of: – ____ The aforesaid entities are hereinafter …").
+
+In the operative part:
+- **Tables** name the party before its amount: "2 Mr. Narayan Ghumatkar Section 15HB …
+  Rs. 3,00,000/-".
+- **Prose** names it after: "₹10,00,000 under Section 15HA and ₹1,00,000 under Section 15HB
+  … on ISF Securities Limited (ISF) and ₹10,00,000 … on Vishwas Securities Limited".
+- **Mentions** use the printed name, a defined short name ("(hereinafter 'Pramol')"),
+  "Noticee No. 2", or number lists ("Noticee Nos. 1 to 3 and 5").
+
+**Regulations.** A provision list, then "of" and the instrument: "Regulations 3(a), (b),
+(c), (d), 4(1) and 4(2)(a) of the SEBI (Prohibition of Fraudulent and Unfair Trade
+Practices relating to Securities Market) Regulations, 2003 (hereinafter referred to as
+'PFUTP Regulations')"; "Section 12A(a), (b), (c) of the SEBI Act"; "Clause 49 of the Listing
+Agreement".
+
+A 4,000-order sample held 487 spellings of about 40 instruments, and the orders define
+their own aliases ("Takeover Regulations", "the Regulations", "Adjudication Rules").
+
+What an order cites is not all it charges:
+- **Procedure and powers:** the preamble ("UNDER SECTION 15-I … READ WITH RULE 5") and
+  directions (Sections 11, 11B; PFUTP 11).
+- **Penalty sections:** SEBI Act 15A–15HB.
+- **Recovery boilerplate** in every AO order: "recovery proceedings may be initiated under
+  Section 28A".
+- **Background:** takeover exemption applications ("filed under Regulation 11(1) … seeking
+  exemption").
+
+The violated provisions follow "violated / in violation of / contravention of / failed to /
+alleged". Settlement orders say "delayed compliance of Regulation 29(1)". SEBI Act 11C(2)/(3)
+is the duty to answer summons, not a power, and is charged under 15A(a).

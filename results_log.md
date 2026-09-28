@@ -159,8 +159,8 @@ Cramér's V 0.334, vs year 0.298.
 
 ## 2026-09-27 — Week 2 Day 4: prior actions and sanctions
 
-`src/extract_actions.py` (actions-v1) with `src/amounts.py`, full corpus, scratch run (deterministic; `derived/`
-reproduces it once the user runs `python -m src.extract_actions`). Agent-checked samples, not validation.
+`src/extract_actions.py` (actions-v1) with `src/amounts.py`, full corpus, scratch run (deterministic; run into
+`derived/` by the user on 2026-09-27). Agent-checked samples, not validation.
 
 | Figure | Value | Scope / note |
 |---|---|---|
@@ -179,6 +179,30 @@ reproduces it once the user runs `python -m src.extract_actions`). Agent-checked
 | Restraint (debarment) | 3,111 orders (WTM 2,511) | duration in months where stated |
 | Registration action / disgorgement / warning | suspension 462, cancellation 223 / 219 / 348 | |
 | Development checks | 20/20 random penalty totals and 20/20 random first prior actions read correctly (after fixes) | fixes came from checking the largest penalties, every figure/words disagreement and the rejected mentions |
+
+## 2026-09-28 — Week 2 Day 5: regulations, parties, and the Week 2 checkpoint table
+
+`src/regulations.py` + `src/extract_parties.py` (parties-v1; 0.7 min) and `src/build_orders.py` (1 s), full corpus,
+scratch run (deterministic; `derived/` reproduces it once the user runs `python -m src.extract_parties` and
+`python -m src.build_orders`). Agent-checked samples, not validation.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders with a party list | **19,451 of 20,849 (93.3%)** | AO 99.4% · Settlement 98.3% · ED/CGM 96.8% · WTM 80.0%. WTM misses: noticee tables that are images or in annexures |
+| Where the list came from | header 11,616 · numbered table 2,832 · PAN-separated 2,301 · comma list 1,251 · "hereinafter … Noticee" 648 · title 598 · other 205 | |
+| Party rows (`order_entities`) | **47,972**; median 1 per order; max 226 | PAN on 32,298 (67.3%) |
+| Entity type | individual 28,990 · company 16,927 · HUF 1,341 · firm 592 · trust 111 | PAN 4th letter first, else the name |
+| Role (first guess) | UNKNOWN 16,107 (33.6%) · ISSUER 10,236 · TRADER 10,015 · DIRECTOR 5,720 · INTERMEDIARY 3,560 · PROMOTER 2,220 · AUDITOR 114 | evidence kept in `role_basis`; "ISSUER by suffix" is weak |
+| Penalty orders with every penalty linked to a party | **7,819 of 8,039 (97.3%)** | one party 6,798 · all rows linked 1,021 · partial 58 · none 162 |
+| Per-party amounts sum to the order total | **7,320 of 7,320** checkable orders | fully linked, no "each"/"jointly" |
+| "₹X each" totals resolved | 71 of 108 | counted once per party named |
+| Parties penalised | 10,958 party rows | sanction types on parties: penalty 10,958 · debarment 9,947 · settlement 2,174 · warning 628 · disgorgement 547 · suspension 442 · cancellation 202 |
+| Orders with a violated-provision list (`regulations`) | **16,865 (80.9%)** | AO 86.6% · ED/CGM 86.8% · Settlement 77.1% · WTM 71.0% |
+| Instruments violated (orders) | PFUTP 8,451 · SEBI Act 4,532 · SAST 2,610 · PIT 2,223 · Stock Brokers 1,904 · Companies Act 1,185 · SCRA 735 · Listing Agreement 612 · LODR 586 · Investment Advisers 554 | input to the Week 3 fraud-category map |
+| Citations | 861,082 resolved (violation 358k · power 233k · cited 152k · penalty 118k); 215,445 provisions unresolved | unresolved: no instrument follows ("Section 67(1)", "Clause 4 of Schedule B") |
+| Issuer guess | 13,225 orders (63.4%) | from "In the matter of <company>" 12,840; from a party 385 |
+| `derived/orders.parquet` | **20,861 rows × 62 columns** | joins on `text_stem`, one-to-one, row count asserted at each join |
+| Development checks | party lists right in 15 of 18 random orders with parties (2 more had none); violated lists right in 13 of 20, the rest empty | fixes came from 50 reviewed orders, every unlinked penalty sampled, and the sum check above; the Section 28A recovery boilerplate had entered 2,717 lists before it was classed as a power |
 
 ### Method notes for the data section
 

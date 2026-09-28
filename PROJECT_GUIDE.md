@@ -41,8 +41,10 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/window_model.py`, `src/llm.py` | stage 5: local-model fallback for windows regex could not settle; cached model calls | — | code |
 | `src/check_windows.py` | stage 6: sanity rules, flagged windows, extraction rate | — | code |
 | `src/extract_actions.py`, `src/amounts.py` | stage 7: prior SCN / interim-order dates, penalties and other sanctions; the rupee normaliser | — | code |
+| `src/extract_parties.py`, `src/regulations.py` | stage 8: noticees (name, PAN/DIN/CIN, role guess, penalty per party) and the regulations each order says were violated | — | code |
+| `src/build_orders.py` | stage 9: `derived/orders.parquet`, one row per order — the Week 2 checkpoint table | — | code |
 | `src/validation_sample.py` | Week 3: draws the 150-order blind coding sheet | — | code |
-| `tests/` | 513 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `tests/` | 591 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -61,13 +63,17 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `derived/window_flagged.csv` | windows that failed a sanity rule | tiny | with stage 6 |
 | `derived/order_actions.parquet` | one row per order: prior-action date, first-action date, penalty total, other sanctions | small | yes, ~1 min |
 | `derived/prior_action_mentions.parquet`, `derived/sanction_mentions.parquet` | every SCN / interim date and every sanction amount found, with its sentence | small | with stage 7 |
+| `derived/order_entities.parquet` | one row per order × party: name, PAN/DIN/CIN, type, role guess (with its evidence), penalty on that party, sanction types | 2.3 MB | yes, ~1 min |
+| `derived/order_parties.parquet` | one row per order: matter, issuer guess, party counts by role, violated regulations (JSON), penalty sections, how penalties linked | 3.5 MB | with stage 8 |
+| `derived/regulation_mentions.parquet` | every provision cited, with instrument, role (violation / penalty / power / cited) and context | 30 MB | with stage 8 |
+| `derived/orders.parquet` | **one row per order, 62 columns — the table to browse**: window, prior action, penalty, matter, issuer, regulations | small | yes, seconds (stage 9) |
 | `derived/extraction_rate.csv` | extraction rate overall and by type, year, method | tiny | with stage 6 |
 | `hand/window_review.csv` | your keep / fix / drop decision on each flagged window | — | git (your decisions) |
 | `derived/fetch_failures.csv` | the orders whose document could not be fetched | tiny | with stage 2 |
 | `reports/listing_*.csv` | per-page scrape log, duplicate conflicts (none), rows needing review | tiny | with stage 1 |
 | `logs/` | run logs for each stage | small | — |
 | `results_log.md` | every figure with its source and date | — | git |
-| `hand/recon_notes.md` | SEBI protocol notes; §7 how orders state the violation period | — | git |
+| `hand/recon_notes.md` | SEBI protocol notes; §7 how orders state the violation period; §8 prior actions and sanctions; §9 parties and regulations | — | git |
 | `hand/window_model_devset.csv`, `hand/window_model_holdout.csv` | 90 agent-labelled orders used to choose the model and prompt — keep them out of the Week 3 blind sample | — | git |
 
 Git tracks code, tests, `hand/`, `paper/` and the `.md` files. `raw/`,
@@ -181,7 +187,7 @@ Full column list: [CLAUDE.md §8](CLAUDE.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 513 passed
+python -m pytest tests -q                                   # 591 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
@@ -190,7 +196,15 @@ python -m src.window_model                                  # stage 5, ~55 min o
 python -m src.window_model --offline                        # stage 5 again, from raw/llm/ in seconds
 python -m src.check_windows                                 # stage 6, sanity rules + extraction rate, seconds
 python -m src.extract_actions                               # stage 7, prior actions + sanctions, ~1 min
+python -m src.extract_parties                               # stage 8, parties + regulations, ~1 min
+python -m src.build_orders                                  # stage 9, derived/orders.parquet, seconds
 ```
+
+`derived/orders.parquet` is the table to open when you want to look at rows: one
+order per row with its window, prior action, penalty, matter, issuer guess and the
+regulations it says were violated. Who was penalised and for how much is in
+`derived/order_entities.parquet` (one row per order × party). Don't add up
+`penalty_amount` there for money — a joint penalty sits on every party liable.
 
 Every stage is resumable and safe to interrupt. For a job that should outlive the
 terminal: `setsid nohup python -m src.extract_text > logs/extract_full.out 2>&1 < /dev/null &`.
@@ -213,11 +227,16 @@ downloads only the new orders' documents, then stage 3.
   mostly dense tables; handwriting and diagrams are noise.
 - 70 PDFs are shared by 145 orders (double listings, or one combined order per noticee).
 - SAT appeal annotations exist only for orders dated 2003–2022.
+- Parties: 7% of orders have none found (mostly WTM orders whose noticee table is an
+  image); a third of party roles are UNKNOWN. Roles and issuer guesses are a first
+  pass to correct in validation.
+- 19% of orders have no violated-regulation list (charges written as circulars, or
+  phrasing the parser misses); `regimes_cited` and `penalty_provisions` still help.
 
 ## 6. Next
 
-- Week 2 Day 4: run stage 7 (`python -m src.extract_actions`). Then Day 5:
-  regulations and parties → `derived/orders.parquet` and `order_entities`.
+- Week 2 Day 5: run stages 8 and 9 (`python -m src.extract_parties`, then
+  `python -m src.build_orders`) to write `derived/orders.parquet`.
 - Week 3: `python -m src.validation_sample` writes the blind coding sheet
   `hand/validation_sample.csv` (150 orders); don't open `derived/validation_key.parquet`
   while coding.
@@ -225,5 +244,4 @@ downloads only the new orders' documents, then stage 3.
   examination / inspection / relevant period" are one quantity; inspection
   *visit* dates are never it. See CLAUDE.md §1.
 - Settle the unit of analysis (order / matter / noticee), given the ISO cluster.
-- Rest of Week 2: prior SCN/interim-order dates, penalties, regulations and
-  parties into `derived/orders.parquet`.
+- Week 3 Day 1: auto-code fraud category from `orders.regimes` / `regulations`.
