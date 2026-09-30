@@ -65,6 +65,68 @@ def test_pfutp_is_decided_by_the_narrative():
     assert cf.classify(job(regs), diversion).fraud_category == cf.FUND_DIVERSION             # 23691
 
 
+# --- whose money was diverted (protocol §3.2, §3.3, §3.7; decision of 2026-09-30) ---
+
+def test_diverted_company_funds_are_tunnelling():
+    text = ("the company along with its promoter directors had devised a scheme to divert/siphon off the funds of "
+            "the company by using certain private limited companies indirectly controlled by the Managing Director. "
+            "These private companies were not shown as related party; the diverted funds were siphoned off by the "
+            "promoters and promoter related entities")                                     # 86164
+    assert cf.classify(job(["SEBI Act 12A(b)", "PFUTP 3(c)"]), text).fraud_category == cf.RPT_TUNNELLING
+
+
+def test_pledged_gdr_proceeds_are_diversion():
+    text = ("the company pledged its GDR proceeds as collateral against the loan availed by Vintage for subscribing "
+            "to the GDRs; the bank adjusted the loan from the GDR proceeds, which were not available for utilisation "
+            "by the company. The GDR proceeds were lying unutilised.")                      # 59366
+    assert cf.classify(job(["PFUTP 3(a)", "SEBI Act 12A(a)"]), text).fraud_category == cf.FUND_DIVERSION
+
+
+def test_a_brokers_misappropriation_of_client_securities_is_intermediary_misconduct():
+    text = ("Misappropriation of client securities by the stock broker: the stock broker pledged clients' securities "
+            "and diverted clients' funds; the ledger was falsified to conceal the misappropriation. The stock broker "
+            "did not upload client funds balances.")                                       # 41339, 35689
+    o = cf.classify(job(["PFUTP 4(1)", "PFUTP 4(2)(p)"]), text)
+    assert o.fraud_category == cf.INTERMEDIARY_MISCONDUCT and "clients' assets" in o.fraud_category_raw
+
+
+def test_the_objects_of_the_issue_alone_are_not_a_diversion():
+    text = ("incorrect financial details with respect to working capital requirement forming object of the issue "
+            "were disclosed in the draft letter of offer; the objects of the issue were described wrongly")  # 81612
+    o = cf.classify(job(["ICDR 70(3)"]), text)
+    assert (o.fraud_category, o.fraud_category_rule) == (cf.DISCLOSURE_FAILURE, "icdr:issue")
+
+
+def test_a_collective_schemes_diversion_is_not_tunnelling():
+    text = ("the company operated a collective investment scheme and mobilised funds from the public; the collective "
+            "investment scheme money was diverted by its promoters to group companies. collective investment scheme. "
+            "The promoters siphoned the money.")
+    scores, _ = cf.narrative_scores(text)
+    assert scores[cf.RPT_TUNNELLING] == 0 and scores[cf.FUND_DIVERSION] == 0
+
+
+def test_the_insider_trading_regulations_by_name_are_not_insider_trading():
+    text = ("violations of the SEBI (Prohibition of Insider Trading) Regulations, 1992 (the Insider Trading "
+            "Regulations) and the Model Code of Conduct for Prevention of Insider Trading")
+    assert cf.narrative_scores(text)[0][cf.INSIDER_TRADING] == 0
+    assert cf.narrative_scores("he was found guilty of insider trading")[0][cf.INSIDER_TRADING] == 1
+
+
+def test_precedence_needs_a_clear_narrative():
+    # "if two apply, the precedence order decides" — a passing mention does not apply
+    assert cf.read_narrative({cf.ACCOUNTING_MISSTATEMENT: 2, cf.MARKET_MANIPULATION: 3})[0] == cf.MARKET_MANIPULATION
+    assert cf.read_narrative({cf.RPT_TUNNELLING: 9, cf.ACCOUNTING_MISSTATEMENT: 18}) == (cf.RPT_TUNNELLING, "medium")
+    assert cf.read_narrative({cf.FUND_DIVERSION: 8, cf.ACCOUNTING_MISSTATEMENT: 18})[0] == cf.ACCOUNTING_MISSTATEMENT
+
+
+def test_an_advisers_recommendations_are_not_manipulation():
+    text = ("investment advisory services for advisory fees; investment adviser; recommendations given to clients; "
+            "tips; recommendations made on the scrip; investment advice")
+    scores, _ = cf.narrative_scores(text)
+    assert scores[cf.MARKET_MANIPULATION] == 0 and cf.read_narrative(scores)[0] == cf.INTERMEDIARY_MISCONDUCT
+    assert cf.narrative_scores("stock tips were circulated to induce buying")[0][cf.MARKET_MANIPULATION] == 1
+
+
 def test_examining_books_is_not_a_misstatement():
     # a broker inspection that looks at books of accounts and financial statements
     text = ("The inspection team examined the books of accounts and financial statements of the broker, "

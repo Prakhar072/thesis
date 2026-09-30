@@ -1,0 +1,59 @@
+text_stem,agent_label,agent_detail,note
+515,SURVEILLANCE,filings_observed,"""While examining the aforesaid LOO ... it was observed"" (SEBI's review of a filed letter of offer)"
+20947,UNCLEAR,none,
+40311,SURVEILLANCE,alert,"""based on internal alert"""
+32072,COMPLAINT,scores,SCORES non-authentication with one pending investor complaint (non-redressal: protocol 5 COMPLAINT)
+2823,SURVEILLANCE,trading_pattern_observed,"investigation into a scrip ""whose shares witnessed sharp price rise"" (same sentence)"
+19618,UNCLEAR,none,price rise is a finding for the investigation period; MEDIA mention is a noticee submission
+83364,INSPECTION,sebi_inspection,
+65414,SURVEILLANCE,trading_pattern_observed,"""as it was observed that similar pattern of synchronized deals"""
+14812,UNCLEAR,none,"""It was observed"" reversal trades is a finding"
+36397,UNCLEAR,none,
+878,SURVEILLANCE,trading_pattern_observed,"price rise and BSE suspension, ""Based on the above background, SEBI took up the case"""
+10300,INSPECTION,exchange_inspection,NSE limited purpose inspection at SEBI's instance
+16428,SURVEILLANCE,trading_pattern_observed,price rise witnessed; BSE snap investigation
+79182,COMPLAINT,complaint,anonymous complaint
+69092,COMPLAINT,complaint,
+2084,INSPECTION,sebi_inspection,
+56049,SURVEILLANCE,trading_pattern_observed,"""on noticing price fluctuations ... SEBI conducted an investigation"""
+44704,UNCLEAR,none,SCORES non-authentication; no complaint stated
+4967,SURVEILLANCE,trading_pattern_observed,"? SEBI examined market-wide F&O trading data and observed synchronised trades"
+27681,UNCLEAR,none,"""SEBI observed certain non compliances"" (no mechanism)"
+58460,SURVEILLANCE,filings_observed,examination pursuant to filing of draft letter of offer
+24443,UNCLEAR,none,price change describes the investigation period
+11259,UNCLEAR,none,finding during investigation
+31093,COMPLAINT,complaint,SCORES non-authentication with one pending investor complaint (non-redressal)
+67624,AUDIT,qualification,"? new auditor's limited review found unbacked transactions, then forensic audit, then company informed SEBI"
+26659,UNCLEAR,none,MPS drive; trigger not stated
+76144,UNCLEAR,none,follow-up of interim order
+36264,REFERRAL,mca_roc,MCA letter with SFIO shell-company database
+99197,COMPLAINT,scores,
+2766,UNCLEAR,none,exemption application; not a detection
+33409,COMPLAINT,scores,
+22555,UNCLEAR,none,price data is a finding
+3053,UNCLEAR,none,"? the company's own advertisements are the conduct, not a media report"
+5713,SURVEILLANCE,trading_pattern_observed,"""widespread speculative trading was reported to SEBI by the CSE"""
+53011,UNCLEAR,none,found during another GDR investigation whose trigger is not stated
+41495,SURVEILLANCE,filings_observed,"? BSE reference stating the promoter's holding had changed (basis stated)"
+17588,MEDIA,news,"? ""As per market reports ... speculative grey market operations ... In view of this SEBI ordered an investigation"""
+15248,UNCLEAR,none,
+5199,SURVEILLANCE,trading_pattern_observed,"""After noticing unusual price variations"""
+17595,UNCLEAR,none,"? price rise stated before the investigation but not linked"
+56640,INSPECTION,sebi_inspection,
+7120,UNCLEAR,none,
+42715,UNCLEAR,none,
+4891,INSPECTION,sebi_inspection,
+37809,UNCLEAR,none,RTI appeal (not an enforcement matter)
+5054,UNCLEAR,none,
+19797,UNCLEAR,none,
+34082,UNCLEAR,none,
+20944,UNCLEAR,none,
+42194,UNCLEAR,none,
+noid_7921299ae28b,COMPLAINT,complaint,
+67626,COMPLAINT,complaint,
+93116,UNCLEAR,none,inspection mention is a noticee contention
+101822,UNCLEAR,none,corrigendum
+80284,COMPLAINT,complaint,
+101671,INSPECTION,sebi_inspection,
+43591,SURVEILLANCE,trading_pattern_observed,ISO: SEBI observed large scale reversal of trades
+41867,UNCLEAR,none,ISO order with no stated trigger

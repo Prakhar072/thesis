@@ -1,5 +1,5 @@
 text_stem,agent_label,note
-56029,FUND_DIVERSION,RHFL: loans to promoter-linked entities; misstatement too (debatable)
+56029,RPT_TUNNELLING,RHFL: company loans to promoter-linked entities (was FUND_DIVERSION; relabelled 2026-09-30 after the protocol decision: company-funds siphoning is tunnelling)
 43974,MARKET_MANIPULATION,bogus LTCG through the exchange
 64535,ACCOUNTING_MISSTATEMENT,inflated sales
 74793,INTERMEDIARY_MISCONDUCT,investment adviser; non-cooperation with inspection
@@ -12,11 +12,11 @@ text_stem,agent_label,note
 40075,FUND_DIVERSION,GDR issue
 47339,INTERMEDIARY_MISCONDUCT,unregistered advice
 27698,FUND_DIVERSION,IPO proceeds to group company
-31458,FUND_DIVERSION,directors siphoning / misappropriation
+31458,RPT_TUNNELLING,Taneja Aerospace: listed-company funds advanced to a private company with common promoters (was FUND_DIVERSION; relabelled 2026-09-30 after the protocol decision: company-funds siphoning is tunnelling)
 59366,FUND_DIVERSION,GDR proceeds
 96642,INSIDER_TRADING,
 72811,INSIDER_TRADING,
-43388,INSIDER_TRADING,
+43388,DISCLOSURE_FAILURE,"Model Code clause 4.2 contra-trade + SAST/PIT 13 disclosures, no UPSI finding: protocol 3.1 exclusion (was INSIDER_TRADING; label corrected 2026-09-30)"
 99117,INSIDER_TRADING,trading ahead of results
 46532,INSIDER_TRADING,selective disclosure of UPSI
 79872,INTERMEDIARY_MISCONDUCT,NSEL broker
@@ -42,7 +42,7 @@ text_stem,agent_label,note
 83694,ACCOUNTING_MISSTATEMENT,
 42973,ACCOUNTING_MISSTATEMENT,forensic audit of financials
 36021,ACCOUNTING_MISSTATEMENT,misrepresentation of financials
-91617,ACCOUNTING_MISSTATEMENT,
+91617,RPT_TUNNELLING,DB Realty: group loan diverted to promoter-related entities under the listed company's guarantee; misstatement hides it (was ACCOUNTING_MISSTATEMENT; relabelled 2026-09-30 after the protocol decision: company-funds siphoning is tunnelling)
 19521,UNSURE,1999 preferential allotment; not read in full
 40616,ACCOUNTING_MISSTATEMENT,
 42880,MARKET_MANIPULATION,NSE co-location: closest category
@@ -67,3 +67,19 @@ text_stem,agent_label,note
 15360,INTERMEDIARY_MISCONDUCT,
 14759,DISCLOSURE_FAILURE,issuer's duty under the DP Regulations
 63449,INTERMEDIARY_MISCONDUCT,
+86164,RPT_TUNNELLING,Rana Sugars: company funds siphoned via undisclosed promoter entities (was FUND_DIVERSION; relabelled 2026-09-30 after the protocol decision: company-funds siphoning is tunnelling)
+35689,INTERMEDIARY_MISCONDUCT,2026-09-30 spot check. Broker pledged clients' securities and falsified its ledger to hide it (protocol 3.2 exclusion)
+54138,DISCLOSURE_FAILURE,2026-09-30 spot check. PIT 7(2)(a)
+26218,DISCLOSURE_FAILURE,2026-09-30 spot check. SAST 1997 3(3)/3(4)
+41339,INTERMEDIARY_MISCONDUCT,2026-09-30 spot check. Guiness Securities: misappropriation of client securities by the broker (protocol 3.2 exclusion)
+81612,DISCLOSURE_FAILURE,2026-09-30 spot check. Lead manager: wrong working-capital figures in the draft offer document; no diversion finding
+43922,INSIDER_TRADING,2026-09-30 spot check
+50054,INSIDER_TRADING,2026-09-30 spot check
+10071,INTERMEDIARY_MISCONDUCT,2026-09-30 spot check. Broker
+5149,INTERMEDIARY_MISCONDUCT,2026-09-30 spot check. Merchant banker
+45822,MARKET_MANIPULATION,2026-09-30 spot check
+1522,MARKET_MANIPULATION,2026-09-30 spot check. Thin narrative; not read in full
+49059,OTHER,2026-09-30 spot check. 11C(3) non-cooperation
+30541,OTHER,2026-09-30 spot check. 15C investor grievances
+62964,RPT_TUNNELLING,2026-09-30 spot check. LODR 23(2)
+noid_ef0756146edd,FUND_DIVERSION,2026-09-30 spot check. Seacoast: directed to bring back diverted rights-issue proceeds; RPT and misstatement charged too (precedence; debatable)

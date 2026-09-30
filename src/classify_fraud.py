@@ -22,7 +22,12 @@ How a category is chosen
    (``category_of``). PFUTP 3/4 and SEBI Act §12A(a)–(c) map to "read the
    narrative"; ICDR/DIP to "diversion if the narrative says so, else disclosure".
 2. The narrative is scored by counting phrases for each category in the order
-   text (``narrative_scores``). The highest score wins; ties go to precedence.
+   text (``narrative_scores``). A diversion narrative goes by whose money it
+   was (``route_diversion``): issue proceeds → FUND_DIVERSION; the company's own
+   funds to promoters / related parties → RPT_TUNNELLING; clients' or investors'
+   assets at an intermediary → INTERMEDIARY_MISCONDUCT. The highest score wins,
+   unless a category earlier in the precedence order is also a clear narrative
+   (>= 5 and at least half the highest): "if two apply, the precedence order decides".
 3. The order's category is the first of its categories in the protocol's
    precedence order: INSIDER_TRADING › FUND_DIVERSION › RPT_TUNNELLING ›
    ACCOUNTING_MISSTATEMENT › MARKET_MANIPULATION › DISCLOSURE_FAILURE ›
@@ -66,7 +71,7 @@ REPO_ROOT = cache.REPO_ROOT
 DERIVED_DIR = REPO_ROOT / "derived"
 LOGS_DIR = REPO_ROOT / "logs"
 
-RULES_VERSION = "fraud-v1"
+RULES_VERSION = "fraud-v2"  # v2 (2026-09-30): whose money was diverted; precedence among clear narratives
 
 INSIDER_TRADING = "INSIDER_TRADING"
 FUND_DIVERSION = "FUND_DIVERSION"
@@ -161,15 +166,25 @@ def category_of(regime: str, provision: str) -> tuple[str, str] | None:
 
 _I = re.IGNORECASE
 PHRASES: dict[str, list[re.Pattern]] = {c: [re.compile(p, _I) for p in ps] for c, ps in {
-    INSIDER_TRADING: [r"unpublished\s+price\s+sensitive", r"\bUPSI\b", r"\binsider\s+trading\b"],
+    # not the regulation's title: "SEBI (Prohibition of Insider Trading) Regulations",
+    # "Model Code of Conduct for Prevention of Insider Trading"
+    INSIDER_TRADING: [r"unpublished\s+price\s+sensitive", r"\bUPSI\b",
+                      r"(?<!prohibition\sof\s)(?<!prevention\sof\s)\binsider\s+trading\b(?!\s*\)?\s*,?\s*regulations)"],
     # "misutilisation" only of issue money or the company's funds: a broker's
     # misuse of *client* funds is INTERMEDIARY_MISCONDUCT (protocol §3.7)
+    # The act of taking money out. Whose money decides the category (see
+    # route_diversion): issue proceeds → FUND_DIVERSION; the company's own funds
+    # to promoters → RPT_TUNNELLING; clients' funds at an intermediary →
+    # INTERMEDIARY_MISCONDUCT (protocol §3.2, §3.3, §3.7).
     FUND_DIVERSION: [r"\bdivert\w*|\bdiversion\b", r"\bsiphon\w*",
                      r"\bmis-?utili[sz]\w*\s+(?:of\s+)?(?:the\s+)?(?:IPO|issue|GDR|proceeds|(?:company'?s\s+)?funds\s+"
                      r"(?:raised|of\s+the\s+company))", r"\bmis-?appropriat\w*",
-                     r"\b(?:IPO|issue|GDR|rights\s+issue|preferential\s+(?:issue|allotment))\s+proceeds",
-                     r"\bobjects?\s+of\s+the\s+issue", r"\butili[sz]ation\s+of\s+(?:the\s+)?(?:\w+\s+)?proceeds",
-                     r"\bround[\s-]?trip\w*", r"\blayered\s+transactions?"],
+                     r"\bround[\s-]?trip\w*", r"\blayered\s+transactions?",
+                     # GDR schemes: the issuer pledges the proceeds for the subscriber's loan
+                     r"\bpledg\w*\s+(?:(?:the|its|of|their)\s+)*(?:\w+\s+)?(?:GDR|IPO|issue)\s+proceeds|"
+                     r"\b(?:GDR|IPO|issue)\s+proceeds\s+(?:\w+\s+){0,6}?as\s+(?:a\s+)?(?:collateral|security)\b",
+                     r"\bnot\s+(?:been\s+)?utili[sz]ed\s+(?:for|as\s+per|towards)\s+the\s+(?:stated\s+)?objects?|"
+                     r"\bdeviat\w*\s+from\s+the\s+(?:stated\s+)?objects?"],
     RPT_TUNNELLING: [r"\brelated[\s-]+part(?:y|ies)\s+transactions?", r"\bRPTs?\b"],
     # Only phrases that say the accounts were false. "Books of accounts" and
     # "financial statements" alone are in broker inspections and adviser cases
@@ -190,15 +205,15 @@ PHRASES: dict[str, list[re.Pattern]] = {c: [re.compile(p, _I) for p in ps] for c
                           r"\bmanipulat\w*\s+(?:the\s+)?(?:price|volume|market|scrip)", r"\bprice\s+manipulat",
                           r"\blast\s+traded\s+price|\bLTP\b", r"\bmisleading\s+appearance\s+of\s+trading",
                           r"\bfront[\s-]?runn?\w*", r"\bpump\s+and\s+dump", r"\bstructured\s+trades?",
-                          r"\bmatched\s+trades?", r"\bfictitious\s+trades?", r"\btrading\s+pattern",
-                          r"\b(?:stock\s+)?tips?\b|\brecommendations?\s+(?:given|made|on)", r"\brigg\w+",
+                          r"\bmatched\s+trades?", r"\bfictitious\s+trades?", r"\btrading\s+pattern", r"\brigg\w+",
                           r"\bspoof\w*|\blayering\b", r"\bprice\s+rise", r"\bconnected\s+(?:entities|clients|group)",
                           r"\bnon[\s-]genuine\s+trades?", r"\bbogus\s+(?:LTCG|long\s+term\s+capital|capital\s+gains?)|"
                           r"\bLTCG\b", r"\bexit\s+providers?"],
     # Advice for a fee (registered or not) charged as fraud on clients.
+    # "unregistered" / "without registration" alone also describe collective
+    # schemes and deemed public issues: INTERMEDIARY_CONTEXT, which only adds.
     INTERMEDIARY_MISCONDUCT: [r"\binvestment\s+advi[sc]\w*", r"\bresearch\s+analyst", r"\badvisory\s+(?:services|fees?)",
-                              r"\bunregistered\b", r"\bwithout\s+(?:obtaining\s+)?(?:a\s+|the\s+)?(?:certificate\s+of\s+)?"
-                              r"registration", r"\bguaranteed\s+returns?|\bassured\s+returns?",
+                              r"\bportfolio\s+management\s+services?", r"\bguaranteed\s+returns?|\bassured\s+returns?",
                               r"\bmis-?(?:use|utili[sz]\w*)\s+(?:of\s+)?(?:the\s+)?clients?(?:['’]s|s['’]|['’])?\s*"
                               r"(?:funds?|securities)",
                               r"\bclients?(?:['’]s|s['’]|['’])?\s+(?:funds?|securities)\s+(?:were|was|had\s+been)?\s*(?:mis-?used|"
@@ -210,6 +225,32 @@ PHRASES: dict[str, list[re.Pattern]] = {c: [re.compile(p, _I) for p in ps] for c
 ACCOUNTING_CONTEXT = [re.compile(p, _I) for p in (r"\bbooks?\s+of\s+accounts?", r"\bfinancial\s+statements?",
                                                   r"\bforensic\s+audit",
                                                   r"\baccounting\s+(?:treatment|standards?)", r"\breceivables\b")]
+FUND_CONTEXT = [re.compile(p, _I) for p in (r"\b(?:IPO|issue|GDR|rights\s+issue|preferential\s+(?:issue|allotment))\s+"
+                                            r"proceeds", r"\bobjects?\s+of\s+the\s+issue",
+                                            r"\butili[sz]ation\s+of\s+(?:the\s+)?(?:\w+\s+)?proceeds")]
+#: Clients' money or securities: with an intermediary, what a "diversion" or
+#: "falsified" narrative is about (protocol §3.2 exclusion, §3.7).
+CLIENT_ASSETS = re.compile(r"\bclients?(?:['’]s|s['’]|['’])?\s+(?:funds?|securities|shares|monies|money|assets)\b|"
+                           r"\b(?:funds?|securities)\s+(?:and\s+securities\s+|and\s+funds\s+)?of\s+(?:the\s+|its\s+)?"
+                           r"clients?\b|"
+                           # a registrar holding investors' dividends and shares
+                           r"\b(?:investors?|shareholders?)(?:['’]s|s['’]|['’])?\s+(?:unclaimed\s+)?"
+                           r"(?:dividends?|shares|securities)\b|"
+                           r"\b(?:unclaimed\s+)?(?:dividends?|shares|securities)\s+(?:belonging\s+to|of)\s+(?:the\s+)?"
+                           r"(?:investors|shareholders)\b", _I)
+#: Tips and recommendations: manipulation when used to move a price (scalping,
+#: pump-and-dump), but the adviser's own business when adviser phrases score
+#: (protocol §3.7: advice-for-fee fraud is INTERMEDIARY_MISCONDUCT).
+TIPS = re.compile(r"\b(?:stock\s+)?tips?\b|\brecommendations?\s+(?:given|made|on)", _I)
+REGISTRATION_CONTEXT = [re.compile(p, _I) for p in (r"\bunregistered\b", r"\bwithout\s+(?:obtaining\s+)?(?:a\s+|the\s+)?"
+                                                    r"(?:certificate\s+of\s+)?registration")]
+INTERMEDIARY_CONTEXT = re.compile(r"\b(?:stock[\s-]*brokers?|sub[\s-]*brokers?|trading\s+members?|"
+                                  r"depository\s+participants?|portfolio\s+managers?|merchant\s+bankers?|"
+                                  r"share\s+transfer\s+agents?|registrars?\s+(?:and|to\s+(?:an?\s+|the\s+)?)"
+                                  r"(?:issue|share\s+transfer)|RTAs?)\b", _I)
+#: Insiders the company's money went to: tunnelling (protocol §3.3, 2026-09-30).
+TUNNEL_CONTEXT = re.compile(r"\bpromoters?\b|\brelated[\s-]+part(?:y|ies)|\bgroup\s+(?:companies|entities)|"
+                            r"\bentities\s+(?:(?:directly|indirectly)\s+)?(?:controlled|owned)\s+by", _I)
 #: Counts per phrase are capped, so one repeated phrase cannot outvote the rest.
 PHRASE_CAP = 5
 #: Categories a narrative can decide, for PFUTP / §12A(a)-(c).
@@ -232,15 +273,56 @@ def narrative_scores(text: str) -> tuple[dict[str, int], dict[str, list[str]]]:
                 total += min(n, PHRASE_CAP)
                 found.append(f"{p.search(text).group(0).lower()}×{n}")
         scores[cat], hits[cat] = total, found
-    if strong := scores[ACCOUNTING_MISSTATEMENT]:
-        # context can at most double what the misstatement phrases score
-        context = 0
-        for p in ACCOUNTING_CONTEXT:
-            if n := len(p.findall(text)):
-                context += min(n, PHRASE_CAP)
-                hits[ACCOUNTING_MISSTATEMENT].append(f"{p.search(text).group(0).lower()}×{n}")
-        scores[ACCOUNTING_MISSTATEMENT] += min(context, strong)
+    for cat, patterns in ((ACCOUNTING_MISSTATEMENT, ACCOUNTING_CONTEXT), (INTERMEDIARY_MISCONDUCT, REGISTRATION_CONTEXT)):
+        if strong := scores[cat]:
+            # context can at most double what the category's own phrases score
+            context = 0
+            for p in patterns:
+                if n := len(p.findall(text)):
+                    context += min(n, PHRASE_CAP)
+                    hits[cat].append(f"{p.search(text).group(0).lower()}×{n}")
+            scores[cat] += min(context, strong)
+    if scores[INTERMEDIARY_MISCONDUCT] < MIN_SCORE[INTERMEDIARY_MISCONDUCT] and (n := len(TIPS.findall(text))):
+        scores[MARKET_MANIPULATION] += min(n, PHRASE_CAP)
+        hits[MARKET_MANIPULATION].append(f"{TIPS.search(text).group(0).lower()}×{n}")
+    route_diversion(text, scores, hits)
     return scores, hits
+
+
+def _move(scores: dict, hits: dict, src: str, dst: str, why: str) -> None:
+    scores[dst] += scores[src]
+    hits[dst] = hits[dst] + [f"{h} ({why})" for h in hits[src]]
+    scores[src], hits[src] = 0, []
+
+
+def route_diversion(text: str, scores: dict[str, int], hits: dict[str, list[str]]) -> None:
+    """Whose money was taken decides the category (protocol §3.2, §3.3, §3.7):
+
+    * clients' funds or securities at a broker / DP (and the records falsified to
+      hide it) → INTERMEDIARY_MISCONDUCT;
+    * issue money (IPO, GDR, rights, preferential proceeds; the objects of the
+      issue) → FUND_DIVERSION, the issue context adding up to the act's score;
+    * the company's own funds to promoters, related parties, group entities →
+      RPT_TUNNELLING (tunnelling);
+    * anything else (a collective scheme's collections, a broker's own money) is
+      no diversion category.
+    """
+    if not scores[FUND_DIVERSION] and not scores[ACCOUNTING_MISSTATEMENT]:
+        return
+    if len(CLIENT_ASSETS.findall(text)) >= 3 and len(INTERMEDIARY_CONTEXT.findall(text)) >= 3:
+        _move(scores, hits, FUND_DIVERSION, INTERMEDIARY_MISCONDUCT, "clients' assets")
+        _move(scores, hits, ACCOUNTING_MISSTATEMENT, INTERMEDIARY_MISCONDUCT, "clients' assets")
+        return
+    if not (act := scores[FUND_DIVERSION]):
+        return
+    issue = sum(min(len(p.findall(text)), PHRASE_CAP) for p in FUND_CONTEXT)
+    if issue >= 2:
+        hits[FUND_DIVERSION].extend(f"{m.group(0).lower()}" for p in FUND_CONTEXT if (m := p.search(text)))
+        scores[FUND_DIVERSION] += min(issue, act)
+    elif scores[OTHER] < MIN_SCORE[OTHER] and len(TUNNEL_CONTEXT.findall(text)) >= 2:
+        _move(scores, hits, FUND_DIVERSION, RPT_TUNNELLING, "company funds")
+    else:
+        scores[FUND_DIVERSION], hits[FUND_DIVERSION] = 0, []
 
 
 def read_narrative(scores: dict[str, int], among=NARRATIVE_CATEGORIES) -> tuple[str | None, str]:
@@ -249,7 +331,13 @@ def read_narrative(scores: dict[str, int], among=NARRATIVE_CATEGORIES) -> tuple[
                     key=lambda c: (-scores[c], _rank(c)))
     if not ranked:
         return None, "low"
-    top = ranked[0]
+    # Protocol: "if two apply, the precedence order decides". Another category
+    # applies when it is a clear narrative in its own right (>= 5) and scores at
+    # least half the strongest; a passing mention does not.
+    top = min((c for c in ranked if c == ranked[0] or (scores[c] >= 5 and 2 * scores[c] >= scores[ranked[0]])),
+              key=_rank)
+    if top != ranked[0]:
+        return top, "medium"
     second = scores[ranked[1]] if len(ranked) > 1 else 0
     if scores[top] >= 5 and scores[top] >= 2 * second:
         return top, "high"

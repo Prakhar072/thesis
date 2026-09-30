@@ -11,3 +11,14 @@ text_stem,section,category,note
 25029,3.8,OTHER,worked example (c)
 46128,-,-,traced in CODEBASE_MAP.md and AUDIT_REPORT.md
 14949,-,-,quoted in AUDIT_REPORT.md
+39468,5,SURVEILLANCE,worked example (alert)
+69454,5,SURVEILLANCE,worked example (trading_pattern_observed)
+83117,5,COMPLAINT,worked example
+76787,5,AUDIT,worked example (qualification)
+23871,5,MEDIA,worked example
+66742,5,REFERRAL,worked example (tax)
+55522,5,REFERRAL,worked example (another body's inspection)
+79496,5,SELF_DISCLOSURE,worked example (confession)
+28712,5,INSPECTION,worked example
+29459,5,UNCLEAR,worked example (exchange_reference)
+86164,3.3,RPT_TUNNELLING,worked example (tunnelling)

@@ -119,8 +119,9 @@ Limited, 2023-08-25.
 - **Code:** INSIDER_TRADING.
 
 ### 3.2 FUND_DIVERSION
-**Inclusion:** money raised from investors is diverted, siphoned, misutilised or
-routed away from its stated use, for example:
+**Inclusion:** *issue money*, i.e. money raised from investors in an IPO, GDR,
+rights or preferential issue, is diverted, siphoned, misutilised or routed away
+from its stated use, for example:
 - IPO, rights or preferential proceeds not used for the objects of the issue;
 - GDR proceeds pledged or routed to related entities;
 - issue money moved through layered transactions to give allottees an exit.
@@ -133,7 +134,14 @@ narrative is diversion ("diverted", "siphoned", "misutilised", "utilisation of I
   diversion finding is DISCLOSURE_FAILURE.
 - A broker's misuse, pledging or diversion of its *clients'* funds or securities is
   INTERMEDIARY_MISCONDUCT, not FUND_DIVERSION: the money was never raised from
-  investors by an issuer.
+  investors by an issuer. The same holds for a registrar's (RTA's) misappropriation of
+  investors' dividends or shares, and for records falsified to hide either.
+- The company's *own* funds (loans, advances, bank borrowings, revenue) diverted or
+  siphoned to promoters, related parties or group entities are RPT_TUNNELLING (§3.3),
+  not FUND_DIVERSION.
+- "Objects of the issue" or "issue proceeds" mentioned without a finding that the
+  money was diverted (e.g. a lead manager's wrong figures in an offer document) is
+  not a diversion.
 
 **Worked example:** 23691, Order against Pinac Stock Brokers Private Limited in
 the matter of IPO of Tijaria Polypipes Limited, 2012-10-31.
@@ -145,13 +153,20 @@ the matter of IPO of Tijaria Polypipes Limited, 2012-10-31.
 - **Code:** FUND_DIVERSION.
 
 ### 3.3 RPT_TUNNELLING
-**Inclusion:** transactions between a listed company and its related parties
-entered into without the approvals the law requires, or on terms that transfer
-value to insiders. Typical charges:
+**Inclusion:** value moved from a listed company to its insiders:
+- transactions between a listed company and its related parties entered into
+  without the approvals the law requires, or on terms that transfer value to insiders;
+- **tunnelling:** the company's own funds (loans, advances, borrowings, revenue)
+  diverted or siphoned to promoters, directors, related parties or group entities,
+  whether or not they were disclosed as related parties. Where the order also finds
+  the accounts misstated to hide it, precedence puts this first.
+
+Typical charges:
 - LODR Reg. 23(1)–(4) (policy, audit-committee and shareholder approval);
 - Listing Agreement Clause 49 (VII);
 - Companies Act §188;
-- PFUTP charges whose narrative is about related-party transactions.
+- PFUTP charges whose narrative is about related-party transactions or the
+  diversion of the company's funds to insiders.
 
 **Exclusion:** LODR Reg. 23(9) (the half-yearly *disclosure* of RPTs), when charged
 alone, is DISCLOSURE_FAILURE.
@@ -163,6 +178,17 @@ Structurals Limited, 2024-03-06.
   transactions ('RPTs') in accordance with … LODR Regulations".
 - It is charged under LODR 23(4).
 - **Code:** RPT_TUNNELLING.
+
+**Worked example (tunnelling):** 86164, Order in the matter of Rana Sugars Limited,
+2024-08-27.
+- "the company along with its promoter directors … had devised a scheme to
+  divert/siphon off the funds of the company by using certain private limited
+  companies indirectly controlled by the Managing Director of RSL and his family
+  members. These private companies were not shown as related party …"
+- The order also finds "consequent misstatements in the financial statements".
+- It is charged under SEBI Act §12A and PFUTP.
+- **Code:** RPT_TUNNELLING. The company's own funds went to insiders; the
+  misstatement concealed it and comes later in precedence.
 
 ### 3.4 ACCOUNTING_MISSTATEMENT
 **Inclusion:** false or misleading financial statements, i.e. books of account
@@ -286,15 +312,20 @@ decided by what the order says was done:
 | Narrative | Category |
 |---|---|
 | books, accounts, financial statements, fictitious sales / purchases, inflated revenue or profit, receivables, misstatement | ACCOUNTING_MISSTATEMENT |
-| IPO / issue / GDR proceeds diverted, siphoned, misutilised, routed; objects of the issue | FUND_DIVERSION |
-| related-party transactions | RPT_TUNNELLING |
-| UPSI, insider | INSIDER_TRADING |
-| trades, price, volume, synchronised / circular / reversal trades, LTP, artificial volume, tips, front-running, bogus long-term capital gains | MARKET_MANIPULATION |
-| advice for a fee, advisory fees, assured returns, unregistered adviser, misuse of clients' funds or securities | INTERMEDIARY_MISCONDUCT |
-| a collective investment scheme, or funds mobilised from the public | OTHER (c) |
+| IPO / issue / GDR proceeds diverted, siphoned, misutilised, routed or pledged; not used for the objects of the issue | FUND_DIVERSION |
+| related-party transactions; the company's own funds diverted or siphoned to promoters, related parties or group entities | RPT_TUNNELLING |
+| trading on UPSI (not the name of the Insider Trading Regulations or the Model Code) | INSIDER_TRADING |
+| trades, price, volume, synchronised / circular / reversal trades, LTP, artificial volume, tips used to move a price, front-running, bogus long-term capital gains | MARKET_MANIPULATION |
+| advice for a fee, advisory fees, assured returns, recommendations sold to clients; misuse of clients' funds or securities at a broker or DP; an RTA's misuse of investors' dividends or shares | INTERMEDIARY_MISCONDUCT |
+| a collective investment scheme, or funds mobilised from the public (including their diversion) | OTHER (c) |
 
-If two apply, the precedence order decides. If none applies, write `?` in
-`notes` and code the closest category.
+**Whose money was diverted decides:** issue money → FUND_DIVERSION; the company's
+own money to insiders → RPT_TUNNELLING; clients' or investors' assets held by an
+intermediary → INTERMEDIARY_MISCONDUCT; a collective scheme's collections → OTHER (c).
+
+If two apply, the precedence order decides. A category *applies* when the order
+finds that conduct, not when it mentions it in passing. If none applies, write
+`?` in `notes` and code the closest category.
 
 ---
 
@@ -318,10 +349,140 @@ matter title and list the others in `notes`.
 
 ## 5. Detection channel (`detection_channel`)
 
-Rules are added on Week 3, Day 2, *before* any sample order is coded for this
-field. The seven values are:
+**Written 2026-09-30 (Week 3, Day 2)**, before the channel auto-coder
+(`src/detect_channel.py`) and before any sample order is coded for this field.
 
-`SURVEILLANCE` · `COMPLAINT` · `AUDIT` · `MEDIA` · `REFERRAL` · `SELF_DISCLOSURE` · `UNCLEAR`
+**The quantity is how the matter first came to the notice of SEBI or an exchange,
+as the order states it.** It is the input to Stage 1's competing risks and to H4
+("automated surveillance is not the dominant first-detection channel").
+
+### Values
+
+There are eight values. The first six are the plan's; INSPECTION was added by user
+decision on 2026-09-30.
+
+`SURVEILLANCE` · `COMPLAINT` · `AUDIT` · `MEDIA` · `REFERRAL` · `SELF_DISCLOSURE` · `INSPECTION` · `UNCLEAR`
+
+Each value also carries a finer `detection_detail`, listed in the table. It lets a
+robustness check move a sub-type, for example to report H4 without the ISO wave.
+
+### General rules
+
+1. **Code what the order says started SEBI's (or the exchange's) work.** The
+   trigger must be tied to the start of the examination, investigation,
+   inspection or inquiry: "pursuant to", "based on", "on receipt of", "following",
+   "after receipt of", or "SEBI observed … In view of the same, SEBI conducted …".
+   A source mentioned elsewhere is not a trigger. Examples:
+   - a noticee's submission ("there were no complaints from clients");
+   - a police complaint the noticee filed;
+   - a news item that is part of the conduct (the planted news in a pump-and-dump).
+2. **Never infer the channel from the kind of fraud.** An insider-trading order
+   that does not say how SEBI noticed the trades is UNCLEAR, even though insider
+   trading is usually caught by surveillance.
+3. **The earliest stated source wins.** In "a complaint was received … SEBI
+   advised BSE to examine … BSE's report showed …", the channel is COMPLAINT.
+4. **What SEBI does after it has noticed a matter is not a trigger.** This covers
+   the investigation itself, summons, a forensic auditor SEBI appoints, and
+   information obtained from banks or exchanges during the investigation.
+5. **Follow-up orders** (non-cooperation with summons, failure to pay a penalty,
+   confirmation of an interim order, a corrigendum): code the underlying matter's
+   trigger if this order states it, else UNCLEAR.
+6. **Do not stretch a marker to avoid UNCLEAR.** The share of UNCLEAR is itself a
+   finding about how much the enforcement record discloses.
+
+### The channels
+
+| Value | Inclusion | `detection_detail` |
+|---|---|---|
+| **SURVEILLANCE** | Market surveillance by SEBI or an exchange: a surveillance alert, "routine market surveillance", surveillance measures. Also, flagged medium, a trading pattern or filing observed by SEBI or an exchange where the order names the pattern but not the mechanism: "SEBI observed large scale reversal of trades", "the scrip witnessed large trading volume and price fall", "BSE reported that a sell-off by the preferential allottees was observed", "SEBI observed from the shareholding pattern filed with BSE that …" | `alert` (alerts, surveillance system, surveillance activity) · `trading_pattern_observed` · `filings_observed` |
+| **COMPLAINT** | A complaint from an investor, a client, a shareholder, a creditor or any person; SCORES complaints; a whistle-blower; complaints forwarded by an exchange's investor-grievance cell. The investor-grievance orders (15C, non-redressal) are COMPLAINT: the complaints are how SEBI learnt of it | `complaint` · `scores` · `whistleblower` |
+| **AUDIT** | Audit findings that brought the matter to SEBI: a statutory auditor's qualification or resignation (with concerns), or a forensic or special audit commissioned by lenders or the company whose report reached SEBI. Not a forensic audit that SEBI or an exchange ordered after it started looking (rule 4) | `qualification` · `auditor_resignation` · `forensic_audit` |
+| **MEDIA** | A published news item, media report, research or short-seller report, or TV programme about the matter that prompted SEBI | `news` · `research_report` |
+| **REFERRAL** | A reference, letter or report from another public body, including an inspection it did and referred. Such bodies are MCA, RoC, SFIO, RBI, the Income Tax Department / CBDT, ED, CBI, police / EOW, courts and tribunals, ministries, other regulators (IRDAI, PFRDA, FMC, foreign regulators) and DGGI / GST authorities. Not a stock exchange (see UNCLEAR). The MCA's list of suspected shell companies (2017) is REFERRAL | `mca_roc` · `sfio` · `rbi` · `tax` · `police_ed_cbi` · `court` · `regulator` · `government` |
+| **SELF_DISCLOSURE** | The company, its management, or the noticee itself disclosed the irregularity: a confession, the company informing the exchanges of a fraud or misstatement, or an intermediary reporting its own lapse. Not "SEBI suo motu", which means on SEBI's own motion | `company_disclosure` · `confession` · `self_report` |
+| **INSPECTION** | A routine, thematic, offsite or limited-purpose inspection of an intermediary (or of a listed company's books) by SEBI or an exchange, when no earlier trigger for the inspection is stated. An inspection by another body that was referred to SEBI is REFERRAL | `sebi_inspection` · `exchange_inspection` · `thematic` |
+| **UNCLEAR** | No trigger stated: "SEBI conducted an investigation into the trading in the scrip of X" alone; "SEBI suo motu"; an exchange reference or report whose basis is not stated ("Based on the report received from NSE, SEBI conducted investigation …"; user decision 2026-09-30) | `none` · `exchange_reference` · `suo_motu` |
+
+**If two sources are stated as joint triggers in one sentence** ("based on
+complaints and a reference from RBI"), code the first named and write `?` in `notes`.
+
+### Clarifications from the development review (2026-09-30, before any validation coding)
+
+These come from labelling 58 random orders (`hand/detection_channel_devset.csv`):
+
+1. **A trading pattern must be tied to the start.** Code "SEBI conducted
+   investigation … as the scrip witnessed …" as SURVEILLANCE, as also "… whose shares
+   witnessed abnormal increase …", "In view of the aforesaid unusual price movement
+   noticed …, SEBI conducted …", and "Based on the above background [price rise],
+   SEBI took up the case". A price movement stated on its own is background, not a
+   trigger ("The scrip opened at Rs.73/- and witnessed a steep price fall"), so it
+   stays UNCLEAR.
+2. **Findings are not triggers.** "During the investigation it was observed …" and
+   "Pursuant to the aforementioned examination, SEBI observed …" report results.
+3. **SEBI receiving a complaint, reference or report is the matter coming to its
+   notice.** "SEBI received two complaints …" is COMPLAINT even where the order never
+   says "investigation".
+4. **An exchange reference that states what the exchange saw** (a price or volume
+   pattern, a change in holding) is SURVEILLANCE, flagged. An exchange reference
+   that does not say what it was about stays UNCLEAR (`exchange_reference`).
+5. **SCORES orders.** A company's failure to obtain SCORES authentication is
+   COMPLAINT only when pending investor complaints are part of the charge; otherwise
+   UNCLEAR.
+6. **Suo-motu settlement applications.** A consent or settlement application filed
+   voluntarily, before proceedings ("apprehending that SEBI would initiate
+   enforcement actions"), is SELF_DISCLOSURE (`self_report`). A settlement
+   application filed after a notice is not a trigger.
+7. **What is enclosed with a notice is not a trigger.** For example: "along with a
+   copy of letter dated … of Department of Economic Affairs".
+8. **A matter found during another investigation** ("During the course of such
+   investigation, it came to SEBI's knowledge …") is UNCLEAR unless the order states
+   what started that investigation.
+9. **A noticee's admission during the investigation is not SELF_DISCLOSURE.**
+
+### Worked examples
+
+- **SURVEILLANCE (`alert`):** 39468, Adjudication Order in the matter of Nivedita
+  Mercantile and Financing Limited, 2018-06-29. "SEBI, on receipt of an alert
+  generated from its surveillance system, conducted an examination in the scrip of
+  Nivedita Mercantile & Financing Ltd."
+- **SURVEILLANCE (`trading_pattern_observed`, flagged):** 69454, Adjudication Order in
+  the matter of trading in Illiquid stock option at BSE in respect of Navneet
+  Garodia HUF, 2023-03-28. "SEBI observed large scale reversal of trades in stock
+  options segment of Bombay Stock Exchange."
+- **COMPLAINT:** 83117, Adjudication order in the matter of AGI Greenpac Limited,
+  2024-04-30. "SEBI conducted an examination in the matter of AGI Greenpac Limited …
+  based on the complaints received from Soneko Marketing (P) Ltd and HNG Industries
+  Thozhilalar Nala Sangam."
+- **AUDIT (`qualification`):** 76787, Adjudication Order in the matter of Reliance
+  Home Finance Limited, 2023-09-12. "From the qualified opinion of the statutory
+  auditor, SEBI observed that the proceeds raised from issue of debt NCDs have been
+  diverted towards certain body corporates including its group companies …"
+- **MEDIA:** 23871, Adjudication Order in respect of Shri Rajendra Janardhan
+  Sarangdhar in the matter of Orchid Chemicals and Pharmaceuticals Ltd, 2012-11-29.
+  "Following a news article titled 'Ranbaxy to sell balance 13.02% stake in Orchid
+  Chem' published in DNA Money on September 18, 2010, SEBI conducted investigation
+  into the trading in the shares of M/s Orchid Chemicals …"
+- **REFERRAL (`tax`):** 66742, Adjudication order in respect of 16 entities in the
+  matter of Twilight Litaka Pharma Limited, 2022-12-29. "SEBI conducted an
+  investigation … in the scrip of Twilight Litaka Pharma Limited … pursuant to
+  receipt of a reference from Income Tax Department, Pune alleging booking of bogus
+  purchases and sales …"
+- **REFERRAL (another body's inspection):** 55522, Adjudication order in the matter
+  of ISG Traders Limited, 2022-01-24. "SEBI received a letter dated August 21, 2019
+  from the office of Registrar of Companies (West Bengal), wherein it is mentioned
+  that RoC had conducted an inspection of books of accounts …"
+- **SELF_DISCLOSURE (`confession`):** 79496, Order in the matter of Satyam Computers
+  Services Limited, 2023-11-30. SEBI investigated "the affairs of Satyam Computer
+  Services Ltd. … after receipt of an email from Mr. B Ramalinga Raju, Ex-Chairman
+  of SCSL, inter alia, admitting and confessing to the company's balance sheet
+  having recorded non-existent bank balances …"
+- **INSPECTION:** 28712, Settlement Order in respect to M/s. Indiabulls Securities
+  Ltd, 2014-12-19. "SEBI conducted an inspection of the books of accounts and other
+  records of M/s. Indiabulls Securities Ltd …"
+- **UNCLEAR (`exchange_reference`):** 29459, Adjudication Order against Prasad V
+  Potluri and PVP Energy Pvt. Ltd., 2015-03-27. "Based on the report received from
+  NSE, SEBI conducted investigation in the scrip of the PVP Ventures Ltd." The basis
+  of NSE's report is not stated.
 
 ---
 
@@ -332,3 +493,6 @@ field. The seven values are:
 | 2026-09-30 | all | first version | — | none |
 | 2026-09-30 | 3.2, 3.4, 3.7, 3.8, PFUTP rule | Clarifications. (1) Misuse of clients' funds is intermediary misconduct, not diversion. (2) Accounting misstatement needs a finding that the accounts were false; examining books is not enough. (3) Advisory fraud on clients is intermediary misconduct. (4) OTHER (e): orders that find no violation. (5) PFUTP narrative rows for advisory and collective-investment-scheme cases. | Found in the auto-coder's development review of 68 orders (`hand/fraud_category_devset.csv`, excluded from the validation sample). No inclusion rule was reversed. | none (no validation coding has started) |
 | 2026-09-30 | 3 (intro) | Definitions (Reg./Sec. 2) are not charges. | A definition had counted as a charge in about 560 orders. For example, PIT 2(1)(g) competed with PIT 4(1) as a disclosure charge, and in 31627 the definitions alone gave DISCLOSURE_FAILURE. Auto-coder change: 6 categories changed, 106 moved from medium to high confidence, dev-set agreement unchanged (58 of 65). | none (no validation coding has started) |
+| 2026-09-30 | 3.2, 3.3, 3.7, PFUTP rule | **User decision:** a listed company's own funds diverted or siphoned to promoters, related parties or group entities are RPT_TUNNELLING. FUND_DIVERSION is issue money only (IPO, GDR, rights, preferential). "Whose money was diverted decides." Clarifications: an RTA's misappropriation of investors' dividends and shares is INTERMEDIARY_MISCONDUCT (like a broker's use of clients' assets); "objects of the issue" without a diversion finding is not diversion; "applies" means the order finds the conduct; the Insider Trading Regulations and the Model Code named by title are not insider trading. New worked example 86164. | §3.2 said "money raised from investors", but its precedence rationale said "taking investors' money out of the company", which left company-funds siphoning (Rana Sugars, RHFL, DB Realty) undefined. A fresh 16-order spot check found 3 clear errors and 2 debatable cases. Auto-coder fraud-v2: 360 orders change category; dev agreement 75 of 81; a second fresh 16 all agree. Dev labels 86164, 56029, 91617, 31458 → RPT_TUNNELLING and 43388 → DISCLOSURE_FAILURE (Model Code contra-trade, §3.1 exclusion). | none (no validation coding has started) |
+| 2026-09-30 | 5 | Detection-channel rules written (Week 3 Day 2), before the channel auto-coder and before any order is coded for this field. **User decisions:** INSPECTION added as an eighth channel; a trading pattern or filing that SEBI or an exchange *observed* is SURVEILLANCE, flagged (`trading_pattern_observed`, `filings_observed`); an exchange reference that does not state its basis is UNCLEAR (`exchange_reference`). Ten worked examples added to `hand/protocol_examples.csv`. | the plan's six channels had no place for routine inspections, and the ISO wave (~2,240 orders) states only that SEBI "observed" the reversal trades | none |
+| 2026-09-30 | 5 | Clarifications 1–9 ("Clarifications from the development review"): a pattern must be tied to the start; findings are not triggers; SEBI receiving a complaint or reference is enough; an exchange reference that states what the exchange saw is SURVEILLANCE (flagged); SCORES orders are COMPLAINT only with pending complaints; suo-motu settlement applications are SELF_DISCLOSURE; notice enclosures are not triggers; matters found in another investigation are UNCLEAR; admissions during the investigation are not SELF_DISCLOSURE. | Found while labelling the 58-order development set and checking the auto-coder's rule and model outputs. None reverses a §5 inclusion rule or the user's decisions. Orders read while building are excluded from the validation sample (`hand/detection_channel_devset.csv`, `hand/seen_while_building.csv`). | none (no validation coding has started) |

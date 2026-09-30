@@ -129,3 +129,12 @@ def test_recovery_boilerplate_is_not_a_violation():
     got, _ = cites("In the event of failure to pay the said amount of penalty within 45 days of the receipt of this "
                    "Order, recovery proceedings may be initiated under Section 28A of the SEBI Act", {})
     assert got == [("SEBI_ACT", "28A", "power")]
+
+
+def test_the_15j_explanation_lists_powers_not_penalties():
+    got, _ = cites("it is clarified that the power of an adjudicating officer to adjudge the quantum of penalty under "
+                   "sections 15A to 15E, clauses (b) and (c) of section 15F, 15G, 15H and 15HA shall be and shall "
+                   "always be deemed to have been exercised under the provisions of this section", {})
+    assert {r for _, _, r in got} == {"power"} and ("SEBI_ACT", "15G", "power") in got
+    got, _ = cites("I hereby impose a penalty of Rs. 10,00,000 under Section 15G of the SEBI Act", {})
+    assert got == [("SEBI_ACT", "15G", "penalty")]

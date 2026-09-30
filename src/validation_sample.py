@@ -26,7 +26,10 @@ Orders seen while building the pipeline are excluded (``SEEN``): the 90 labelled
 while choosing the model (``hand/window_model_devset.csv``,
 ``hand/window_model_holdout.csv``), the coding protocol's worked examples
 (``hand/protocol_examples.csv``) and the orders read while tuning the
-fraud-category auto-coder (``hand/fraud_category_devset.csv``).
+fraud-category and detection-channel auto-coders (``hand/fraud_category_devset.csv``,
+``hand/detection_channel_devset.csv``), and every other order whose text was read
+while building them (``hand/seen_while_building.csv``: surveys, precision samples,
+model probes).
 """
 
 from __future__ import annotations
@@ -49,9 +52,10 @@ LISTINGS_IN = REPO_ROOT / "derived" / "listings.parquet"
 DOCUMENTS_IN = REPO_ROOT / "derived" / "order_documents.parquet"
 #: Orders the pipeline's author read while building or documenting the coding:
 #: the model dev/held-out sets, the coding protocol's worked examples, and the
-#: orders read while tuning the fraud-category auto-coder. None may be coded blind.
+#: orders read while tuning the fraud-category and channel auto-coders. None may be coded blind.
 SEEN = (REPO_ROOT / "hand" / "window_model_devset.csv", REPO_ROOT / "hand" / "window_model_holdout.csv",
-        REPO_ROOT / "hand" / "protocol_examples.csv", REPO_ROOT / "hand" / "fraud_category_devset.csv")
+        REPO_ROOT / "hand" / "protocol_examples.csv", REPO_ROOT / "hand" / "fraud_category_devset.csv",
+        REPO_ROOT / "hand" / "detection_channel_devset.csv", REPO_ROOT / "hand" / "seen_while_building.csv")
 SHEET_OUT = REPO_ROOT / "hand" / "validation_sample.csv"
 KEY_OUT = REPO_ROOT / "derived" / "validation_key.parquet"
 

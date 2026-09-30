@@ -249,6 +249,61 @@ section, the title, a strong narrative, then the instruments cited. Definitions 
 | Definitions fix | 6 categories changed, 106 moved from medium to high confidence, dev agreement unchanged | PIT 2(1)(g) had counted as a disclosure charge beside PIT 4(1); 31627 (definitions only) had been DISCLOSURE |
 | Known limits | NSE co-location cases fall in MM as the nearest category; ISO orders against brokers charged only under the broker regulations are INTERMEDIARY; 945 unresolved orders (no violated list, penalty section, telling title or narrative) | |
 
+## 2026-09-30 — Week 3 Day 1 check: fraud-v2 and the §15J boilerplate
+
+This check ran on the regenerated `derived/`, which matched the scratch run row for row. Every order with text
+has a category, and no order charged under PIT 3/4 is coded as anything but insider trading. Two problems
+turned up:
+
+1. **The §15J Explanation is boilerplate, not a penalty.** Since 2019 AO orders quote it: "the power of an
+   adjudicating officer to adjudge the quantum of penalty under sections 15A to 15E, … 15F, 15G, 15H and 15HA …".
+   It had put all those sections into `penalty_provisions`. Orders "penalised under §15G" fall from 2,719 to
+   **489** (286 of them insider trading). The fix is in `regulations.py`, where the cited sections become the
+   officer's power. It changes only `penalty_provisions` (2,302 orders); the violated lists and the categories
+   are unaffected.
+2. **Fraud category: the code departed from the protocol in three places.** A fresh stratified spot check of 16
+   orders (2 per category, excluding the dev set) found **11 of 16 right**, with 3 clear errors and 2 debatable.
+   - **Brokers:** a broker's misappropriation of clients' securities read as diversion or accounting (§3.2
+     exclusion).
+   - **Offer documents:** "objects of the issue" alone read as diversion.
+   - **Two narratives:** the higher score won where the protocol says precedence decides.
+
+   The user decided the open definitional question: a company's own funds siphoned to insiders are
+   **RPT_TUNNELLING**, and FUND_DIVERSION is issue money only. This is recorded in the protocol change log.
+
+| Figure | fraud-v1 → fraud-v2 | Scope / note |
+|---|---|---|
+| Orders changing category | **360** | largest flows: FUND → RPT 42 · FUND → DISCL 43 (offer-document lapses) · INTERM → OTHER 43 (CIS) · FUND → MM 40 · INSIDER → MM 38 (the regulations named by title) · ACC → RPT 25 · INSIDER → DISCL 19 (Model Code breaches) |
+| Category | MM 7,408 → 7,486 · DISCLOSURE 4,398 → 4,458 · OTHER 4,229 → 4,291 · INTERMEDIARY 3,353 → 3,322 · INSIDER 632 → **572** · FUND 511 → **342** · ACCOUNTING 244 → 232 · RPT 74 → **146** | FUND is issue money only; RPT now includes tunnelling |
+| …among windowed orders | MM 6,741 · DISCL 1,964 · INTERM 1,571 · OTHER 859 · INSIDER 514 · FUND 244 · ACC 154 · RPT 95 | |
+| Confidence | high 12,679 · medium 3,481 · low 4,689 (fallback 3,062; unresolved 959) | |
+| Dev agreement | **75 of 81** (93%) | the dev set now includes the 16 spot-check orders it was tuned on (84 orders; 3 UNSURE). Five labels changed: four under the decision, and 43388 is Model Code, so DISCLOSURE by §3.1 |
+| Second fresh spot check (no tuning) | **16 of 16** | 2 per category, agent-judged from the charges and the quoted evidence, not a full reading; ISO orders excluded from the draw |
+
+## 2026-09-30 — Week 3 Day 2: detection channel (rules; model pass pending)
+
+`hand/coding_protocol.md` §5 was written before coding. The user decided three definitions: INSPECTION became an
+eighth channel; a trading pattern or filing that SEBI or an exchange *observed* is SURVEILLANCE, flagged; an exchange
+reference with no stated basis is UNCLEAR. `src/detect_channel.py` (channel-v1) looks for a source tied to the start
+of SEBI's work, then applies the earliest-trigger rule. Orders it leaves undecided that carry a channel cue go to the
+local model (dc-v2, cue-verified quotes). Figures below are **rules only**: a full-corpus scratch run, 1.3 min. The
+model pass (~5,300 orders) is for the user to run.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Rules decide | 8,208 orders (39.4% of 20,849 with text) | UNCLEAR by rule (exchange reference, suo motu) included; 5,325 more carry a cue and go to the model; 7,316 have no candidate sentence |
+| **Channel** (rules only) | UNCLEAR 13,129 (63.0%) · SURVEILLANCE 3,343 · COMPLAINT 2,553 · INSPECTION 1,239 · REFERRAL 473 · MEDIA 77 · SELF_DISCLOSURE 25 · AUDIT 10 | SURVEILLANCE detail: trading_pattern_observed 2,596 (ISO 1,532) · alert 415 · filings_observed 332 |
+| Share among orders with a channel | SURVEILLANCE 43.3% · COMPLAINT 33.1% · INSPECTION 16.0% · REFERRAL 6.1% · MEDIA 1.0% · SELF_DISCLOSURE 0.3% · AUDIT 0.1% | order level, not matter level (H4 needs the matter-level count; unit of analysis still open) |
+| …excluding ISO | COMPLAINT 42.7% · SURVEILLANCE 26.7% · INSPECTION 20.7% · REFERRAL 7.9% · MEDIA 1.3% | |
+| …windowed listed-company frauds (not INTERMEDIARY/OTHER), excl. ISO (1,763) | SURVEILLANCE 57.2% · COMPLAINT 24.0% · REFERRAL 9.4% · INSPECTION 6.4% · MEDIA 2.3% · SELF_DISCLOSURE 0.4% · AUDIT 0.3% | preliminary; the decided orders are a selected subset (UNCLEAR 60.9% of windowed orders) |
+| **UNCLEAR share** (reportable: how much the record discloses) | 63.0% overall · Settlement 86.3% · WTM 63.0% · AO 59.5% · ED/CGM 51.1%; by era 2000–05 72.9% · 2006–10 73.6% · 2011–15 67.5% · 2016–20 64.0% · 2021–26 49.2% | falls with time; by fraud category from 56.8% (OTHER) to 86.0% (FUND_DIVERSION) |
+| Dev agreement (rules, UNCLEAR default) | **54 of 58** (93%); rules decided 27, all right | `hand/detection_channel_devset.csv`: 58 random orders stratified by type (2 ISO), agent-labelled, tuned on. The 4 misses are 3 judgement calls (`?`) and 1 exchange snap investigation |
+| Protocol examples | 9 of 10 by rules | 76787 (AUDIT) is stated in the SCN summary, outside the trigger window |
+| Model pass (dev and probes) | unconstrained: dev fell 55 → 50 (7 invented channels); cue-verified: no false channels on dev; on 80 undecided real orders it assigned 24 channels, about three quarters right | kept as a medium-confidence fallback, `detection_method = model` |
+| Orders seen while building (excluded from the blind sample) | 458 | dev sets, protocol examples, `hand/seen_while_building.csv` (206 read in surveys, samples and probes) |
+| `penalty_provisions` §15J fix | orders citing §15G as a penalty 2,719 → 489 | see the Day 1 check above |
+| `derived/orders.parquet` (scratch) | 20,861 × 71 | five channel columns added |
+
 ### Method notes for the data section
 
 - SEBI's listing endpoint paginates on `doDirect` (0-based), not the `nextValue` a browser capture suggests; verified by exact count reconciliation.

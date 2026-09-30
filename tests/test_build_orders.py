@@ -41,6 +41,8 @@ def make_derived(tmp_path, *, parties_extra=None):
     _frame(bo.PARTY_COLUMNS, rows + (parties_extra or [])).to_parquet(tmp_path / "order_parties.parquet")
     _frame(bo.CATEGORY_COLUMNS, [{"text_stem": s, "fraud_category": "MARKET_MANIPULATION"} for s in stems]) \
         .to_parquet(tmp_path / "order_categories.parquet")
+    _frame(bo.CHANNEL_COLUMNS, [{"text_stem": s, "detection_channel": "UNCLEAR"} for s in stems]) \
+        .to_parquet(tmp_path / "order_channels.parquet")
     return stems
 
 

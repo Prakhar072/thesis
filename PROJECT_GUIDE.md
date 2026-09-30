@@ -43,9 +43,10 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/extract_actions.py`, `src/amounts.py` | stage 7: prior SCN / interim-order dates, penalties and other sanctions; the rupee normaliser | — | code |
 | `src/extract_parties.py`, `src/regulations.py` | stage 8: noticees (name, PAN/DIN/CIN, role guess, penalty per party) and the regulations each order says were violated | — | code |
 | `src/classify_fraud.py` | stage 9: fraud category per order, from the violated provisions and (for PFUTP) the narrative, following `hand/coding_protocol.md` | — | code |
-| `src/build_orders.py` | stage 10: `derived/orders.parquet`, one row per order — the Week 2 checkpoint table, now with the fraud category | — | code |
+| `src/detect_channel.py` | stage 10: detection channel per order (how the matter reached SEBI), from rules and a checked local-model fallback, following protocol §5 | — | code |
+| `src/build_orders.py` | stage 11: `derived/orders.parquet`, one row per order — the Week 2 checkpoint table, now with fraud category and detection channel | — | code |
 | `src/validation_sample.py` | Week 3: draws the 150-order blind coding sheet | — | code |
-| `tests/` | 669 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `tests/` | 696 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -68,7 +69,8 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `derived/order_parties.parquet` | one row per order: matter, issuer guess, party counts by role, violated regulations (JSON), penalty sections, how penalties linked | 3.5 MB | with stage 8 |
 | `derived/regulation_mentions.parquet` | every provision cited, with instrument, role (violation / penalty / power / cited) and context | 30 MB | with stage 8 |
 | `derived/order_categories.parquet` | one row per order: fraud category, its confidence, the rule that decided it, the evidence, every category charged | small | yes, ~1.5 min (stage 9) |
-| `derived/orders.parquet` | **one row per order, 66 columns — the table to browse**: window, prior action, penalty, matter, issuer, regulations, fraud category | small | yes, seconds (stage 10) |
+| `derived/order_channels.parquet` | one row per order: detection channel, finer detail, confidence, method (rule / model / none), the sentence it was read from | small | rules ~1.3 min; model ~2 h first time, seconds from `raw/llm/` (stage 10) |
+| `derived/orders.parquet` | **one row per order, 71 columns — the table to browse**: window, prior action, penalty, matter, issuer, regulations, fraud category, detection channel | small | yes, seconds (stage 11) |
 | `derived/extraction_rate.csv` | extraction rate overall and by type, year, method | tiny | with stage 6 |
 | `hand/window_review.csv` | your keep / fix / drop decision on each flagged window | — | git (your decisions) |
 | `derived/fetch_failures.csv` | the orders whose document could not be fetched | tiny | with stage 2 |
@@ -78,7 +80,7 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `hand/recon_notes.md` | SEBI protocol notes; §7 how orders state the violation period; §8 prior actions and sanctions; §9 parties and regulations | — | git |
 | `hand/window_model_devset.csv`, `hand/window_model_holdout.csv` | 90 agent-labelled orders used to choose the model and prompt — keep them out of the Week 3 blind sample | — | git |
 | `hand/coding_protocol.md` | **the coding rules** for window, fraud category, primary issuer and (Day 2) detection channel — one paragraph, inclusion rule and worked example per category; changes only through its change log | — | git |
-| `hand/protocol_examples.csv`, `hand/fraud_category_devset.csv` | the protocol's 12 worked examples and 68 agent-labelled orders used to build the fraud-category rules — both excluded from the blind sample | — | git |
+| `hand/protocol_examples.csv`, `hand/fraud_category_devset.csv`, `hand/detection_channel_devset.csv`, `hand/seen_while_building.csv` | the protocol's worked examples, the agent-labelled orders used to build the fraud-category (84) and channel (58) rules, and every other order read while building them (206) — all excluded from the blind sample (458 in total) | — | git |
 | `audit/` | the 2026-09-28 audit (map, logic notes, silent errors, verification checks); "Status after fixes" in `AUDIT_REPORT.md` | — | git |
 
 Git tracks code, tests, `hand/`, `paper/` and the `.md` files. `raw/`,
@@ -192,7 +194,7 @@ Full column list: [CLAUDE.md §8](CLAUDE.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 669 passed
+python -m pytest tests -q                                   # 696 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
@@ -203,13 +205,16 @@ python -m src.check_windows                                 # stage 6, sanity ru
 python -m src.extract_actions                               # stage 7, prior actions + sanctions, ~1 min
 python -m src.extract_parties                               # stage 8, parties + regulations, ~1 min
 python -m src.classify_fraud                                # stage 9, fraud category, ~1.5 min
-python -m src.build_orders                                  # stage 10, derived/orders.parquet, seconds
+python -m src.detect_channel                                # stage 10, detection channel: rules, then the model (~2 h on the GPU)
+python -m src.detect_channel --offline                      # stage 10 again, model answers from raw/llm/ (--no-model: rules only)
+python -m src.build_orders                                  # stage 11, derived/orders.parquet, seconds
 ```
 
 `derived/orders.parquet` is the table to open when you want to look at rows: one
 order per row with its window, prior action, penalty, matter, issuer guess, the
-regulations it says were violated and its fraud category (with `fraud_category_rule`
-saying why, and `fraud_category_confidence`). Who was penalised and for how much is in
+regulations it says were violated, its fraud category (with `fraud_category_rule`
+saying why, and `fraud_category_confidence`) and its detection channel (with
+`detection_raw`, the sentence it was read from, and `detection_method`). Who was penalised and for how much is in
 `derived/order_entities.parquet` (one row per order × party). Don't add up
 `penalty_amount` there for money — a joint penalty sits on every party liable.
 
@@ -244,12 +249,18 @@ downloads only the new orders' documents, then stage 3.
   used to build the rules, so it is optimistic; the blind sample gives the real figure.
 - Settlement amounts: where several applicants each pay in separate sentences, only the
   largest counts (an under-count).
+- Detection channel: 63% of orders do not say what started SEBI's work (UNCLEAR; 86% of
+  settlement orders, falling from 73% before 2011 to 49% since 2021). That share is a
+  finding, not a gap to fill by guessing. Model-read channels (`detection_method = model`)
+  are less reliable than rule-read ones: keep them separable in any analysis.
 
 ## 6. Next
 
-- Regenerate `derived/` after the 2026-09-30 fixes: stages 6–10 (`check_windows`,
-  `extract_actions`, `extract_parties`, `classify_fraud`, `build_orders`), about 4 minutes.
-- Week 3 Day 2: detection channel (protocol §5 is written first).
+- Run stages 8–11 (`extract_parties`, `classify_fraud`, `detect_channel`, `build_orders`):
+  about 4 minutes, plus ~2 hours for the channel model pass (`--no-model` skips it).
+- H4 (surveillance is not the dominant first-detection channel) needs first detections per
+  *matter*, not per order: the ISO wave alone moves the order-level surveillance share from
+  27% to 43%.
 - Week 3: `python -m src.validation_sample` writes the blind coding sheet
   `hand/validation_sample.csv` (150 orders); don't open `derived/validation_key.parquet`
   while coding.

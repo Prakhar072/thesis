@@ -288,6 +288,12 @@ _VIOLATION_CUE = re.compile(r"violat\w*|contraven\w*|breach\w*|non[\s-]*complian
                             r"lapses?\b|irregularit\w*", _I)
 _VIOLATED_AFTER = re.compile(r"[^.;]{0,40}?\b(?:violated|contravened|breached|not\s+(?:been\s+)?complied|"
                              r"non[\s-]*complian\w*)", _I)
+#: The §15J Explanation (2019), quoted in most later AO orders: "the power of an
+#: adjudicating officer to adjudge the quantum of penalty under sections 15A to 15E,
+#: clauses (b) and (c) of section 15F, 15G, 15H and 15HA shall be … deemed …". The
+#: sections it lists are the officer's power, not penalties imposed on anyone.
+_ADJUDGE_POWER = re.compile(r"\bpower\s+(?:of\s+(?:an?|the)\s+adjudicating\s+officer\s+)?to\s+adjudge\s+"
+                            r"(?:the\s+)?quantum\s+of\s+penalty", _I)
 _CHAIN = re.compile(r"^(?:[\s,;]|\band\b|&|\bor\b|read\s+with|r/w|r\.w\.|as\s+well\s+as|along\s*with|\bwith\b|"
                     r"\balso\b)*$", _I)
 
@@ -392,6 +398,8 @@ def find_citations(sentence: str, aliases: dict[str, Instrument]) -> tuple[list[
             if inst.regime == "SEBI_ACT" and p.startswith("151"):
                 p = "15I" + p[3:]  # OCR: "15I" read as "151"
             role = role_for(inst.regime, p, inst.year)
+            if role == "penalty" and _ADJUDGE_POWER.search(sentence, max(0, m.start() - 200), m.start()):
+                role = "power"
             if role is None:
                 if chained and prev_role in ("violation", "power"):
                     role = prev_role

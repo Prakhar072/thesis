@@ -1,6 +1,6 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-30 (audit fixes; Week 3, Day 1 built). Read this before touching code or data.
+Last updated: 2026-09-30 (audit fixes; Week 3, Days 1–2 built). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -48,12 +48,34 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (audit fixes and Week 3, Day 1 built)
+## 2. Status (audit fixes and Week 3, Days 1–2 built)
 
-**Pending (the user runs; ~4 min, no network), in order:**
-`python -m src.check_windows` → `python -m src.extract_actions` → `python -m src.extract_parties`
-→ `python -m src.classify_fraud` → `python -m src.build_orders`. Until then `derived/` holds the
-pre-fix Week 2 outputs and has no `order_categories.parquet` (so `build_orders` fails loudly).
+**Pending (the user runs; no network except the local model), in order:**
+`python -m src.extract_parties` (the §15J fix, ~1 min) → `python -m src.classify_fraud` (fraud-v2, ~1.5 min)
+→ `python -m src.detect_channel` (rules ~1.3 min, then the local-model pass on ~5,300 orders, ~1.5–2.5 h; Ollama
+must be serving; `--no-model` gives rules only) → `python -m src.build_orders`. The regeneration after the audit
+fixes was done on 2026-09-30 15:09–15:12 and committed (78a8eab); `derived/` holds fraud-v1 and no
+`order_channels.parquet` until these run (so `build_orders` fails loudly).
+
+**Week 3 Day 2 (detection channel):** protocol §5 was written first. **User decisions (2026-09-30):**
+- INSPECTION becomes an eighth channel;
+- "SEBI / an exchange observed <a pattern or filing>" is SURVEILLANCE, flagged (`trading_pattern_observed`,
+  `filings_observed`);
+- an exchange reference with no stated basis is UNCLEAR (`exchange_reference`).
+
+`src/detect_channel.py` (stage 10) writes `derived/order_channels.parquet`. Rules only (scratch):
+- UNCLEAR 13,129 (63.0%)
+- SURVEILLANCE 3,343
+- COMPLAINT 2,553
+- INSPECTION 1,239
+- REFERRAL 473
+- MEDIA 77
+- SELF_DISCLOSURE 25
+- AUDIT 10
+
+On the 58-order dev set: 54 of 58 right, and all 27 rule decisions right (tuned). The model is a cue-verified,
+medium-confidence fallback (`detection_method = model`). **458 orders read while building are excluded from the
+blind sample** (`validation_sample.SEEN`, including `hand/seen_while_building.csv`).
 
 **Audit fixes (2026-09-30)** (`audit/AUDIT_REPORT.md`, "Status after fixes"; figures in `results_log.md`),
 all local to stages 6–8 and scratch-verified on the full chain:
@@ -69,18 +91,20 @@ all local to stages 6–8 and scratch-verified on the full chain:
 
 **Week 3 Day 1 (fraud category):** `hand/coding_protocol.md` was written before coding.
 `src/classify_fraud.py` (stage 9) writes `derived/order_categories.parquet`, and `build_orders` (stage 10)
-joins four of its columns. Categories:
-- MM 7,408
-- DISCLOSURE 4,398
-- OTHER 4,229
-- INTERMEDIARY 3,353
-- INSIDER 632
-- FUND 511
-- ACCOUNTING 244
-- RPT 74
+joins four of its columns. Categories under **fraud-v2** (after the Day 1 check; scratch-verified):
+- MM 7,486
+- DISCLOSURE 4,458
+- OTHER 4,291
+- INTERMEDIARY 3,322
+- INSIDER 572
+- FUND 342
+- ACCOUNTING 232
+- RPT 146
 
-Confidence: high 12,630 · medium 3,521 · low 4,698 (945 unresolved). Dev agreement is 58 of 65, measured
-on the orders the rules were built on, so it is optimistic. `derived/orders.parquet`: 20,861 × 66.
+Confidence: high 12,679 · medium 3,481 · low 4,689 (959 unresolved). Dev agreement is 75 of 81, but it was
+tuned on those orders. A fresh 16-order check before the fixes found 11 of 16 right; after them, 16 of 16 on
+another fresh 16. **User decision (2026-09-30):** a company's own funds siphoned to insiders are
+RPT_TUNNELLING, and FUND_DIVERSION is issue money only. `derived/orders.parquet`: 20,861 × 66.
 
 The rest of this section is the Week 2 record; its sanction and party figures are pre-fix.
 
@@ -161,7 +185,7 @@ Day 3 review.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (669 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (696 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -227,12 +251,13 @@ Day 3 review.
 | 7 actions | `python -m src.extract_actions` | text_documents, `derived/text/`, windows_checked | `derived/order_actions.parquet`, `derived/prior_action_mentions.parquet`, `derived/sanction_mentions.parquet`, `logs/extract_actions.log` | none (~1 min) |
 | 8 parties | `python -m src.extract_parties` | text_documents, `derived/text/`, listings, sanction_mentions, order_actions | `derived/order_entities.parquet`, `derived/order_parties.parquet`, `derived/regulation_mentions.parquet`, `logs/extract_parties.log` | none (~1 min) |
 | 9 category | `python -m src.classify_fraud` | order_parties, order_actions, listings, text_documents, `derived/text/` | `derived/order_categories.parquet`, `logs/classify_fraud.log` | none (~1.5 min) |
-| 10 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties, order_categories | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
+| 10 channel | `python -m src.detect_channel [--no-model] [--offline]` | listings, text_documents, `derived/text/` | `derived/order_channels.parquet`, `raw/llm/`, `logs/detect_channel.log` | localhost Ollama only (rules ~1.3 min; model ~1.5–2.5 h, seconds when cached) |
+| 11 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties, order_categories, order_channels | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
 → `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it) → `check_windows`
-→ `extract_actions` → `extract_parties` → `classify_fraud` → `build_orders`.
+→ `extract_actions` → `extract_parties` → `classify_fraud` → `detect_channel --offline` → `build_orders`.
 Scratch dry run of stages 6–10: symlink `listings`, `order_documents`, `text_documents` and the
 `violation_windows` input into DIR, copy `hand/window_review.csv`, then pass `--scratch DIR` (and
 `--derived DIR` / `--sanctions` / `--actions` where the stage takes them).
@@ -434,7 +459,21 @@ precision, raw sentence, confidence, method, kind, sanity status), prior and fir
 and sanctions from `order_actions`, matter / issuer / parties / regulations from
 `order_parties`, and `fraud_category`, `fraud_category_confidence`, `fraud_category_rule`,
 `fraud_category_raw` from `order_categories`. Built by joins only (on `text_stem`,
-one-to-one, row count asserted). `detection_channel` comes on Week 3 Day 2.
+one-to-one, row count asserted), and `detection_channel`, `detection_detail`, `detection_confidence`,
+`detection_method`, `detection_raw` from `order_channels` (20,861 × 71).
+
+`derived/order_channels.parquet` — one row per order (20,861); the detection channel (Week 3 Day 2, `channel-v1`,
+model prompt `dc-v2`; rules in `hand/coding_protocol.md` §5)
+: `detection_channel` ∈ `SURVEILLANCE, COMPLAINT, AUDIT, MEDIA, REFERRAL, SELF_DISCLOSURE, INSPECTION, UNCLEAR` (null
+only without text); `detection_detail` (SURVEILLANCE: `alert`, `trading_pattern_observed`, `filings_observed` — the
+last two flagged; COMPLAINT: `complaint`, `scores`, `whistleblower`; AUDIT: `qualification`, `auditor_resignation`,
+`forensic_audit`; MEDIA: `news`, `research_report`; REFERRAL: `mca_roc`, `sfio`, `rbi`, `tax`, `police_ed_cbi`,
+`court`, `regulator`, `government`; SELF_DISCLOSURE: `confession`, `company_disclosure`, `self_report`; INSPECTION:
+`sebi_inspection`, `exchange_inspection`, `thematic`; UNCLEAR: `none`, `exchange_reference`, `suo_motu`; model
+channels: `model`); `detection_confidence` (`high` linked source; `medium` flagged detail, model, or rule UNCLEAR;
+`low` nothing found); `detection_method` ∈ `rule, model, none`; `detection_raw` (the sentence); `channels_found`
+(JSON, every rule hit in order); `n_background`; `model_status` ∈ `MODEL_CHANNEL, MODEL_UNCLEAR, MODEL_UNVERIFIED,
+MODEL_ERROR`; `model_raw`; `rules_version`; `prompt_version`; `error`.
 
 `src/regulations.py` — the citation parser: instrument catalogue (full titles, abbreviations,
 the order's own "hereinafter" aliases), provision lists ("3(a), (b), 4(1) and 4(2)(e)"), and the
@@ -544,6 +583,22 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 - Generic accounting words ("books of accounts", "financial statements", "forensic
   audit") appear in broker inspections and adviser cases. They only reinforce a
   misstatement phrase; they never make ACCOUNTING by themselves.
+- Boilerplate that lists sections is not a charge. Examples: 28A recovery, the §15J Explanation ("power of an
+  adjudicating officer to adjudge the quantum of penalty under sections 15A to 15E, … 15G, 15H and 15HA"),
+  and regulation *titles* ("SEBI (Prohibition of Insider Trading) Regulations", "Model Code of Conduct for
+  Prevention of Insider Trading"). Each of these had inflated a count by thousands of orders.
+- In the fraud category, *whose* money was diverted decides (`classify_fraud.route_diversion`): issue proceeds
+  → FUND; company funds to insiders → RPT (tunnelling); clients' or investors' assets at a broker, DP or RTA →
+  INTERMEDIARY; a CIS → OTHER. Precedence overrides the top narrative score only for a clear narrative
+  (≥ 5 and ≥ half the top); stray mentions flipped dozens of orders.
+- Detection channel: a trigger must be *tied to the start* of SEBI's work (a link word, SEBI receiving it, or
+  the investigation cue in the same sentence). Everything else in an order mentions complaints, inspections,
+  media and courts too: noticee contentions, SCN enclosures, cited judgments, findings ("During the
+  investigation it was observed"). `trigger_window` stops the search a few sentences after SEBI's work starts.
+- `"(‘SEBI’), observed"`: quotes, brackets and commas sit between "SEBI" and the verb (`SEBI_T`); a pattern
+  written `SEBI\s+observed` silently misses thousands of orders.
+- An unconstrained model pass invents channels from "SEBI conducted an investigation" (dev set: 7 of 30). The
+  model sees only cue-bearing sentences in the trigger window, and its quote must carry the channel's cue.
 - `issuer_from_matter` takes the *last* "shares of / scrip of" match, so a header matter that
   runs on into the order can walk past the company. Descriptive prefixes ("Inspection of
   Books of") are stripped only at the start.
@@ -577,9 +632,10 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    matter-grouping step (not built).
 5. Build the finality classifier (interim / final / confirmatory) from order text;
    use `sat_appeals` as metadata. Stage 3 needs the event types by Week 7.
-6. Fraud category is built (Week 3 Day 1). Next is **Week 3 Day 2, detection channel**: first write
-   protocol §5 (categories, inclusion rules, worked examples), then code it; `hand/recon_notes.md` §7
-   has the phrasing survey. The blind sample (Days 3–5) validates both, with κ on the fraud category.
-   `SEEN` in `validation_sample.py` already excludes the protocol examples and the fraud devset.
+6. Fraud category and detection channel are built (Week 3 Days 1–2). Next are **Days 3–4, the blind
+   sample**: `python -m src.validation_sample` (the user codes 150 orders from the PDFs, with the protocol open).
+   Day 5 measures agreement and κ for both fields, and window accuracy by method and era. H4 (surveillance
+   share < 50%) needs matter-level first detections: order-level shares swing with the ISO wave (43% with,
+   27% without) and on listed-company frauds (57%).
 7. Week 4 matching: `order_entities.pan` / `cin` and `orders.issuer_guess` are the
    hooks; entity roles are a first guess to correct during validation.
