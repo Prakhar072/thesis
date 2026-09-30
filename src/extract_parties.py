@@ -516,7 +516,19 @@ _MATTER_PREFIX = re.compile(
     r"(?:the\s+)?(?:(?:equity\s+)?shares?|scrip|securities|stock)?\s*(?:of|in|by)?\s*)+", _I)
 
 
+#: SEBI appends appeal annotations to listing titles ("… Limited [SAT Appeal No.:
+#: 440/2020 & Misc. App. No. 510/2020] [SAT Appeal No.: …]", "… 328/2020; MA
+#: 372/2020]"); they are not part of the matter (AUDIT_REPORT.md M-3).
+_APPEAL_TAIL = re.compile(r"\s*\[?\s*(?:SAT|Civil)\s+Appeal\b.*$"
+                          r"|(?:\s+\d+\s*/\s*(?:19|20)\d\d(?:\s*;\s*MA\s+\d+\s*/\s*(?:19|20)\d\d)?\s*\])+\s*$", _I | re.S)
+
+
+def strip_appeals(title: str | None) -> str | None:
+    return _APPEAL_TAIL.sub("", title).strip() if title else title
+
+
 def matter_from(title: str | None, flat: str, end: int) -> tuple[str | None, str | None]:
+    title = strip_appeals(title)
     if title and (ms := list(_MATTER.finditer(title))):
         return title[ms[-1].end():].strip(" .,;-–"), "title"
     if m := _MATTER.search(flat, 0, end):
@@ -527,11 +539,36 @@ def matter_from(title: str | None, flat: str, end: int) -> tuple[str | None, str
     return None, None
 
 
+#: What the matter is about, before the company: "Inspection of Books of …", "Front
+#: Running Trading activity of Dealers of …", "Issuance of Shares by …", "Financial
+#: Statements of …". Only at the start: header matters can run on into the order
+#: ("… conducted inspection of the books of accounts of M").
+_DESCRIPTOR = re.compile(
+    r"^(?:(?:investigation|examination)\s+(?:in(?:to)?|of)\s+)?"
+    r"(?:(?:thematic|comprehensive|limited\s+purpose|front[\s-]*running|trading|depository\s+participant|GDR|the|"
+    r"equity|preference|redeemable|(?:non[\s-]*)?cumulative|participating|(?:un)?secured|optionally|fully|partly|"
+    r"compulsorily|(?:non[\s-]*)?convertible)\s+)*"
+    r"(?:inspection|financial\s+statements?|activit(?:y|ies)|conversions?|NCDs?|issuance|books(?:\s+of\s+accounts?)?|"
+    r"accounts?\s+and\s+other\s+(?:records|documents)|dealers|shares|GDRs?|debentures|front[\s-]*running|trades)"
+    r"(?:\s+issue)?\s+(?:of|by)\s+"
+    r"|^(?:stock\s*broker|sub[\s-]*broker|custodian|debenture\s+trustee|depository\s+participant)\s*[-–:]\s*", _I)
+
+
+def strip_descriptor(s: str) -> str:
+    while d := _DESCRIPTOR.match(s):
+        s = s[d.end():]
+    return s
+
+
 def issuer_from_matter(matter: str | None) -> str | None:
     if not matter:
         return None
     s = re.sub(r"[(\[]\s*(?:formerly|now|earlier|erstwhile|previously)\b[^)\]]*[)\]]?", " ", matter, flags=_I)
-    s = " ".join(s.split())
+    s = strip_descriptor(" ".join(s.split()))
+    # "UPSI through WhatsApp with respect to Wipro Ltd" — but "Hasti Finance Ltd. with
+    # respect to Mr. Amit Chouhan" names the company first
+    if (w := re.search(r"\bwith\s+respect\s+to\s+(?:the\s+)?", s, _I)) and not _ISSUER_SUFFIX.search(s[:w.start()]):
+        s = s[w.end():]
     of = list(re.finditer(r"\b(?:scrips?|shares?|securities|stock|IPO|GDR\s+issue|public\s+issue|rights\s+issue|"
                           r"affairs|promoters?|directors?)\s+(?:of|in)\s+(?:the\s+)?", s, _I))
     s = s[of[-1].end():] if of else _MATTER_PREFIX.sub("", s).strip()
@@ -540,6 +577,9 @@ def issuer_from_matter(matter: str | None) -> str | None:
     if not m:
         return None
     name = s[:m.end()].strip(" ,.;")
+    # "Trading Activity of <person> with <FII> Ltd" names two parties, no issuer
+    if re.search(r"\bwith\b(?!\s+respect\s+to)", name, _I):
+        return None
     return name if valid_name(name) and len(name.split()) <= 10 else None
 
 
@@ -549,6 +589,7 @@ _COUNT_PHRASE = re.compile(r"^\s*(?:\d+|two|three|four|five|six|seven|eight|nine
 
 
 def title_parties(title: str | None) -> list[str]:
+    title = strip_appeals(title)
     if not title or not (m := _TITLE_PARTIES.search(title)) or _COUNT_PHRASE.match(m.group("p")):
         return []
     out = []
@@ -1004,7 +1045,8 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
         if not parties and job.order_type in ("AO", "SETTLEMENT", "ED_CGM"):
             # "ORDER … IN THE MATTER OF HANUMAN SHARES AND STOCK BROKERS LTD 1. I was appointed …"
             m_text, _ = matter_from(job.title, flat, hend)
-            if (c := issuer_from_matter(m_text)) and name_clean(c) == name_clean(_MATTER_PREFIX.sub("", m_text or "")):
+            if (c := issuer_from_matter(m_text)) and \
+                    name_clean(c) == name_clean(_MATTER_PREFIX.sub("", strip_descriptor(m_text or ""))):
                 parties = [Party(c, "matter", clean=name_clean(c))]
         if not parties:
             ms = list(_MATTER.finditer(flat, 0, hend))
@@ -1056,6 +1098,8 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
         pen = [s for s in sanctions if s.kind == ea.PENALTY and s.amount_rupees]
         rows = ea.penalty_rows(pen) or [x for x in pen if x.is_total]  # only a Total stated: Day 4 uses it too
         link = link_penalties(parties, rows)
+        if len(parties) == 1 and job.penalty_total_basis == "stated_total" and job.penalty_total:
+            link.amounts[0] = job.penalty_total  # one party carries the order's stated total (14949)
         other = link_other(parties, sanctions)
         o.penalty_rows_n, o.penalty_rows_linked = link.n_rows, link.n_linked
         if rows:

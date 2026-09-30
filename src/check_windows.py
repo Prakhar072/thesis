@@ -207,6 +207,19 @@ def update_review(review: pd.DataFrame, flagged: pd.DataFrame) -> pd.DataFrame:
 # Applying rules and reviews
 # --------------------------------------------------------------------------
 
+def _clear(w: pd.DataFrame, i) -> None:
+    """A window that is not in the dataset carries nothing that says it is: the
+    dates *and* its method, rule, kind, confidence and sentence are cleared (the
+    flagged dates stay in ``flagged_start``/``flagged_end``, the sentence in
+    ``window_flagged.csv``). Leaving ``violation_confidence = high`` on a row with
+    no dates let a filter on confidence alone count it (AUDIT_REPORT.md M-9)."""
+    for col in ("violation_start", "violation_end", "start_precision", "end_precision", "violation_raw",
+                "violation_method", "violation_rule", "window_kind", "char_start"):
+        if col in w.columns:
+            w.at[i, col] = None
+    w.at[i, "violation_confidence"] = "low"
+
+
 def check(windows: pd.DataFrame, decided: dict[str, tuple]) -> pd.DataFrame:
     w = windows.copy()
     for col in ("flagged_start", "flagged_end", "sanity_flags", "sanity_severity", "review_note"):
@@ -225,13 +238,13 @@ def check(windows: pd.DataFrame, decided: dict[str, tuple]) -> pd.DataFrame:
         decision = decided.get(r.text_stem)
         if decision is None:
             w.at[i, "sanity_status"] = FLAGGED
-            w.at[i, "violation_start"] = w.at[i, "violation_end"] = None
+            _clear(w, i)
             continue
         kind, a, b, note = decision
         w.at[i, "sanity_status"] = REVIEWED[kind]
         w.at[i, "review_note"] = note or None
         if kind == DROP:
-            w.at[i, "violation_start"] = w.at[i, "violation_end"] = None
+            _clear(w, i)
         elif kind == FIX:
             w.at[i, "violation_start"], w.at[i, "violation_end"] = a, b
             w.at[i, "start_precision"] = w.at[i, "end_precision"] = "day"
@@ -335,7 +348,12 @@ def main(argv: list[str] | None = None) -> int:
         log.warning("review sheet: %s", msg)
 
     checked = check(windows, decided)
-    flagged_all = checked[checked.sanity_flags.notna()]
+    flagged_all = checked[checked.sanity_flags.notna()].copy()
+    # the review sheet and the flagged file show what was flagged, which check()
+    # has cleared from rows that are not in the dataset
+    for col in ("violation_raw", "violation_method", "violation_rule", "window_kind", "start_precision",
+                "end_precision"):
+        flagged_all[col] = windows.loc[flagged_all.index, col]
     stale = sorted(set(decided) - set(flagged_all.text_stem))
     if stale:
         log.warning("%d review decisions are for orders no longer flagged (ignored): %s",

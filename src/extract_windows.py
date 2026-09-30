@@ -235,14 +235,25 @@ def _resplit_long(text: str, start: int, end: int) -> list[tuple[int, int]]:
     return pieces
 
 
-def split_sentences(text: str) -> list[tuple[int, int]]:
+def split_sentences(text: str, groups: bool = False) -> list[tuple[int, int]] | list[tuple[int, int, int]]:
     """``(start, end)`` offsets of sentences in ``text``.
 
     Splits after ``.``/``?``/``!`` (and any closing quote or bracket) when the
     next word starts with a capital, digit, quote or bracket, unless the full
     stop ends a known abbreviation or an initial. Page breaks are treated as
     whitespace: sentences run across pages.
+
+    With ``groups=True`` each span is ``(start, end, group)``: pieces cut from
+    one over-long sentence by ``_resplit_long`` share a group, so a stage that
+    must read a clause with the table after it ("I hereby impose the following
+    penalty … – [table]") can put them back together.
     """
+    if groups:
+        return _split_sentences(text)
+    return [(s, e) for s, e, _ in _split_sentences(text)]
+
+
+def _split_sentences(text: str) -> list[tuple[int, int, int]]:
     spans = []
     start = 0
     for m in _BOUNDARY.finditer(text):
@@ -252,14 +263,14 @@ def split_sentences(text: str) -> list[tuple[int, int]]:
         start = m.end()
     spans.append((start, len(text)))
     out = []
-    for s, e in spans:
+    for g, (s, e) in enumerate(spans):
         s, e = _trim(text, s, e)
         if e <= s:
             continue
         for ps, pe in _resplit_long(text, s, e):
             ps, pe = _trim(text, ps, pe)
             if pe > ps:
-                out.append((ps, pe))
+                out.append((ps, pe, g))
     return out
 
 

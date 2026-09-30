@@ -11,6 +11,11 @@ cd ~/projects/thesis && .venv/bin/python     # then paste a block, or save it as
 Each check gives what to run, the value on 2026-09-28, and what to look for.
 Checks marked **[A-x]** / **[P-x]** test an issue in `AUDIT_REPORT.md`.
 
+> **After the 2026-09-30 fixes** (C-1, C-2, H-1, H-2, M-3, M-9; see "Status after fixes" in
+> `AUDIT_REPORT.md`), the 2026-09-28 values for those checks describe the old outputs. The expected values are
+> now in `results_log.md` (2026-09-30). The checks themselves still apply: for example, tiny penalties should
+> number about 2, `matter_raw` with appeal text 0, and descriptor-only window rows 0. Tests: 669 passed.
+
 ---
 
 ## 1. Is this one consistent run?

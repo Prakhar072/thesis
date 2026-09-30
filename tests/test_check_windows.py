@@ -168,3 +168,19 @@ def test_a_backwards_fix_is_refused():
                            "violation_end": ["31-12-2002"], "note": [""]})
     decided, problems = cw.decisions(review)
     assert not decided and "2022" in problems[0]
+
+
+def test_a_window_out_of_the_dataset_keeps_no_descriptors():
+    # AUDIT_REPORT.md M-9: dropped rows kept violation_confidence = "high" with no dates
+    import datetime as dt
+    import pandas as pd
+    from src import check_windows as cw
+    w = pd.DataFrame([{"text_stem": "1", "order_date": dt.date(2005, 1, 1), "violation_start": dt.date(1990, 1, 1),
+                       "violation_end": dt.date(1991, 1, 1), "start_precision": "day", "end_precision": "day",
+                       "violation_raw": "…", "violation_confidence": "high", "violation_method": "regex",
+                       "violation_rule": "range", "window_kind": "stated_period", "char_start": 10}])
+    for decided in ({}, {"1": ("drop", None, None, "")}):
+        r = cw.check(w, decided).iloc[0]
+        assert r.violation_start is None and r.violation_raw is None and r.violation_method is None
+        assert r.window_kind is None and r.violation_confidence == "low"
+        assert r.flagged_start == dt.date(1990, 1, 1)

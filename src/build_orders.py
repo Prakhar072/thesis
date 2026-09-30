@@ -12,14 +12,15 @@ text_documents             text path, text layer, pages, OCR share
 windows_checked            the violation window (Day 1–3), its confidence and method
 order_actions              prior action and first action dates, sanctions (Day 4)
 order_parties              matter, issuer guess, parties by role, regulations (Day 5)
+order_categories           fraud category, its confidence, rule and evidence (Week 3)
 =========================  ==========================================================
 
 Every join is on ``text_stem`` and one-to-one (never on ``order_id``: pandas
 matches the 76 null ids to each other), and the row count is asserted after
 each join. Party-level facts (who was penalised, how much each) stay in
 ``derived/order_entities.parquet`` — the runbook keeps the two tables apart so
-penalties are never double-counted. ``fraud_category`` and
-``detection_channel`` are coded in Week 3 and are not here yet.
+penalties are never double-counted. ``detection_channel`` is coded on
+Week 3, Day 2 and is not here yet.
 """
 
 from __future__ import annotations
@@ -54,6 +55,8 @@ ACTION_COLUMNS = ["text_stem", "prior_action_date", "prior_action_kind", "prior_
                   "penalty_total", "penalty_total_basis", "penalty_n", "penalty_max", "penalty_outcome", "penalty_raw",
                   "settlement_amount", "disgorgement_total", "debarred", "debarment_months_max",
                   "debarment_indefinite", "registration_action", "warned"]
+CATEGORY_COLUMNS = ["text_stem", "fraud_category", "fraud_category_confidence", "fraud_category_rule",
+                    "fraud_category_raw"]
 PARTY_COLUMNS = ["text_stem", "matter_raw", "issuer_guess", "issuer_source", "n_parties", "n_parties_by_role",
                  "parties_source", "penalty_link_status", "penalty_total_resolved", "regulations", "regimes",
                  "regimes_cited", "penalty_provisions"]
@@ -71,7 +74,8 @@ def _with_stem(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build(derived: pathlib.Path = DERIVED_DIR, parties: pathlib.Path | None = None) -> pd.DataFrame:
+def build(derived: pathlib.Path = DERIVED_DIR, parties: pathlib.Path | None = None,
+          categories: pathlib.Path | None = None) -> pd.DataFrame:
     listings = _with_stem(_read(derived / "listings.parquet"))[LISTING_COLUMNS]
     n = len(listings)
     assert listings["text_stem"].is_unique, "duplicate text_stem in listings"
@@ -80,10 +84,11 @@ def build(derived: pathlib.Path = DERIVED_DIR, parties: pathlib.Path | None = No
     windows = _read(derived / "windows_checked.parquet", WINDOW_COLUMNS)
     actions = _read(derived / "order_actions.parquet", ACTION_COLUMNS)
     party = _read(parties or derived / "order_parties.parquet", PARTY_COLUMNS)
+    category = _read(categories or derived / "order_categories.parquet", CATEGORY_COLUMNS)
 
     out = listings
     for name, df in (("order_documents", docs), ("text_documents", text), ("windows_checked", windows),
-                     ("order_actions", actions), ("order_parties", party)):
+                     ("order_actions", actions), ("order_parties", party), ("order_categories", category)):
         if not df["text_stem"].isin(listings["text_stem"]).all():
             raise ValueError(f"{name} has orders not in the listings")
         out = out.merge(df, on="text_stem", how="left", validate="one_to_one")
@@ -111,6 +116,7 @@ def summarise(orders: pd.DataFrame) -> dict:
         "regulations_violated": share(with_text["regulations"].fillna("[]") != "[]"),
         "issuer_guess": share(with_text["issuer_guess"].notna()),
         "window_and_prior_action": share(with_text["violation_start"].notna() & with_text["prior_action_date"].notna()),
+        "fraud_category": {k: int(v) for k, v in with_text["fraud_category"].value_counts().items()},
         "top_regimes": {k: int(v) for k, v in pd.Series([r for x in with_text["regimes"].dropna()
                                                          for r in json.loads(x)]).value_counts().head(8).items()},
     }
@@ -130,6 +136,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR, help="where the inputs are")
     parser.add_argument("--parties", type=pathlib.Path,
                         help="order_parties.parquet to use (default <derived>/order_parties.parquet)")
+    parser.add_argument("--categories", type=pathlib.Path,
+                        help="order_categories.parquet to use (default <derived>/order_categories.parquet)")
     parser.add_argument("--scratch", type=pathlib.Path,
                         help="dry run: write orders.parquet and the log under DIR instead of derived/")
     parser.add_argument("--log-level", default="INFO")
@@ -144,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         assert_safe_output(p)
     setup_logging(args.log_level, log_file)
     started = time.monotonic()
-    orders = build(args.derived, args.parties)
+    orders = build(args.derived, args.parties, args.categories)
     path = out_dir / "orders.parquet"
     write(orders, path)
     log.info("=" * 72)

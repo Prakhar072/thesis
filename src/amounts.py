@@ -34,11 +34,18 @@ SCALES = {"crore": 10**7, "crores": 10**7, "cr": 10**7, "cr.": 10**7,
           "lakh": 10**5, "lakhs": 10**5, "lac": 10**5, "lacs": 10**5, "lakhs.": 10**5,
           "million": 10**6, "millions": 10**6, "thousand": 10**3, "thousands": 10**3}
 
-_CURRENCY = r"(?:Rs\.?|Re\.?|INR|₹|`|Rupees)"
-#: A figure: digit groups joined by commas (optionally followed by a space,
-#: "8, 52, 500") or dots (a typo for commas). A bare space never joins groups:
-#: "Rs. 5,00,000 12 noticees" is five lakh.
-_FIGURE = r"\d{1,3}(?:(?:,\s?|\.)\d{2,3})*(?:\.\d{1,2})?|\d+(?:\.\d+)?"
+#: "INR200004031" is a SEBI registration number (RTA), not rupees.
+_CURRENCY = r"(?:Rs\.?|Re\.?|INR(?!\d{9})|₹|`|Rupees)"
+#: Between digit runs: a comma (optionally followed by a space, "8, 52, 500")
+#: before at least two digits, or a dot used for a comma ("1,00.000",
+#: "5.00.000"): a dot is a group separator only before exactly three digits,
+#: or before a group that is itself followed by a separator. A bare space
+#: never joins: "Rs. 5,00,000 12 noticees" is five lakh.
+_SEP = r"(?:,\s?(?=\d{2})|\.(?=\d{3}(?!\d)|\d{2,3}[.,]\d))"
+#: A figure: whole digit runs joined by separators, then paise. Every digit
+#: is consumed — an earlier pattern stopped after three ("Rs. 500000" was ₹500,
+#: "₹1258.88 crore" ₹125; AUDIT_REPORT.md H-1).
+_FIGURE = rf"\d+(?:{_SEP}\d+)*(?:\.\d{{1,2}}(?!\d))?"
 _UNIT = r"(?:crores?|cr\.?|lakhs?|lacs?|millions?|thousands?)"
 
 AMOUNT = re.compile(

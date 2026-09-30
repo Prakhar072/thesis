@@ -22,9 +22,11 @@ spreads the sample over categories and years in proportion (the runbook's
 "stratified by year and order category"). Overall accuracy is then
 ``sum(stratum_share * stratum_accuracy)``.
 
-The 90 orders labelled while choosing the model (``hand/window_model_devset.csv``
-and ``hand/window_model_holdout.csv``) were seen by the pipeline's author and are
-excluded.
+Orders seen while building the pipeline are excluded (``SEEN``): the 90 labelled
+while choosing the model (``hand/window_model_devset.csv``,
+``hand/window_model_holdout.csv``), the coding protocol's worked examples
+(``hand/protocol_examples.csv``) and the orders read while tuning the
+fraud-category auto-coder (``hand/fraud_category_devset.csv``).
 """
 
 from __future__ import annotations
@@ -45,7 +47,11 @@ REPO_ROOT = cache.REPO_ROOT
 WINDOWS_IN = REPO_ROOT / "derived" / "windows_checked.parquet"
 LISTINGS_IN = REPO_ROOT / "derived" / "listings.parquet"
 DOCUMENTS_IN = REPO_ROOT / "derived" / "order_documents.parquet"
-SEEN = (REPO_ROOT / "hand" / "window_model_devset.csv", REPO_ROOT / "hand" / "window_model_holdout.csv")
+#: Orders the pipeline's author read while building or documenting the coding:
+#: the model dev/held-out sets, the coding protocol's worked examples, and the
+#: orders read while tuning the fraud-category auto-coder. None may be coded blind.
+SEEN = (REPO_ROOT / "hand" / "window_model_devset.csv", REPO_ROOT / "hand" / "window_model_holdout.csv",
+        REPO_ROOT / "hand" / "protocol_examples.csv", REPO_ROOT / "hand" / "fraud_category_devset.csv")
 SHEET_OUT = REPO_ROOT / "hand" / "validation_sample.csv"
 KEY_OUT = REPO_ROOT / "derived" / "validation_key.parquet"
 

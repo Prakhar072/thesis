@@ -37,6 +37,27 @@ Severity:
 | L-1 … L-11 | LOW | see below | | |
 | I-1 … I-6 | INFO | see below | | |
 
+### Status after fixes (2026-09-30)
+
+The fixes were made on request after this audit. Each was local to the stage it names, and no later stage needed
+rewriting. They were verified by a full-corpus scratch run (figures in `results_log.md`, 2026-09-30). `derived/`
+changes once the user re-runs stages 6–10. The findings below keep their original, pre-fix counts.
+
+| ID | Status | Before → after (full corpus) |
+|---|---|---|
+| C-1 | **fixed**. The operative clause reads on into the pieces cut from the same over-long sentence. A forward clause ("the following penalties") reads the next sentences. Both stop at another imposing clause or the payment instructions | penalty orders 8,039 → 8,473 (434 recovered, ₹619.7 crore; 0 lost) |
+| C-2 | **fixed**. Each sentence gets one value (stated total, then total = sum of parts, then the sum), and the order takes the largest | settlement sum ₹1,913 → ₹1,460 crore; median ₹10 → ₹5.93 lakh; 1,044 orders down. Remaining limit: several applicants paying in separate sentences are under-counted |
+| H-1 | **fixed** (`amounts._FIGURE` reads whole digit runs; "INR" followed by a 9+ digit registration number is not money) | penalties under ₹1,000: 22 → 2; Satyam disgorgement ₹1,258.88 crore |
+| H-2 | **fixed**. A stated total is used when "each" appears or when it equals the sum of every non-total mention; a single party takes the stated total | stated totals used 23 → 27; 71 penalty totals corrected (70 up) |
+| H-3 | open (a documented limitation; the signing date is not extracted) | — |
+| H-4 | open (OCR of images on digital pages not attempted) | — |
+| H-5 | open (a design decision for the unit of analysis, CLAUDE.md §11 item 4) | — |
+| H-6 | open (the Week 3 blind sample measures it) | — |
+| M-3 | **fixed** (`strip_appeals` on titles before matter and party parsing) | `matter_raw` with appeal text 1,209 → 0 |
+| M-9 | **fixed** (`check_windows._clear` nulls every window descriptor; the review sheet keeps them) | 8 → 0 rows |
+| other M / L | open | — |
+| new | **fixed**. `issuer_guess` kept descriptive prefixes ("Inspection of Books of X", "Financial Statements of X") | 46 guesses cleaned; issuer guesses 13,225 → 13,314 |
+
 ---
 
 ## CRITICAL

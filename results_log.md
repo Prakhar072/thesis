@@ -204,6 +204,51 @@ scratch run (deterministic; `derived/` reproduces it once the user runs `python 
 | `derived/orders.parquet` | **20,861 rows × 62 columns** | joins on `text_stem`, one-to-one, row count asserted at each join |
 | Development checks | party lists right in 15 of 18 random orders with parties (2 more had none); violated lists right in 13 of 20, the rest empty | fixes came from 50 reviewed orders, every unlinked penalty sampled, and the sum check above; the Section 28A recovery boilerplate had entered 2,717 lists before it was classed as a power |
 
+## 2026-09-30 — Audit fixes (stages 6–8 regenerated) and Week 3 Day 1: fraud category
+
+The fixes follow `audit/AUDIT_REPORT.md` (C-1, C-2, H-1, H-2, M-3, M-9) plus two found afterwards: a single party
+now takes a stated total, and descriptive prefixes are dropped from `issuer_guess`. All were local to stages 6–8;
+no later stage needed rewriting. Full-corpus scratch run (deterministic); `derived/` reproduces it once the user runs
+the five commands in CLAUDE.md §2. Before = `derived/` built 2026-09-27/28.
+
+| Figure | Before → after | Scope / note |
+|---|---|---|
+| Orders with a penalty | **8,039 → 8,473** | 434 recovered (₹619.7 crore): tables split from their "hereby impose" clause (C-1). 71 corrected (70 up, net +₹59.3 crore): truncated figures (H-1), stated totals (H-2). 0 lost. AO 8,305 · ED/CGM 99 · WTM 68 · Settlement 1 |
+| Penalty sum | ₹11,806 crore → **₹12,485 crore** | median ₹5 lakh (unchanged); p5 ₹50,000 · p25 ₹2 lakh · p75 ₹7 lakh · p95 ₹60.8 lakh; max unchanged (30700, PACL, ₹7,269 crore) |
+| AO outcome | penalty 7,912 → 8,305 · no penalty 2,481 → 2,387 · unknown 1,604 → 1,305 | |
+| Penalties under ₹1,000 | 22 → 2 | the truncation signature (H-1) |
+| Stated totals used | 23 → 27 orders | only when "each" appears, or the total equals every non-total mention |
+| Figure vs words | 32 of 9,704 → **53 of 12,053** (0.4%) | the new disagreements are in the penalty tables now read: a row figure printed beside the words of a noticee's subtotal, typos ("Rs. 2,50,0000 (Two Lakhs Fifty Thousand)"). Figure kept, flagged |
+| Settlement amounts | 1,717 orders (unchanged); median ₹10 lakh → **₹5.93 lakh**; sum ₹1,913 crore → **₹1,460 crore** | 1,058 orders changed, 1,044 of them down: an amount restated in several sentences had been added each time (C-2). Now the largest sentence value counts. Limitation: where several applicants each pay in separate sentences, this under-counts |
+| Disgorgement | 219 orders; sum ₹4,441 crore → ₹5,552 crore | 29 changed; Satyam now ₹1,258.88 crore (was read as ₹125) |
+| Windows | 12,142 (58.2%), unchanged | dropped/flagged rows no longer keep method, kind or raw text (M-9: 8 → 0 rows) |
+| Prior actions | 16,918, unchanged | |
+| `matter_raw` with SAT-appeal text | 1,209 → 0 | M-3 |
+| Orders with a party list | 19,451 → **19,460** | 9 "Inspection of <broker>" AO orders gained their one party |
+| Party rows | 47,972 → 47,981 | PAN 32,298. Parties penalised 10,958 → 13,242 rows |
+| Penalty links | one party 6,798 → 6,922 · all rows 1,021 → 1,301 · partial 58 → 87 · none 162 → 163 | fully linked 8,223 of 8,473 penalty orders (97.0%) |
+| Per-party amounts sum to the order total | **7,681 of 7,681** checkable orders | fully linked, no "each", no joint liability. The 10 other fully linked orders all have joint liability, which sits on every party liable by design |
+| Issuer guess | 13,225 → **13,314 (63.9%)** | 46 guesses cleaned ("Inspection of Books of X", "Issuance of … Shares by X", "Financial Statements of X" → X); 9 new from the inspection orders above |
+| `derived/orders.parquet` | 20,861 × 62 → **20,861 × 66** | four fraud-category columns |
+
+**Week 3 Day 1: fraud category.** Stage `src/classify_fraud.py` (fraud-v1; 1.5 min). The rules come from
+`hand/coding_protocol.md`, which was written before coding; its worked examples are in `hand/protocol_examples.csv`.
+Violated provisions (`order_parties.regulations`) decide first. PFUTP 3/4 and SEBI Act §12A(a)–(c) are decided by
+the narrative (capped keyword scores). Where no violated list exists, the fallbacks are, in order: the penalty
+section, the title, a strong narrative, then the instruments cited. Definitions (Reg./Sec. 2) are not charges.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders coded | 20,849 (every order with text) | |
+| **Category** | MARKET_MANIPULATION 7,408 (35.5%) · DISCLOSURE_FAILURE 4,398 (21.1%) · OTHER 4,229 (20.3%) · INTERMEDIARY_MISCONDUCT 3,353 (16.1%) · INSIDER_TRADING 632 (3.0%) · FUND_DIVERSION 511 (2.5%) · ACCOUNTING_MISSTATEMENT 244 (1.2%) · RPT_TUNNELLING 74 (0.4%) | MM includes 2,223 of the 2,243 Illiquid Stock Options orders (18 are intermediary, 2 other) |
+| …among windowed orders (12,142) | MM 6,684 · DISCLOSURE 1,933 · INTERMEDIARY 1,573 · OTHER 852 · INSIDER 567 · FUND 321 · ACCOUNTING 167 · RPT 45 | the Stage 1 base: the fraud categories of the plan (diversion, RPT, accounting) are small |
+| …by order type | AO: MM 5,239 · DISCL 2,835 · OTHER 2,109 · INTERM 1,127. WTM: OTHER 1,857 · MM 1,760 · INTERM 1,575 · DISCL 620. Settlement: DISCL 917 · MM 387 · INTERM 353 · OTHER 234. ED/CGM: INTERM 298 | |
+| Basis | provisions 16,828 (high 12,630 · medium 3,521 · low 677) · fallback 3,076 (low) · unresolved 945 (OTHER, low) | medium = several categories charged; precedence decided (3,110 orders charge more than one) |
+| Top rules | PFUTP narrative 6,220 · SAST 2,011 · §12A narrative 1,182 · PIT disclosure 1,126 · Stock Brokers 1,011 · unresolved 945 · 15C investor grievances 811 · unregistered 635 · 11C non-cooperation 606 · deemed public issue 523 | |
+| Development agreement | **58 of 65** agent-labelled orders (89%); 3 UNSURE excluded | `hand/fraud_category_devset.csv`. The rules were tuned on these orders, so this is optimistic. The blind sample (Day 5) measures accuracy and κ. The devset and protocol examples are excluded from that sample |
+| Definitions fix | 6 categories changed, 106 moved from medium to high confidence, dev agreement unchanged | PIT 2(1)(g) had counted as a disclosure charge beside PIT 4(1); 31627 (definitions only) had been DISCLOSURE |
+| Known limits | NSE co-location cases fall in MM as the nearest category; ISO orders against brokers charged only under the broker regulations are INTERMEDIARY; 945 unresolved orders (no violated list, penalty section, telling title or narrative) | |
+
 ### Method notes for the data section
 
 - SEBI's listing endpoint paginates on `doDirect` (0-based), not the `nextValue` a browser capture suggests; verified by exact count reconciliation.

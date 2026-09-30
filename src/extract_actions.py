@@ -334,10 +334,66 @@ def _amount_mentions(stem: str, kind: str, sentence: str, rel: float, joint: boo
     return out
 
 
-def find_sanctions(sentences: list[tuple[str, float]], stem: str, order_type: str | None) -> list[SanctionMention]:
+#: How much of the rest of an over-long sentence a sanction clause may take in.
+CONTINUATION_MAX = 8000
+
+
+def _with_continuation(s: str, pieces: list[str] | None) -> str:
+    """The clause and the rest of its sentence.
+
+    A penalty paragraph with its table ("I hereby impose the following penalty on
+    the Noticees – [table]") often exceeds the 2,000-character sentence cap, and
+    ``split_sentences`` cuts it into pieces: the clause in one, the amounts in the
+    next (46128; AUDIT_REPORT.md C-1). The following pieces of the same sentence
+    are read with the clause, up to ``CONTINUATION_MAX`` characters and never past
+    a piece that imposes something itself.
+    """
+    out = s
+    for p in pieces or ():
+        if _IMPOSE.search(p) or len(out) + len(p) > CONTINUATION_MAX:
+            break
+        out += " " + p
+    return out
+
+
+#: The order itself imposing ("I hereby impose", "I impose"), as opposed to "a fit
+#: case to impose", "the AO has chosen to impose": only these may read on past
+#: their own sentence.
+_OPERATIVE_IMPOSE = re.compile(r"\bhereby\s+[it]mpose|(?:\bI|\|)\s*,?\s+[it]mpose", _I)
+#: The clause points at a table after it.
+_FORWARD = re.compile(r"\b(?:following|as\s+(?:under|follows)|(?:mentioned|detailed|given|shown|specified|set\s+out|"
+                      r"tabulated|provided)\s+(?:below|hereunder)|table\s+below|below)\b", _I)
+#: …but not a statute being quoted ("which reads as under: …").
+_QUOTING = re.compile(r"\b(?:reads?|provides?|stipulates?|reproduced|extracted)\s+(?:as\s+)?(?:under|follows|below)", _I)
+#: A sentence that ends a penalty table: another sanction, or the payment instructions.
+_TABLE_END = re.compile(r"\b(?:shall|to)\s+(?:be\s+)?(?:remit\w*|pa(?:y|id))\b|\bdisgorge|\brestrain|\bdebar"
+                        r"|certificate\s+of\s+registration|\bwarn", _I)
+
+
+def _with_following(s: str, following: list[str]) -> str:
+    """ "I hereby impose the following penalties on the noticees …, as applicable."
+    with the table as the next sentence(s) (47376, 53836): the clause names no
+    amount, so the sentences after it are read with it — up to
+    ``CONTINUATION_MAX`` characters, and never past another imposing sentence,
+    another sanction or the payment instructions."""
+    out = s
+    for p in following:
+        if _IMPOSE.search(p) or _TABLE_END.search(p) or _QUOTING.search(p) or len(out) + len(p) > CONTINUATION_MAX:
+            break
+        if len(re.findall(r"\b[a-z]{3,}\b", p)) >= 25 and not am.find_amounts(p, bare=True):
+            break  # running prose, not table rows
+        out += " " + p
+    return out
+
+
+def find_sanctions(sentences: list[tuple[str, float]], stem: str, order_type: str | None,
+                   continuations: list[list[str]] | None = None) -> list[SanctionMention]:
+    """``continuations[i]``: the pieces that follow sentence ``i`` within the same
+    over-long sentence (``split_sentences(..., groups=True)``), if any."""
     out: list[SanctionMention] = []
     for i, (s, rel) in enumerate(sentences):
         nearby = " ".join(x for x, _ in sentences[i:i + 3])
+        rest = continuations[i] if continuations else None
         # Settlement amounts: anywhere in a settlement order.
         if order_type == "SETTLEMENT" and _SETTLEMENT.search(s) and _SETTLEMENT_PAY.search(s) \
                 and "scheme" not in s.lower():
@@ -346,9 +402,20 @@ def find_sanctions(sentences: list[tuple[str, float]], stem: str, order_type: st
             continue
         cited = _NOT_OPERATIVE.search(s)
         if (imp := _IMPOSE.search(s)) and not cited:
-            out.extend(_amount_mentions(stem, PENALTY, s, rel, bool(_JOINT.search(nearby)), anchor=imp.start()))
+            joint = bool(_JOINT.search(nearby))
+            operative = bool(_OPERATIVE_IMPOSE.search(s))
+            found = _amount_mentions(stem, PENALTY, _with_continuation(s, rest) if operative else s, rel, joint,
+                                     anchor=imp.start())
+            tail = s[imp.start():]
+            if not found and operative and _FORWARD.search(tail) and not _QUOTING.search(tail) \
+                    and not am.find_amounts(tail, bare=True):
+                following = [x for x, _ in sentences[i + 1:i + 40]]
+                found = _amount_mentions(stem, PENALTY, _with_following(s, following), rel, joint,
+                                         anchor=imp.start())
+            out.extend(found)
         if _DISGORGE.search(s) and _DIRECTIVE.search(s) and not _PAST_OR_CITED.search(s):
-            out.extend(_amount_mentions(stem, DISGORGEMENT, s, rel, bool(_JOINT.search(nearby))))
+            out.extend(_amount_mentions(stem, DISGORGEMENT, _with_continuation(s, rest), rel,
+                                        bool(_JOINT.search(nearby))))
         if _RESTRAIN.search(s) and _DIRECTIVE.search(s) and not _PAST_OR_CITED.search(s):
             period = _PERIOD_OF.search(s)
             out.append(SanctionMention(stem, DEBARMENT, s, rel,
@@ -476,6 +543,40 @@ def penalty_rows(pen: list[SanctionMention]) -> list[SanctionMention]:
     return rows
 
 
+def _sentence_amount(items: list[SanctionMention]) -> int:
+    """What one sentence says is paid: its stated total; else, when the largest
+    amount is the sum of at least two others ("Rs. 35,964 consisting of Rs. 25,964
+    … and Rs. 10,000"), that amount; else the sum (several applicants in a table,
+    "Rs. 25,000 towards settlement charges and Rs. 25,000 towards expenses")."""
+    totals = [s.amount_rupees for s in items if s.is_total]
+    if totals:
+        return max(totals)
+    amounts = [s.amount_rupees for s in items]
+    top = max(amounts)
+    rest = list(amounts)
+    rest.remove(top)
+    if len(rest) >= 2 and sum(rest) == top:
+        return top
+    return sum(amounts)
+
+
+def settlement_amount(mentions: list[SanctionMention]) -> int:
+    """The settlement amount of an order.
+
+    Settlement orders state it several times — the applicant's proposal, the
+    Internal Committee's and HPAC's recommendations, the remittance — and a
+    proposal may be revised upwards. Each sentence is read on its own
+    (``_sentence_amount``), and the order's amount is the largest of them.
+    Summing across sentences counted one ₹92.6 lakh settlement as ₹1.85 crore
+    (100354; AUDIT_REPORT.md C-2). An order in which several applicants each pay
+    in a sentence of their own is under-counted by this rule.
+    """
+    by_sentence: dict[str, list[SanctionMention]] = {}
+    for s in mentions:
+        by_sentence.setdefault(s.sentence, []).append(s)
+    return max(_sentence_amount(items) for items in by_sentence.values())
+
+
 def summarise_order(job: Job, prior: list[PriorMention], sanctions: list[SanctionMention]) -> OrderActions:
     o = OrderActions(job.text_stem, job.order_id, job.order_type, job.order_date, job.text_status)
     o.n_prior_mentions = len(prior)
@@ -507,8 +608,16 @@ def summarise_order(job: Job, prior: list[PriorMention], sanctions: list[Sanctio
         if not rows:  # only a Total was stated
             rows = totals
             rows_sum = sum(s.amount_rupees for s in rows)
-        if len(totals) == 1 and totals[0].amount_rupees != rows_sum and o.penalty_each:
-            o.penalty_total, o.penalty_total_basis = totals[0].amount_rupees, "stated_total"
+        stated = {s.amount_rupees for s in totals}
+        every_mention = sum(s.amount_rupees for s in pen if not s.is_total)
+        # A single stated total that the rows miss is taken when it explains the
+        # gap: "₹X each", or equal penalties in separate sentences that the
+        # restatement rule merged ("… ₹2,00,000 … & ₹2,00,000 …. Further, … ₹2,00,000
+        # under Section 15HA … a consolidated penalty of ₹6,00,000", 14949;
+        # AUDIT_REPORT.md H-2).
+        if len(stated) == 1 and (total := next(iter(stated))) != rows_sum \
+                and (o.penalty_each or total == every_mention):
+            o.penalty_total, o.penalty_total_basis = total, "stated_total"
         else:
             o.penalty_total = rows_sum
             o.penalty_total_basis = "rows_each_unresolved" if o.penalty_each else "rows"
@@ -517,13 +626,13 @@ def summarise_order(job: Job, prior: list[PriorMention], sanctions: list[Sanctio
         o.penalty_words_checked = sum(s.words_agree is not None for s in rows)
         o.penalty_words_disagree = sum(s.words_agree is False for s in rows)
         o.penalty_raw = " || ".join(dict.fromkeys(s.sentence for s in rows))[:4000]
-    settle = {(s.sentence, s.amount_rupees): s for s in sanctions if s.kind == SETTLEMENT and s.amount_rupees}
+    settle = [s for s in sanctions if s.kind == SETTLEMENT and s.amount_rupees]
     if settle:
-        o.settlement_amount = sum(s.amount_rupees for s in settle.values())
-    dis = {(s.sentence, s.amount_rupees): s for s in sanctions if s.kind == DISGORGEMENT and s.amount_rupees
-           and not s.is_total}
+        o.settlement_amount = settlement_amount(settle)
+    dis = [s for s in sanctions if s.kind == DISGORGEMENT and s.amount_rupees and not s.is_total]
     if dis:
-        o.disgorgement_total = sum(s.amount_rupees for s in dis.values())
+        # the same amount restated in a later sentence is one direction, not two
+        o.disgorgement_total = sum(s.amount_rupees for s in penalty_rows(dis))
     deb = [s for s in sanctions if s.kind == DEBARMENT]
     if deb:
         o.debarred = True
@@ -550,8 +659,15 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
         flat = ew.normalise_sentence(stripped)
         prior = find_prior_mentions(flat, job.text_stem, job.order_date, job.window_start)
         n = max(len(stripped), 1)
-        sentences = [(ew.normalise_sentence(stripped[s:e]), s / n) for s, e in ew.split_sentences(stripped)]
-        sanctions = find_sanctions(sentences, job.text_stem, job.order_type)
+        spans = ew.split_sentences(stripped, groups=True)
+        sentences = [(ew.normalise_sentence(stripped[s:e]), s / n) for s, e, _ in spans]
+        # the pieces that follow each sentence inside one over-long sentence
+        # (pieces of a group are contiguous)
+        continuations: list[list[str]] = [[] for _ in spans]
+        for i in range(len(spans) - 2, -1, -1):
+            if spans[i + 1][2] == spans[i][2]:
+                continuations[i] = [sentences[i + 1][0]] + continuations[i + 1]
+        sanctions = find_sanctions(sentences, job.text_stem, job.order_type, continuations)
         return summarise_order(job, prior, sanctions), prior, sanctions
     except Exception as exc:  # pragma: no cover - last-resort guard for a long run
         o = OrderActions(job.text_stem, job.order_id, job.order_type, job.order_date, job.text_status)

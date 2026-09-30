@@ -97,3 +97,27 @@ def test_a_space_does_not_join_numbers():
 def test_non_amounts_are_ignored():
     assert am.find_amounts("Regulation 3(a) of the Regulations, 2003 and Rule 5") == []
     assert am.find_amounts("Rs. per share") == []
+
+
+@pytest.mark.parametrize("text, rupees, words", [
+    # AUDIT_REPORT.md H-1: figures without grouping kept only their first 1-3 digits
+    ("Rs. 500000 (Rupees five lakhs only)", 500_000, 500_000),        # 10087 (was ₹500)
+    ("Rs.30000/- (Rupees Thirty Thousand Only)", 30_000, 30_000),     # 10170 (was ₹300)
+    ("INR 19908933.85 as mentioned in Table no. 4", 19_908_933, None),  # 101405 (was ₹199); paise dropped
+    ("₹1258.88 crore jointly and severally", 12_588_800_000, None),   # 30647 Satyam (was ₹125)
+    ("Rs.1,10000/- (Rupees one lacs ten thousand only)", 110_000, 110_000),  # 20061, malformed grouping
+    ("Rs. 5.00.000/- (Rupees Five Lakh)", 500_000, 500_000),          # dots for commas
+])
+def test_whole_figures_are_read(text, rupees, words):
+    [a] = am.find_amounts(text)
+    assert (a.rupees, a.words_rupees) == (rupees, words)
+
+
+def test_a_registration_number_is_not_money():
+    # 36011: "INR200004031" is an RTA's SEBI registration number
+    assert am.find_amounts("registered as RTA vide registration no. INR200004031, PAN No. AACCB8463B") == []
+    assert [a.rupees for a in am.find_amounts("a penalty of INR 2,00,000/-")] == [200_000]
+
+
+def test_two_amounts_separated_by_a_comma_stay_two():
+    assert [a.rupees for a in am.find_amounts("Rs 2,00,000, Rs 3,00,000 and Rs. 5,00,000")] == [200_000, 300_000, 500_000]

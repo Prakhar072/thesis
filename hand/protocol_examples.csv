@@ -1,0 +1,13 @@
+text_stem,section,category,note
+75894,3.1,INSIDER_TRADING,worked example
+23691,3.2,FUND_DIVERSION,worked example
+82086,3.3,RPT_TUNNELLING,worked example
+99823,3.4,ACCOUNTING_MISSTATEMENT,worked example
+39418,3.5,MARKET_MANIPULATION,worked example
+45046,3.6,DISCLOSURE_FAILURE,worked example
+65476,3.7,INTERMEDIARY_MISCONDUCT,worked example
+48699,3.8,OTHER,worked example (a)
+25639,3.8,OTHER,worked example (b)
+25029,3.8,OTHER,worked example (c)
+46128,-,-,traced in CODEBASE_MAP.md and AUDIT_REPORT.md
+14949,-,-,quoted in AUDIT_REPORT.md

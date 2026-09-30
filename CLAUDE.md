@@ -1,11 +1,12 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-28 (Week 2, Day 5 built). Read this before touching code or data.
+Last updated: 2026-09-30 (audit fixes; Week 3, Day 1 built). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
-(verified SEBI protocol notes and how orders state the window), `PROJECT_GUIDE.md`
-(the human-facing guide).
+(verified SEBI protocol notes and how orders state the window), `hand/coding_protocol.md`
+(the coding rules for window, fraud category, issuer, detection channel), `audit/`
+(the 2026-09-28 audit and its fix status), `PROJECT_GUIDE.md` (the human-facing guide).
 
 ---
 
@@ -47,7 +48,41 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 2, Day 5 built)
+## 2. Status (audit fixes and Week 3, Day 1 built)
+
+**Pending (the user runs; ~4 min, no network), in order:**
+`python -m src.check_windows` → `python -m src.extract_actions` → `python -m src.extract_parties`
+→ `python -m src.classify_fraud` → `python -m src.build_orders`. Until then `derived/` holds the
+pre-fix Week 2 outputs and has no `order_categories.parquet` (so `build_orders` fails loudly).
+
+**Audit fixes (2026-09-30)** (`audit/AUDIT_REPORT.md`, "Status after fixes"; figures in `results_log.md`),
+all local to stages 6–8 and scratch-verified on the full chain:
+- **C-1:** penalty tables split from their "hereby impose" clause are read. Penalty orders 8,039 → 8,473, sum
+  ₹11,806 → ₹12,485 crore.
+- **C-2:** a settlement amount restated in several sentences is counted once. Sum ₹1,913 → ₹1,460 crore.
+- **H-1:** whole digit runs are read; Satyam disgorgement ₹1,258.88 crore.
+- **H-2:** stated totals are used.
+- **M-3:** appeal text is removed from `matter_raw`.
+- **M-9:** out-of-dataset window rows carry no descriptors.
+- **New:** a single party takes a stated total; `issuer_guess` drops "Inspection of Books of" and similar
+  prefixes.
+
+**Week 3 Day 1 (fraud category):** `hand/coding_protocol.md` was written before coding.
+`src/classify_fraud.py` (stage 9) writes `derived/order_categories.parquet`, and `build_orders` (stage 10)
+joins four of its columns. Categories:
+- MM 7,408
+- DISCLOSURE 4,398
+- OTHER 4,229
+- INTERMEDIARY 3,353
+- INSIDER 632
+- FUND 511
+- ACCOUNTING 244
+- RPT 74
+
+Confidence: high 12,630 · medium 3,521 · low 4,698 (945 unresolved). Dev agreement is 58 of 65, measured
+on the orders the rules were built on, so it is optimistic. `derived/orders.parquet`: 20,861 × 66.
+
+The rest of this section is the Week 2 record; its sanction and party figures are pre-fix.
 
 Done: listing scrape → document fetch → text extraction + OCR (708 OCR orders,
 7,782 OCR pages, 182 rotated) → window candidates + **regex v1.1**
@@ -126,8 +161,11 @@ Day 3 review.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (591 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (669 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
+10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
+    orders already coded that are affected). Once validation coding starts, a rule change means
+    re-coding the affected orders; never edit a rule silently.
 
 ## 4. Environment
 
@@ -188,12 +226,16 @@ Day 3 review.
 | 6 sanity | `python -m src.check_windows` | violation_windows, `hand/window_review.csv` | `derived/windows_checked.parquet`, `derived/window_flagged.csv`, `derived/extraction_rate.csv`, appends to `hand/window_review.csv`, `logs/check_windows.log` | none (seconds) |
 | 7 actions | `python -m src.extract_actions` | text_documents, `derived/text/`, windows_checked | `derived/order_actions.parquet`, `derived/prior_action_mentions.parquet`, `derived/sanction_mentions.parquet`, `logs/extract_actions.log` | none (~1 min) |
 | 8 parties | `python -m src.extract_parties` | text_documents, `derived/text/`, listings, sanction_mentions, order_actions | `derived/order_entities.parquet`, `derived/order_parties.parquet`, `derived/regulation_mentions.parquet`, `logs/extract_parties.log` | none (~1 min) |
-| 9 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
+| 9 category | `python -m src.classify_fraud` | order_parties, order_actions, listings, text_documents, `derived/text/` | `derived/order_categories.parquet`, `logs/classify_fraud.log` | none (~1.5 min) |
+| 10 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties, order_categories | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
 → `window_model --offline` (answers from `raw/llm/`; `model_calls=0` proves it) → `check_windows`
-→ `extract_actions` → `extract_parties` → `build_orders`.
+→ `extract_actions` → `extract_parties` → `classify_fraud` → `build_orders`.
+Scratch dry run of stages 6–10: symlink `listings`, `order_documents`, `text_documents` and the
+`violation_windows` input into DIR, copy `hand/window_review.csv`, then pass `--scratch DIR` (and
+`--derived DIR` / `--sanctions` / `--actions` where the stage takes them).
 Useful flags: `--category`, `--order-id` (repeatable), `--limit`, `--start-page/--end-page`
 (listings), `--resolve-only` (fetch), `--sample N`, `--no-ocr`, `--scratch DIR`,
 `--workers`, `--nice` (extract), `--top-k` (windows), `--model`, `--think`, `--status`,
@@ -375,13 +417,24 @@ ENQUIRY_REGS, SETTLEMENT), `regime_year`, `provision` ("4(2)(a)"), `keyword`, `r
 `violation, penalty, power, cited`, `how` (title / act / abbrev / alias / generic / default),
 `rel_pos`, `citation` (as written), `context` (120 chars before it).
 
-`derived/orders.parquet` — **the Week 2 checkpoint**, one row per order (20,861 × 62): the
+`derived/order_categories.parquet` — one row per order (20,861); the fraud category (Week 3 Day 1, `fraud-v1`,
+rules in `hand/coding_protocol.md` §3)
+: `fraud_category` ∈ `INSIDER_TRADING, FUND_DIVERSION, RPT_TUNNELLING, ACCOUNTING_MISSTATEMENT, MARKET_MANIPULATION,
+DISCLOSURE_FAILURE, INTERMEDIARY_MISCONDUCT, OTHER` (null only without text); `fraud_category_confidence` ∈ `high`
+(one category charged, or a clear narrative) / `medium` (several charged, precedence decided; or a narrative that
+only just wins) / `low` (fallbacks, PFUTP decided by its clauses, unresolved); `fraud_category_rule` (e.g.
+`pit_trading`, `pfutp:narrative`, `lodr_23`, `fallback:investor_grievances`, `fallback:narrative`, `unresolved`);
+`fraud_category_raw` (the provisions or phrases that decided it); `fraud_categories_all` (JSON, every category
+charged, precedence order); `narrative_scores` (JSON, capped phrase counts); `rules_version`; `error`.
+
+`derived/orders.parquet` — **the Week 2 checkpoint**, one row per order (20,861 × 66): the
 runbook `orders` table. Listing (title, category, source URL, SAT appeals), PDF URL, text
 (path, text layer, pages, OCR pages), the window from `windows_checked` (start, end,
 precision, raw sentence, confidence, method, kind, sanity status), prior and first action
-and sanctions from `order_actions`, and matter / issuer / parties / regulations from
-`order_parties`. Built by joins only (on `text_stem`, one-to-one, row count asserted).
-`fraud_category` and `detection_channel` come in Week 3.
+and sanctions from `order_actions`, matter / issuer / parties / regulations from
+`order_parties`, and `fraud_category`, `fraud_category_confidence`, `fraud_category_rule`,
+`fraud_category_raw` from `order_categories`. Built by joins only (on `text_stem`,
+one-to-one, row count asserted). `detection_channel` comes on Week 3 Day 2.
 
 `src/regulations.py` — the citation parser: instrument catalogue (full titles, abbreviations,
 the order's own "hereinafter" aliases), provision lists ("3(a), (b), 4(1) and 4(2)(e)"), and the
@@ -476,6 +529,25 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 - "Recovery proceedings may be initiated under Section 28A" is boilerplate in every AO
   order; 28A is a power, not a violated provision (it had entered 2,717 lists).
 
+**Audit fixes and Week 3 Day 1.**
+- Sentence splitting cuts sentences over 2,000 characters into pieces
+  (`split_sentences(..., groups=True)` says which pieces belong together). An operative
+  "hereby impose" clause reads on into its own pieces, never into the next imposing
+  sentence. A *non-operative* "impose" ("SEBI may impose …", statute quotes) never reads
+  on: doing so once pulled market capitalisation and client balances into penalties
+  (8,649 orders, ₹113,284 crore).
+- `settlement_amount` is the largest *sentence* value, not a sum over sentences:
+  settlement orders restate the amount 2–4 times.
+- Classify from what was charged, never from definitions: PIT 2(1)(g), Companies Act
+  2(76) and PFUTP 2(1)(c) are recited beside the charge (`classify_fraud.category_of`
+  returns None for Reg./Sec. 2).
+- Generic accounting words ("books of accounts", "financial statements", "forensic
+  audit") appear in broker inspections and adviser cases. They only reinforce a
+  misstatement phrase; they never make ACCOUNTING by themselves.
+- `issuer_from_matter` takes the *last* "shares of / scrip of" match, so a header matter that
+  runs on into the order can walk past the company. Descriptive prefixes ("Inspection of
+  Books of") are stripped only at the start.
+
 ## 11. Next steps (runbook Week 2 onward)
 
 1. Week 2 is built (Day 5: `derived/orders.parquet`, `order_entities`). Settlement orders
@@ -505,12 +577,9 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    matter-grouping step (not built).
 5. Build the finality classifier (interim / final / confirmatory) from order text;
    use `sat_appeals` as metadata. Stage 3 needs the event types by Week 7.
-6. Week 3 Day 1 auto-codes fraud category from `orders.regulations` / `regimes`
-   (PIT → insider trading, LODR 23 → RPT, LODR 30/33 and SAST → disclosure,
-   Intermediaries and broker/adviser regimes → intermediary misconduct, ICDR → fund
-   diversion, PFUTP 3/4 → read the narrative). 19% of orders have no violated list
-   (charges written as circulars, or phrasing the parser misses): fall back to
-   `regimes_cited` and `penalty_provisions` (15C = investor grievances, 15G = insider
-   trading, 15HA = fraud/manipulation).
+6. Fraud category is built (Week 3 Day 1). Next is **Week 3 Day 2, detection channel**: first write
+   protocol §5 (categories, inclusion rules, worked examples), then code it; `hand/recon_notes.md` §7
+   has the phrasing survey. The blind sample (Days 3–5) validates both, with κ on the fraud category.
+   `SEEN` in `validation_sample.py` already excludes the protocol examples and the fraud devset.
 7. Week 4 matching: `order_entities.pan` / `cin` and `orders.issuer_guess` are the
    hooks; entity roles are a first guess to correct during validation.

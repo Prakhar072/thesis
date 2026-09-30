@@ -161,6 +161,20 @@ def test_noticee_numbers():
     ("GDR Issue by Aksh Optifibre Limited", "Aksh Optifibre Limited"),
     ("dealings in Illiquid Stock Options at BSE", None),
     ("Satyam Computers Services Limited", "Satyam Computers Services Limited"),
+    # what the matter is about comes off the front
+    ("Investigation in the Financial Statements of Oriental Trimex Limited", "Oriental Trimex Limited"),
+    ("Inspection of Books of M/S LSC Securities Limited", "LSC Securities Limited"),
+    ("Front Running Trading activity of Dealers of Reliance Securities Ltd", "Reliance Securities Ltd"),
+    ("ISSUANCE OF OPTIONALLY FULLY CONVERTIBLE DEBENTURES BY RAMEL INDUSTRIES", "RAMEL INDUSTRIES"),
+    ("Bank of Rajasthan Ltd", "Bank of Rajasthan Ltd"),
+    ("issuance of Redeemable Preference Shares by Rightmax Technotrade International Limited",
+     "Rightmax Technotrade International Limited"),
+    ("Circulation of UPSI through WhatsApp with respect to Wipro Ltd", "Wipro Ltd"),
+    ("Hasti Finance Ltd. with respect to Mr. Amit Chouhan", "Hasti Finance Ltd"),
+    ("Trading Activity of Kanaiyalal Baldevbhai Patel with Passport India Investment (Mauritius) Ltd", None),
+    # … but only off the front: a header matter running on into the order keeps its first company
+    ("MAGNUM EQUITY BROKING LTD. BROKER OF THE STOCK EXCHANGE, MUMBAI . 1. BACKGROUND SEBI had conducted inspection "
+     "of the books of accounts and other documents of M", "MAGNUM EQUITY BROKING LTD"),
 ])
 def test_issuer_from_matter(matter, issuer):
     assert xp.issuer_from_matter(matter) == issuer
@@ -332,3 +346,16 @@ def test_orders_without_text_are_kept(tmp_path):
 ])
 def test_where_a_name_stops(entry, name):
     assert xp.clean_entry(entry) == name
+
+
+@pytest.mark.parametrize("title, matter", [
+    # AUDIT_REPORT.md M-3: SEBI's appeal annotations are not part of the matter
+    ("Adjudication Order in the matter of GDR issue by Aksh Optifibre Limited [SAT Appeal No.: 440/2020 & Misc. "
+     "App. No. 510/2020] [SAT Appeal No.: 438/2020]", "GDR issue by Aksh Optifibre Limited"),
+    ("Order against Mr Manilal Kotecha in the matter of Pyramid Saimira Theatre Ltd SAT Appeal No.122/2018]",
+     "Pyramid Saimira Theatre Ltd"),
+    ("Order in the matter of X Ltd 328/2020; MA 372/2020] 370/2020; MA 374/2020]", "X Ltd"),
+    ("Adjudication Order in the matter of BTS Consultancy Services Pvt. Ltd 353/2017 ]", "BTS Consultancy Services Pvt. Ltd"),
+])
+def test_appeal_annotations_leave_the_matter(title, matter):
+    assert xp.matter_from(title, "", 0) == (matter, "title")

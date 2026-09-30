@@ -241,3 +241,100 @@ def test_main_end_to_end(tmp_path):
     assert rows["1"]["first_action_date"] == D(2017, 3, 15)
     assert rows["2"]["penalty_total"] is None
     assert pq.read_table(out / "sanction_mentions.parquet").num_rows == 1
+
+
+# --------------------------------------------------------------------------
+# Fixes after the audit (AUDIT_REPORT.md C-1, C-2, H-2)
+# --------------------------------------------------------------------------
+
+def test_a_penalty_table_split_from_its_clause_is_read(tmp_path):
+    # 46128: the clause and the table exceed the 2,000-character sentence cap and
+    # were cut at a blank line — the clause in one piece, every amount in the next
+    rows = "\n\n".join(f"Noticee {k} (Mr. Person Number {k}) Section 12A(a), (b), (c) of SEBI Act, 1992 read with "
+                       f"Regulations 3(a), (b), (c), (d) and 4(1) of PFUTP Regulations Section 15HA of the SEBI Act, "
+                       f"1992 Rs. {k}0,00,000/- (Rupees {['', 'Ten', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty'][k]} "
+                       f"Lakh Only)" for k in range(1, 7))
+    text = ("BACKGROUND " + "The Noticees were heard in the matter. " * 150 + "ORDER 47. After taking into "
+            "consideration all the facts and circumstances of the case, I, in exercise of the powers conferred "
+            "upon me under Section 15-I of the SEBI Act, 1992, hereby impose the following penalty on the "
+            "Noticees – Noticee Violation Penal Provisions Penalty (Rs.)\n\n" + rows + "\n\nThe Noticees shall "
+            "remit the penalty within 45 days.")
+    (tmp_path / "t.txt").write_text(text, encoding="utf-8")
+    o, _, sanctions = ea.process(ea.Job("t", 1, "AO", D(2020, 2, 28), "t.txt", "OK", None), tmp_path)
+    assert o.penalty_total == 21_000_000 and o.penalty_n == 6  # ₹10–60 lakh
+    assert o.penalty_outcome == "penalty"
+
+
+def test_a_continuation_never_swallows_another_imposing_sentence():
+    rest = ["Rs. 1,00,000/- (Rupees One Lakh Only)", "I also impose a penalty of Rs. 2,00,000/- on Noticee 2"]
+    assert ea._with_continuation("I hereby impose the following penalty –", rest) == \
+        "I hereby impose the following penalty – Rs. 1,00,000/- (Rupees One Lakh Only)"
+
+
+@pytest.mark.parametrize("sentences, amount", [
+    # 100354: the IC's and HPAC's recommendations restate one amount (was summed: ₹1.85 crore)
+    (["After deliberation, the IC recommended the matter for settlement at the amount of ₹92,62,500/- (Rupees "
+      "Ninety Two Lakh Sixty Two Thousand Five Hundred only).",
+      "HPAC in its meeting considered the settlement terms proposed and recommended that the case may be settled "
+      "upon payment of ₹92,62,500/- (Rupees Ninety Two Lakh Sixty Two Thousand Five Hundred only).",
+      "The applicant has remitted the settlement amount of ₹92,62,500/- vide demand draft."], 9_262_500),
+    # 7670: a total followed by its parts
+    (["Accordingly, the applicant shall pay Rs.35,964 (Rupees thirty five thousand nine hundred and sixty four "
+      "only) consisting of Rs. 25,964 as settlement charges and Rs. 10,000 as legal charges towards settlement."],
+     35_964),
+    # 5272: two parts, then the total restated with its parts
+    (["Accordingly, the applicant shall pay Rs.25,000/- towards settlement charges and Rs.25,000/- towards "
+      "administrative expenses.",
+      "The applicant has remitted a sum of Rs.50,000/- comprising Rs.25,000/- towards settlement charges and "
+      "Rs.25,000/- towards administrative expenses."], 50_000),
+    # 99036: several applicants in one table
+    (["The applicants remitted the settlement amount mentioned in the Notices which was as under: Applicant "
+      "Settlement amount Dhaval Kotia ₹ 3,00,000/- Ravi Kotia ₹ 4,46,875/- Amit Kotia ₹ 3,00,000/-"], 1_046_875),
+])
+def test_settlement_amount(sentences, amount):
+    assert _order(sentences, "SETTLEMENT").settlement_amount == amount
+
+
+def test_equal_penalties_in_separate_sentences_are_explained_by_the_stated_total():
+    # 14949: a third ₹2 lakh in its own sentence was merged as a "restatement"
+    o = _order(["In view of the abovementioned conclusions, I hereby impose a penalty of ₹ 2,00,000/- (Rupees Two "
+                "Lakhs only) on the noticee for the violation Regulations 7(1) and (2) of SAST Regulations & "
+                "₹ 2,00,000/- (Rupees Two Lakhs only) for the violation Regulations 13(1) of PIT Regulations.",
+                "Further, I impose a penalty of ₹ 2,00,000/- (Rupees Two Lakhs only) on the noticee under Section "
+                "15HA of the Securities and Exchange Board of India Act.",
+                "Accordingly, I hereby impose a consolidated penalty of ₹ 6,00,000/- (Rupees Six Lakhs only) on "
+                "the noticee."])
+    assert (o.penalty_total, o.penalty_total_basis) == (600_000, "stated_total")
+
+
+def test_a_restated_penalty_still_does_not_take_a_stated_total_it_does_not_explain():
+    o = _order(["I hereby impose a penalty of Rs. 5,00,000/- (Rupees Five Lakh only) on the noticee.",
+                "Accordingly, I hereby impose a penalty of Rs. 5,00,000/- (Rupees Five Lakh only) on the noticee "
+                "under Section 15HA.",
+                "Thus a total penalty of Rs. 7,00,000/- is imposed on the noticee."])
+    assert (o.penalty_total, o.penalty_total_basis) == (500_000, "rows")
+
+
+def test_a_penalty_table_in_the_sentences_after_the_clause_is_read():
+    # 47376: the clause is a full sentence; the table follows as the next sentence(s)
+    o = _order(["After considering the factors under section 15J of the SEBI Act, I hereby impose following penalties "
+                "on the noticees under sections 15HA and 15HB of the SEBI Act, as applicable.",
+                "S.No.",
+                "Name of the Noticee Penalty 1 Mr. A Kumar Rs. 5,00,000/- (Rupees Five Lakh only) 2 Mr. B Shah "
+                "Rs. 2,00,000/- (Rupees Two Lakh only)",
+                "The above penalties shall be paid within 45 days of the receipt of this order.",
+                "The noticees are also directed to disgorge Rs. 9,00,000/- (Rupees Nine Lakh only)."])
+    assert (o.penalty_total, o.penalty_n) == (700_000, 2)
+
+
+@pytest.mark.parametrize("sentences", [
+    # 26761: statute quoted after a non-operative "impose"
+    ["I am convinced that it is a fit case to impose monetary penalty under Section 15A(b) of the SEBI Act, which "
+     "reads as under: Penalty for failure to furnish information.",
+     "I find that the market capitalization of the company during the said period was approx. Rs. 12,782 crore."],
+    # 47619: a WTM order discussing the AO's order
+    ["I note with the fact that the AO has chosen to impose a monetary penalty on the Noticee.",
+     "IL&FS claimed its plan would reduce its overall debt by ₹30,000 crores on August 29, 2018."],
+])
+def test_non_operative_imposing_words_do_not_read_on(sentences):
+    assert _order(sentences).penalty_total is None

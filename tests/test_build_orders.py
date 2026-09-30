@@ -39,6 +39,8 @@ def make_derived(tmp_path, *, parties_extra=None):
                                for k, s in enumerate(stems)]).to_parquet(tmp_path / "order_actions.parquet")
     rows = [{"text_stem": s, "n_parties": 1, "regulations": '["PFUTP 3(a)"]', "regimes": '["PFUTP"]'} for s in stems]
     _frame(bo.PARTY_COLUMNS, rows + (parties_extra or [])).to_parquet(tmp_path / "order_parties.parquet")
+    _frame(bo.CATEGORY_COLUMNS, [{"text_stem": s, "fraud_category": "MARKET_MANIPULATION"} for s in stems]) \
+        .to_parquet(tmp_path / "order_categories.parquet")
     return stems
 
 
