@@ -344,3 +344,24 @@ run (`--scratch`, seed 20261006, 1.6 s); the real draw uses the same seed and in
 | Local copies | 136 PDFs + 14 inline-order texts, 0 missing, 80 MB | `hand/validation_pdfs/`, gitignored. Copies because `raw/pdfs` files are hard links into `raw/cache` |
 | Rare classes (expected at corpus shares) | RPT ≈ 1 · ACCOUNTING ≈ 2 · FUND ≈ 2 · INSIDER ≈ 4; AUDIT, SELF_DISCLOSURE ≈ 0–1 · MEDIA ≈ 1–2 | κ and agreement are measurable overall; per-category accuracy only for MM, DISCLOSURE, INTERMEDIARY, OTHER and UNCLEAR, SURVEILLANCE, COMPLAINT. A rare-class check would need a separate draw |
 | Coded fields | `violation_start`, `violation_end`, `window_kind`, `fraud_category`, `detection_channel`, `detection_detail` (new), `primary_issuer`, `notes` | protocol §2–§5; `--check` validates values without showing pipeline output |
+
+## 2026-10-14 — Week 3 Day 5: the validation scorer (built; no figures until the coding is done)
+
+The user deferred the hand coding of the 150 (Days 3–4). `src/score_validation.py` is built and tested so Day 5
+runs in one command once the sheet is coded: `python -m src.score_validation --official`. **No validation figure
+exists yet**; the Gate 1 decision waits for it. What it will report:
+
+| Measure | Definition |
+|---|---|
+| Window: has a window | hand `window_kind` ≠ none vs a pipeline window; agreement over all coded orders |
+| Window: exact / within one month | both ends the same day / within 31 days. Over the pipeline's windows (a window the coder rejects is wrong), over the hand windows (a missed one is wrong), and where both give one. An open end is compared on the stated end only |
+| Fraud category, detection channel | agreement and Cohen's κ, weighted by the key; channel also as stated vs UNCLEAR, and with flagged SURVEILLANCE as UNCLEAR |
+| Primary issuer | Week 4 normaliser, exact or token-sort ratio ≥ 92; `NONE` = no issuer |
+| Breakdowns | `violation_method`, era of the order, order type, stratum, auto-coder confidence and method, the coder's `?` |
+| Intervals | 95%, bootstrap resampling within stratum × ISO cells |
+| Gate 1 | extraction 58.2% (`derived/extraction_rate.csv`) with the weaker κ, read off the runbook table |
+
+Plumbing check (scratch, the real sample and pipeline): a sheet filled with the pipeline's own answers scores 100%
+and κ 1.00 on every measure; nine planted disagreements (two date shifts, a rejected and a missed window, a kind,
+a category, a channel, an issuer; a reworded issuer with "(formerly …)" still matches) land in exactly the
+expected measures (e.g. exact 107/110 of pipeline windows, within a month 108/110) and error rows. 740 tests pass.

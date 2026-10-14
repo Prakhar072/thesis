@@ -1,6 +1,7 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-10-14 (Week 3, Days 3–4: the blind sample built). Read this before touching code or data.
+Last updated: 2026-10-14 (Week 3, Days 3–5 built: the blind sample and its scorer; the coding is deferred by the
+user). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -48,13 +49,27 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 3, Days 1–2 run; Days 3–4 blind sample built)
+## 2. Status (Week 3, Days 1–2 run; Days 3–5 built; the hand coding deferred)
 
-**Pending (the user runs):** `python -m src.validation_sample` (seconds; once — it refuses to overwrite a started
-sheet). Then the user codes the 150 orders in `hand/validation_sample.csv` from the copies in
-`hand/validation_pdfs/`, with `hand/coding_protocol.md` open, in two sittings, and checks the sheet as they go
-with `python -m src.validation_sample --check`. **Agents must not show the pipeline's answer for any sampled
-order** (the coding is blind until Day 5): no per-order output from `derived/` for ids in the sheet or the key.
+**Pending (the user; deferred by their choice on 2026-10-14):** `python -m src.validation_sample` (seconds; once —
+it refuses to overwrite a started sheet). Then the user codes the 150 orders in `hand/validation_sample.csv` from
+the copies in `hand/validation_pdfs/`, with `hand/coding_protocol.md` open, in two sittings, and checks the sheet as
+they go with `python -m src.validation_sample --check`. Then `python -m src.score_validation --official` (Day 5).
+**Agents must not show the pipeline's answer for any sampled order** (the coding is blind until it is scored): no
+per-order output from `derived/` for ids in the sheet or the key. Until the coding is scored, Day 5's numbers, its
+fixes and the Gate 1 decision are open; work that does not depend on them (Week 4) can go ahead.
+
+**Week 3 Day 5 (scorer, 2026-10-14):** `src/score_validation.py` scores the coded sheet against
+`derived/orders.parquet`, weighted by the key. Window: has-a-window agreement; exact and within-31-days rates
+over the pipeline's windows, over the hand windows and over orders where both give one; kind. Fraud category and
+channel: agreement and Cohen's κ (weighted, with stratified-bootstrap 95% intervals); the channel also as stated vs
+UNCLEAR and with flagged SURVEILLANCE as UNCLEAR. Issuer: Week 4 normaliser + token-sort ≥ 92. Breakdowns: method,
+era, order type, auto-coder confidence, doubt. Errors with the machine's evidence → `derived/validation_errors.csv`
+(the fix step); Gate 1 read from the runbook table with the weaker κ. It refuses an unfinished sheet (`--partial`
+tests plumbing only) and a sheet with `--check` errors; `--official` saves the first scoring with fingerprints of the
+coding and the pipeline's answers, and every later scoring after a change is labelled NOT THE VALIDATION.
+Plumbing checked in scratch on the real sample: a sheet coded with the pipeline's own answers scores 100% / κ 1.00;
+nine planted disagreements land in the expected measures and error rows.
 
 **Week 3 Days 3–4 (blind sample, 2026-10-14):** `src/validation_sample.py` updated before the draw.
 - **Excluded as seen: 539 orders** (458 → 539). Added: the 43 flagged windows the user reviewed with the
@@ -199,7 +214,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (717 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (740 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -268,6 +283,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 | 10 channel | `python -m src.detect_channel [--no-model] [--offline]` | listings, text_documents, `derived/text/` | `derived/order_channels.parquet`, `raw/llm/`, `logs/detect_channel.log` | localhost Ollama only (rules ~1.3 min; model ~1.5–2.5 h, seconds when cached) |
 | 11 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties, order_categories, order_channels | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
 | sample | `python -m src.validation_sample [--scratch DIR] [--check]` | windows_checked, listings, order_documents, `raw/pdfs`, `derived/text/`, the seen lists in `hand/` | `hand/validation_sample.csv`, `hand/validation_pdfs/`, `derived/validation_key.parquet` | none (seconds); once, not part of a rebuild |
+| score | `python -m src.score_validation [--official] [--partial] [--scratch DIR] [--reps N]` | the coded sheet, validation_key, orders, extraction_rate | `derived/validation_{scored.parquet,errors.csv,summary.csv,table.md}`, `hand/validation_official.json` (`--official`, once), `logs/score_validation.log` | none (seconds) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
@@ -502,6 +518,17 @@ order), then the coder's columns (`hand/coding_protocol.md`): `violation_start`,
 `cell_sampled`, `weight` (= cell population / cell sampled, cells = stratum × iso; sums to 20,849), `seed`,
 `excluded_seen`. Day 5 joins it to `orders.parquet` on `text_stem` and weights agreement with `weight`.
 
+`derived/validation_scored.parquet` — one row per coded order (Day 5): `h_*` hand values, `m_*` pipeline values,
+`presence` ∈ `both, missed, spurious, neither`, `d_start`/`d_end` (days, pipeline − hand), and the agreement flags
+(nullable boolean; NA = not in that measure's denominator): `win_present_agree`, `win_{exact,month}_of_{machine,hand,
+both}`, `win_kind_agree`, `cat_agree`, `ch_agree`, `ch_stated_agree`, `ch_detail_agree`, `issuer_agree`; plus
+`stratum`, `iso`, `weight`, `era`, `doubt`. `derived/validation_summary.csv`: `measure`, `by`, `group`, `n`,
+`matches`, `rate` (unweighted; κ for `*_kappa`), `weighted`, `ci_low`, `ci_high` (overall rows only).
+`derived/validation_errors.csv`: one row per disagreement — `field`, `error`, `hand`, `machine`, `detail`, the
+machine's method / rule / confidence / evidence sentence, `hand_notes`. `derived/validation_table.md`: the paper
+tables and the Gate 1 reading. `hand/validation_official.json`: the first scoring of the finished sheet (headline
+figures, Gate 1, fingerprints); never overwritten without `--force`.
+
 `src/regulations.py` — the citation parser: instrument catalogue (full titles, abbreviations,
 the order's own "hereinafter" aliases), provision lists ("3(a), (b), 4(1) and 4(2)(e)"), and the
 role of each citation (see `hand/recon_notes.md` §9).
@@ -661,10 +688,13 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    matter-grouping step (not built).
 5. Build the finality classifier (interim / final / confirmatory) from order text;
    use `sat_appeals` as metadata. Stage 3 needs the event types by Week 7.
-6. Fraud category and detection channel are built and run (Week 3 Days 1–2); the blind sample is built (Days
-   3–4): the user draws it and codes 150 orders from the copies, with the protocol open. Day 5 (not built)
-   measures agreement and κ for both fields (weighted by the key), window exact and within-one-month match, and
-   accuracy by `violation_method` and era; then fixes, and never re-validates on the same 150. H4 (surveillance
+6. Fraud category and detection channel are built and run (Week 3 Days 1–2); the blind sample and its scorer
+   are built (Days 3–5). The user draws and codes the 150 (deferred), then runs
+   `python -m src.score_validation --official`; record its figures and the Gate 1 decision in `results_log.md`.
+   Then fix the systematic errors from `derived/validation_errors.csv`, re-run the pipeline, and never re-validate
+   on the same 150: a second round needs a fresh draw that excludes them (add `hand/validation_sample.csv` to
+   `validation_sample.SEEN` and write a new sheet; not built). If κ < 0.6, the protocol is rewritten through its
+   change log and the affected orders recoded. H4 (surveillance
    share < 50%) needs matter-level first detections: order-level shares swing with the ISO wave (42% with,
    26% without) and on listed-company frauds (55%; final figures with the model pass).
 7. Week 4 matching: `order_entities.pan` / `cin` and `orders.issuer_guess` are the

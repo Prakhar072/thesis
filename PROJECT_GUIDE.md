@@ -266,6 +266,13 @@ downloads only the new orders' documents, then stage 3.
   `python -m src.validation_sample --check` lists misspelt values, non-ISO dates (Excel
   likes to reformat them) and protocol reminders; it never shows the pipeline's answers.
   Don't open `derived/validation_key.parquet` or `derived/orders.parquet` while coding.
+- Week 3, Day 5, once all 150 are coded: `python -m src.score_validation --official`. It
+  writes the validation tables (`derived/validation_table.md`: window exact / within a
+  month, agreement and Cohen's κ for category and channel, issuer agreement, by method,
+  era and order type), every disagreement with the pipeline's evidence
+  (`derived/validation_errors.csv`, for the fixes) and the Gate 1 reading. `--official`
+  saves the figures once, in `hand/validation_official.json`; scoring the same 150 again
+  after fixes is labelled as not the validation.
 - The window is the period of business activity SEBI examined — "investigation /
   examination / inspection / relevant period" are one quantity; inspection
   *visit* dates are never it. See CLAUDE.md §1.
