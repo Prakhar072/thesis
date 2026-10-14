@@ -365,3 +365,62 @@ Plumbing check (scratch, the real sample and pipeline): a sheet filled with the 
 and κ 1.00 on every measure; nine planted disagreements (two date shifts, a rejected and a missed window, a kind,
 a category, a channel, an issuer; a reworded issuer with "(formerly …)" still matches) land in exactly the
 expected measures (e.g. exact 107/110 of pipeline windows, within a month 108/110) and error rows. 740 tests pass.
+
+## 2026-10-14 — Week 4 (built; scratch figures; the user runs the fetches and the review)
+
+Everything below is from scratch runs on 2026-10-14. The universe lists, a few probe days and the shareholding
+probes were fetched through the cache: 7 list snapshots, about 70 bhavcopy, index and corporate-action requests,
+and about 75 shareholding requests. Nothing has been written into `derived/` yet.
+
+**Day 1: listed universe** (`src/universe.py`, snapshots of 2026-10-14)
+
+| Figure | Value | Note |
+|---|---|---|
+| Securities | 13,451: BSE active 4,845 · delisted 4,388 · suspended 1,033; NSE equity 2,605 · SME 580 | BSE fund units (INF ISINs) dropped |
+| Firms (`firm_id` = ISIN issuer prefix) | **10,180**: active 5,539 · delisted 4,122 · suspended 519; on BSE 9,480, on NSE 3,181, both 2,481 | 2,338 have no ISIN (old BSE delistings) |
+| NSE renames placed on a firm | 918 of 1,094 company rows (by symbol 688, by name 228, by symbol change 2) | fund-scheme rows dropped; BSE has no rename list |
+| Aliases | 23,900 | |
+
+**Day 2: matching** (`src/match_entities.py`, match-v1)
+
+| Figure | Value | Note |
+|---|---|---|
+| Orders printing an ISIN or a BSE scrip code | 230 (1.1%) | the runbook's "codes first" path is thin; names carry the matching |
+| Distinct names | 8,657: auto 3,134 · review 564 · reject 4,959 | review band before the distinctive-word check: 1,665 |
+| Order issuers (13,314 named) | exact 8,101 · auto 443 · code 55 · review 582 · private 771 · no match 3,362 | |
+| **Orders with a matched listed issuer** | **8,599 (41.2%)**; windowed orders 5,613 of 12,142 (46.2%) | before the hand review |
+| Distinct issuer firms | 2,209; from windowed orders 1,221 | |
+| Company parties (16,936) | exact 3,243 · auto 167 · review 502 · private 7,503 · none 5,521 | |
+| Agent spot checks (not blind) | fuzzy auto 24/25, then 19/20 + 1 unsure after a fix (IDFC ≠ HDFC → review); exact through renames 15/15 | the IDFC/HDFC error led to the first-word rule |
+
+**Day 3: sample** (`src/build_sample.py`, sample-v1, seed 20261015; not frozen yet)
+
+| Figure | Value | Note |
+|---|---|---|
+| Fraud firms | 1,221 (active 677 · delisted 411 · suspended 133); 935 with a fraud year in FY2010–2025 | before the hand review |
+| Fraud firm-years | 3,357; FY2010–2025: 2,387 (issuer itself a noticee: 1,096; stated period only: 2,021) | financial years, any overlap |
+| Window length | median 207 days (IQR 89–396) | matched windowed orders |
+| Controls | 600 of 5,709 eligible, weight 9.52 (active 466 · delisted 113 · suspended 21) | never an issuer or review candidate of any order |
+| Events | 7,243 (orders 6,867, recited interims 376), 2001-04 to 2026-09; 217 before 2006 | prices from 2004 cover events from 2005 |
+
+**Day 4: prices** (`src/fetch_prices.py`, `src/prices.py`)
+
+| Figure | Value | Note |
+|---|---|---|
+| Format switch | old format to 5 Jul 2024, UDiFF from 8 Jul 2024 at both exchanges; 2,478 of 2,494 NSE symbols and 3,998 of 4,063 BSE codes continue across it | dry run 1–12 Jul 2024 |
+| Equities a day | NSE ~1,300 (2010) → ~2,500 (2024); BSE ~3,000 (2010) → ~4,500 (2024) | |
+| Adjustment | bhavcopy prices unadjusted; Tata Steel split 28 Jul 2022: raw −89.5% → adjusted +4.6% | factors from BSE corporate actions |
+| Corporate actions 2022 | 2,189 (dividends 1,702, splits 103, bonuses 124, rights 59, consolidations 1) | |
+| Full fetch | 5,944 weekdays × 2 exchanges + 23 action years + ~274 index months ≈ 12,200 requests, ~7–8 h | user-run |
+
+**Day 5: ownership** (`src/fetch_shareholding.py`)
+
+| Figure | Value | Note |
+|---|---|---|
+| Coverage of BSE's shareholding summary | Dec 2015 onward (Jun 2015 and earlier empty) | ownership for FY2016+ only |
+| Parse checks | Jaiprakash Associates Jun 2019: promoter 38.91%, pledged 20.00%; Reliance Dec 2015 / Dec 2023 / Jun 2026: 46.66 / 50.30 / 50.48%, no pledge; 3 live fraud firms parsed in all 9 quarters | |
+| Requests | ≤ 11 March quarters × 1,732 sample firms on BSE, fewer with trading spans | user-run, ~6–9 h |
+| Audit qualification | dropped (runbook timebox: needs annual-report PDFs) | the network extension stays future work |
+
+**Weekend: panel** (`src/build_panel.py`): plumbing run on the scratch slices only (a few weeks of prices), 5,150
+firm-years. The coverage table is produced by the user's run and recorded then. 807 tests pass.

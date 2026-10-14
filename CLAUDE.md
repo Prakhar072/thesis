@@ -1,7 +1,8 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-10-14 (Week 3, Days 3–5 built: the blind sample and its scorer; the coding is deferred by the
-user). Read this before touching code or data.
+Last updated: 2026-10-14 (Week 4 built: universe, matching, sample, prices, ownership, panel — scratch-verified;
+the long fetches and the hand review are the user's. Week 3 hand coding deferred by the user). Read this before
+touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -49,15 +50,60 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 3, Days 1–2 run; Days 3–5 built; the hand coding deferred)
+## 2. Status (Week 4 built; Week 3 hand coding deferred)
 
-**Pending (the user; deferred by their choice on 2026-10-14):** `python -m src.validation_sample` (seconds; once —
-it refuses to overwrite a started sheet). Then the user codes the 150 orders in `hand/validation_sample.csv` from
-the copies in `hand/validation_pdfs/`, with `hand/coding_protocol.md` open, in two sittings, and checks the sheet as
-they go with `python -m src.validation_sample --check`. Then `python -m src.score_validation --official` (Day 5).
+**Pending on the user (Week 4; nothing here has been run into `derived/`), in order:**
+
+| # | Step | Command | Time | Needs |
+|---|---|---|---|---|
+| W4-1 | Prices — start first, it is the longest and depends on nothing else | `setsid nohup .venv/bin/python -m src.fetch_prices > logs/fetch_prices.out 2>&1 &` | ~7–8 h (≈12,200 requests, 2004-01-01 → yesterday; resumable: re-run reads the cache) | network (NSE, BSE) |
+| W4-2 | Listed universe | `python -m src.universe` | seconds (its 7 snapshots are already cached, 2026-10-14) | — |
+| W4-3 | Matching | `python -m src.match_entities` | ~35 s; writes `hand/match_review.csv` (564 names) | W4-2 |
+| W4-4 | **Hand review** of the 80–92 band | fill `decision` in `hand/match_review.csv` (`accept` / `reject` / a `firm_id` from the candidates), most-used names first; then re-run W4-3 | ~2 h (runbook) | W4-3 |
+| W4-5 | Freeze the sample | `python -m src.build_sample` (once; refuses to overwrite) | ~15 s | W4-4 |
+| W4-6 | Price sanity check | `python -m src.prices --check TATASTEEL` → `figures/price_check_TATASTEEL.png`; look at it | seconds | W4-1, W4-2 |
+| W4-7 | Ownership | `setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholding.out 2>&1 &` | ~6–9 h (≤ 11 March quarters × 1,732 firms; fewer once prices exist) | W4-1, W4-5 |
+| W4-8 | Merge, coverage table | `python -m src.build_panel` → record `derived/panel_coverage.csv` in `results_log.md` | ~1 min | all |
+
+Run the fetches one at a time (both hit BSE). The review sheet shows the issuer names the pipeline read; they mostly
+repeat SEBI's titles, which the blind validation sheet shows anyway, so the anchoring risk for `primary_issuer` is
+small. A frozen sample is not changed by later Week 3 window fixes: re-label fraud years from fixed windows as a
+documented robustness check, or wait to freeze until the validation fixes are in (user's call).
+
+**Pending on the user (Week 3; deferred by their choice on 2026-10-14; nothing here has been run):**
+
+| # | Step | Command / file | State |
+|---|---|---|---|
+| 1 | Draw the blind sample (Days 3–4) | `python -m src.validation_sample` (seconds; once — refuses to overwrite a started sheet) | not run: `hand/validation_sample.csv`, `hand/validation_pdfs/`, `derived/validation_key.parquet` do not exist |
+| 2 | Hand-code the 150 (Days 3–4, ~7 h, two sittings) | `hand/validation_sample.csv`, from the copies, with `hand/coding_protocol.md` open; `python -m src.validation_sample --check` as you go | not started |
+| 3 | Score (Day 5) | `python -m src.score_validation --official` | not run (needs 1–2) |
+| 4 | Record the figures and the Gate 1 decision | `results_log.md` (Week 3 checkpoint) | open |
+| 5 | Fix systematic errors from `derived/validation_errors.csv`, re-run; a second round needs a fresh draw | — | open |
+
 **Agents must not show the pipeline's answer for any sampled order** (the coding is blind until it is scored): no
 per-order output from `derived/` for ids in the sheet or the key. Until the coding is scored, Day 5's numbers, its
-fixes and the Gate 1 decision are open; work that does not depend on them (Week 4) can go ahead.
+fixes and the Gate 1 decision are open; work that does not depend on them (Week 4) goes ahead.
+
+**Week 4 (built 2026-10-14; scratch figures in `results_log.md`):**
+- **Day 1, `src/universe.py` + `src/names.py`.** BSE scrip lists (active, delisted, suspended), NSE equity and SME
+  lists, NSE name and symbol changes → 10,180 firms (`firm_id` = ISIN issuer prefix), 23,900 aliases; 918 of NSE's
+  1,094 company renames placed on a firm. Name history is NSE's only (BSE-only renames are known by their last name).
+- **Day 2, `src/match_entities.py`.** Codes first (only 230 orders print an ISIN or scrip code), then names:
+  exact / token-sort ≥ 92 auto, 80–92 review, < 80 reject; private companies never matched; a fuzzy match must
+  also agree on the distinctive words (words in ≥ 30 listed names are generic) and its first one. Scratch: order
+  issuers matched 8,599 (41.2%; windowed 5,613 of 12,142; 1,221 firms); 564 names for review. Agent spot checks
+  (not blind): fuzzy auto 43–44 of 45, exact-through-rename 15 of 15.
+- **Day 3, `src/build_sample.py`.** Financial years (Apr–Mar). Scratch: 1,221 fraud firms, 3,357 fraud firm-years
+  (2,387 in FY2010–2025), 600 controls drawn from 5,709 eligible (weight 9.52), 7,243 events.
+- **Day 4, `src/fetch_prices.py` + `src/prices.py`.** NSE and BSE bhavcopies in both formats (switch on 8 Jul 2024),
+  BSE corporate actions (one request a year), BSE 500 index (one a month). Bhavcopy prices are **not** adjusted;
+  splits and bonuses are applied from BSE's corporate actions (Tata Steel 28 Jul 2022: −89.5% raw → +4.6%).
+  Scratch-verified on 2010, Jul–Aug 2022 and Jul 2024.
+- **Day 5, `src/fetch_shareholding.py`.** BSE shareholding summaries: promoter %, pledged shares and %, total shares;
+  current format from **Dec 2015 only** (earlier quarters return empty) → ownership covers FY2016 onward. March
+  quarters by default. Audit qualification: **dropped** within the runbook's timebox (needs annual-report PDFs).
+- **Weekend, `src/build_panel.py`.** Firm-year panel FY2010–2025 with every join's row count asserted, and the
+  coverage table. Plumbing run on the scratch slices only.
 
 **Week 3 Day 5 (scorer, 2026-10-14):** `src/score_validation.py` scores the coded sheet against
 `derived/orders.parquet`, weighted by the key. Window: has-a-window agreement; exact and within-31-days rates
@@ -153,9 +199,9 @@ After that run, an analysis of its output found five bugs in how model quotes
 are read (a malformed date widened to its whole year; "January 21-25, 2008",
 "May-June 1998", "2003-05", "May 3 to May 20, 2004" read wrongly) and trade-log
 rows taken as windows. Fixed and tested (410 tests); re-reading the cached
-answers changes 70 windows, all reviewed: combined **12,150 (58.3%)**. **Pending:**
-the user re-runs `python -m src.window_model --offline` (seconds, 0 model
-calls) so `derived/` holds the fixed reading. A review of 50 random model
+answers changes 70 windows, all reviewed: combined **12,150 (58.3%)**. Done: the
+user re-ran `python -m src.window_model --offline` on 2026-09-27 15:10 (0 model
+calls), so `derived/` holds the fixed reading. A review of 50 random model
 windows judged 42–45 of 50 right after the fixes (84–90%; agent-judged, not
 blind; the dev/held-out figure of 91% was on only 33 windows).
 
@@ -189,8 +235,7 @@ in 7,819 of 8,039 penalty orders (97.3%); per-party amounts sum to the order tot
 in all 7,320 checkable orders. Violated provisions (`regulations`, the runbook's JSON
 list) for 16,865 orders (80.9%): PFUTP 8,451, SEBI Act 4,532, SAST 2,610, PIT 2,223.
 Agent review (not blind): party lists right in 15 of 18 random orders with parties.
-`derived/orders.parquet`: 20,861 × 62. **Pending:** the user runs
-`python -m src.extract_parties` then `python -m src.build_orders`.
+`derived/orders.parquet`: 20,861 × 62 (done: re-run on 2026-09-30 with the later stages).
 
 
 ## 3. Hard rules — do not break these
@@ -201,7 +246,8 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
    only through `src/llm.py`, which caches every answer permanently under
    `raw/llm/` keyed by model digest + options + prompts + schema.
 2. **SEBI politeness:** sequential only, never parallel; 1.5 s delay is built into
-   the cache. Set `SEBI_CONTACT=<email>` so the User-Agent carries a contact.
+   the cache. Set `SEBI_CONTACT=<email>` so the User-Agent carries a contact. The same
+   holds for NSE and BSE (Week 4): one fetch at a time, never two processes at once.
 3. **`raw/` is append-only.** Never delete or modify under `raw/`.
 4. **`raw/pdfs/<id>.pdf` are hard links to `raw/cache/` entries.** Writing to
    one corrupts both. Open PDFs read-only (the code opens from bytes). The
@@ -214,7 +260,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (740 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (807 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -267,6 +313,30 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
   SEBI links to https. Some pages link sat.gov.in or supremecourtofindia.nic.in
   documents; none are in the corpus.
 
+## 5b. NSE / BSE facts established empirically (Week 4)
+
+- **Lists (no cookies, browser UA):** BSE `api.bseindia.com/BseIndiaAPI/api/ListofScripData/w?segment=Equity&status=
+  Active|Delisted|Suspended` (JSON; needs `Referer`/`Origin: https://www.bseindia.com`; `INDUSTRY` is always null);
+  NSE `nsearchives.nseindia.com/content/equities/EQUITY_L.csv`, `…/emerge/corporates/content/SME_EQUITY_L.csv`,
+  `…/equities/namechange.csv` (since 1996), `…/equities/symbolchange.csv`. NSE's `/api/` endpoints need session
+  cookies — not used (rule 6).
+- **ISIN → firm:** characters 1–7 (`INE117A`) are the issuer; the serial after them changes with a face-value split;
+  `IN9…` is a partly paid issue of the same issuer; `INF…` are fund units.
+- **Bhavcopies:** the URL and format change on **8 Jul 2024** (UDiFF `BhavCopy_<NSE|BSE>_CM_0_0_0_<YYYYMMDD>_F_0000`);
+  old NSE `cm<DD><MON><YYYY>bhav.csv.zip` has no ISIN or trade count in 2010 (both by 2022); old BSE
+  `EQ<DDMMYY>_CSV.ZIP` keys on the scrip code, which stays the same in the new format. **A BSE holiday returns an
+  HTML page with status 200** (cached; read as "no file"); an NSE holiday is a 404.
+- **Prices are not adjusted** for splits or bonuses, `PREVCLOSE` included (Tata Steel 28 Jul 2022: 959.40 → 100.35).
+- **BSE corporate actions:** `…/api/DefaultData/w?Fdate=YYYYMMDD&TDate=…&ddlcategorys=E&segment=0&strSearch=S`; a
+  whole year comes in one response (checked: July 2022 has 306 rows either way). Purposes: "Stock  Split From
+  Rs.10/- to Rs.1/-", "Bonus issue 1:2", "Consolidation of Shares" (no ratio).
+- **BSE index archive:** `…/api/IndexArchDaily/w?index=BSE500&period=D&fmdt=dd/mm/yyyy&todt=…` stops at **26 rows**
+  per response: ask by month. NSE's `ind_close_all_<DDMMYYYY>.csv` exists from ~2013 (404 in 2010).
+- **BSE shareholding summary:** `…/api/shpSecSummery_New/w?qtrid=<n>.00&scripcode=<code>`; `qtrid` = 60 for Dec 2008,
+  +1 per quarter (120 = Dec 2023); empty before **Dec 2015** (qtrid 88). Columns that do not apply are omitted, so
+  read them by header (colspans expanded). `shpSecSummery` (old) and the `.aspx` pages redirect (3xx; the cache
+  does not follow redirects).
+
 ## 6. Pipeline
 
 | Stage | Command | Reads | Writes | Network |
@@ -284,6 +354,13 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 | 11 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties, order_categories, order_channels | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
 | sample | `python -m src.validation_sample [--scratch DIR] [--check]` | windows_checked, listings, order_documents, `raw/pdfs`, `derived/text/`, the seen lists in `hand/` | `hand/validation_sample.csv`, `hand/validation_pdfs/`, `derived/validation_key.parquet` | none (seconds); once, not part of a rebuild |
 | score | `python -m src.score_validation [--official] [--partial] [--scratch DIR] [--reps N]` | the coded sheet, validation_key, orders, extraction_rate | `derived/validation_{scored.parquet,errors.csv,summary.csv,table.md}`, `hand/validation_official.json` (`--official`, once), `logs/score_validation.log` | none (seconds) |
+| 12 universe | `python -m src.universe [--offline]` | BSE/NSE lists (cache) | `derived/universe.parquet`, `derived/firms.parquet`, `derived/name_aliases.parquet`, `logs/universe.log` | 7 requests (cached 2026-10-14) |
+| 13 match | `python -m src.match_entities` | orders, order_entities, universe, name_aliases, firms, `hand/match_review.csv` | `derived/order_issuers.parquet`, `derived/entity_matches.parquet`, `derived/name_matches.parquet`, appends to `hand/match_review.csv`, `logs/match_entities.log` | none (~35 s) |
+| 14 sample | `python -m src.build_sample` (once: the freeze) | orders, order_issuers, entity_matches, firms | `derived/sample.parquet`, `derived/sample_fraud_years.parquet`, `derived/sample_events.parquet`, `hand/sample_frozen.csv`, `logs/build_sample.log` | none (~15 s) |
+| 15 prices | `python -m src.fetch_prices [--start] [--end] [--offline] [--skip-bhavcopies]` | NSE/BSE archives (cache) | `derived/prices/<NSE|BSE>_<year>.parquet`, `derived/price_days.parquet`, `derived/corporate_actions.parquet`, `derived/market_index.parquet`, `logs/fetch_prices.log` | ~12,200 requests (~7–8 h) |
+| 15b check | `python -m src.prices --check <symbol>` | prices, corporate_actions, universe | `figures/price_check_<symbol>.png` | none |
+| 16 ownership | `python -m src.fetch_shareholding [--quarterly] [--role] [--limit]` | sample, prices (spans), BSE API (cache) | `derived/shareholding.parquet`, `logs/fetch_shareholding.log` | ≤ ~19,000 requests (~6–9 h) |
+| 17 panel | `python -m src.build_panel` | sample*, universe, prices, corporate_actions, market_index, shareholding | `derived/panel.parquet`, `derived/panel_coverage.csv`, `logs/build_panel.log` | none (~1 min) |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
@@ -529,6 +606,52 @@ machine's method / rule / confidence / evidence sentence, `hand_notes`. `derived
 tables and the Gate 1 reading. `hand/validation_official.json`: the first scoring of the finished sheet (headline
 figures, Gate 1, fingerprints); never overwritten without `--force`.
 
+**Week 4 tables.**
+
+`derived/universe.parquet` — one row per listed security (13,451): `exchange` ∈ `BSE, NSE`, `code` (BSE scrip code
+or NSE symbol), `symbol`, `isin`, `firm_id`, `name` (BSE issuer name / NSE name), `short_name` (BSE), `name_norm`,
+`status` ∈ `Active, Delisted, Suspended` (NSE lists: Active), `group`, `series`, `face_value`, `listing_date` (NSE),
+`source`. `derived/firms.parquet` — one row per firm (10,180): `firm_id`, `name`, `name_norm`, `status` (best of its
+listings), `isins`/`bse_codes`/`nse_symbols` (JSON), `on_bse`, `on_nse`, `bse_status`, `nse_listing_date`.
+`derived/name_aliases.parquet`: `firm_id`, `alias`, `alias_norm`, `source` ∈ `bse_name, bse_short_name, nse_name,
+nse_old_name, nse_new_name`, `valid_from`/`valid_to` (renames).
+
+`derived/order_issuers.parquet` — one row per order: `issuer_name` (= `issuer_guess`), `issuer_firm_id`,
+`match_method` ∈ `code, exact, auto, hand, review_pending, hand_reject, private, none`, `match_confidence` (score),
+`match_alias`, `match_query`, `candidate_firm_id` (review band), `codes_found`, `code_firms`, `issuer_isin`,
+`issuer_ticker` (NSE symbol, else BSE code), `issuer_nse_symbol`, `issuer_bse_code`, `issuer_bse_status`.
+`derived/entity_matches.parquet` — one row per company party (the runbook's `order_entities.ticker / isin /
+match_confidence`, keyed by `text_stem` + `party_no`): `firm_id`, `match_method`, `match_confidence`, `isin`,
+`ticker`, …. `derived/name_matches.parquet` — one row per distinct normalised name: `band` ∈ `auto, review, reject`,
+`reason`, `score`, `candidates` (JSON top 3), `n_orders`, `n_parties`.
+`hand/match_review.csv` — the durable review: `query`, `query_norm`, `n_orders`, `n_parties`, `best_score`,
+`candidates` ("firm_id name [status] score; …"), `example_title`, **`decision`** (`accept` = first candidate /
+`reject` / a `firm_id`), `note` (the reason it is in review). New names are appended; filled rows never change.
+
+`derived/sample.parquet` — one row per sample firm: `role` ∈ `fraud, control`, `weight` (controls: eligible / drawn),
+`eligible_controls`, codes, `n_orders`, `n_windowed_orders`, window span, `categories`, `n_fraud_years`,
+`n_fraud_years_in_period`, `sample_version`, `seed`. `derived/sample_fraud_years.parquet`: `firm_id`, `fy`,
+`overlap_days`, `n_orders`, `categories`, `issuer_noticee`, `stated_period_only`, `text_stems`, `in_period`.
+`derived/sample_events.parquet`: `firm_id`, `event_date`, `kind` ∈ `order, interim_recited`, `order_type`,
+`n_orders`, `text_stems`, `categories`. `hand/sample_frozen.csv`: the frozen firm list (committed).
+
+`derived/prices/<NSE|BSE>_<year>.parquet` — one row per security per trading day: `date`, `exchange`, `code`,
+`series` (NSE series / BSE group), `isin` (when printed), `name`, `open`…`last`, `prev_close` (unadjusted),
+`volume`, `turnover` (₹), `trades`. `derived/price_days.parquet`: `date`, `exchange`, `status` ∈ `ok, holiday,
+holiday_confirmed, unreadable, missing, error`, `rows`, `url`. `derived/corporate_actions.parquet`: `scrip_code`,
+`ex_date`, `purpose`, `kind` ∈ `split, bonus, consolidation, rights, dividend, demerger, merger, buyback, other`,
+`factor` (shares after / before; splits and bonuses only). `derived/market_index.parquet`: BSE500 daily OHLC.
+
+`derived/shareholding.parquet` — one row per firm and quarter asked: `bse_code`, `quarter_end`, `qtrid`, `status` ∈
+`ok, empty, unparsed, error, not_cached`, `promoter_pct`, `promoter_shares`, `total_shares`, `pledged_shares`,
+`pledged_pct` (of the promoter holding), `pledge_answer`, `promoter_holders`.
+
+`derived/panel.parquet` — one row per (sample firm, financial year) FY2010–2025 traded or in a window: `role`,
+`weight`, `fraud_year`, `overlap_days`, `categories`, `issuer_noticee`, `first_public_fy`, `post_public`,
+`main_exchange`, `trading_days`, `ret`, `index_ret`, `excess_ret`, `vol`, `turnover_median`, `amihud`,
+`zero_volume_share`, `gap_days`, `close_end`, `promoter_pct`, `promoter_pct_change`, `pledged_pct`,
+`pledged_shares`, `total_shares`, `market_cap` (₹ crore). `derived/panel_coverage.csv`: the paper's coverage table.
+
 `src/regulations.py` — the citation parser: instrument catalogue (full titles, abbreviations,
 the order's own "hereinafter" aliases), provision lists ("3(a), (b), 4(1) and 4(2)(e)"), and the
 role of each citation (see `hand/recon_notes.md` §9).
@@ -576,6 +699,15 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
 - Roles are a first guess: 33.6% UNKNOWN; `role_basis = suffix` (any company with no
   other evidence → ISSUER) is weak. Penalty links fail in 162 penalty orders and are
   partial in 58 (party named in a form the list does not use).
+- **Listed-universe coverage (Week 4).** Companies listed only on regional exchanges (Calcutta, Ahmedabad,
+  Jaipur …; many 1990s–2000s fraud firms, e.g. Shubh Laxmi Projects) are in neither BSE's nor NSE's lists and stay
+  unmatched; so do collective investment schemes and unlisted subsidiaries (correctly). 2,338 old BSE delistings
+  have no ISIN (firm id `BSE:<code>`). Rename history is NSE's only.
+- **Ownership** starts in Dec 2015 (BSE's current-format summaries); FY2010–2015 fraud years have none. Prices are
+  price returns (dividends, rights and demergers not adjusted); consolidations are flagged, not adjusted. A few
+  Saturday budget sessions and Muhurat sessions are not fetched (weekdays only).
+- The panel's controls are a weighted random draw (600 of 5,709 eligible), not the full universe (runbook Week 4
+  Day 3 vs technical plan §6.1): base rates and recall at SEBI's capacity use `weight`.
 
 ## 10. Gotchas that cost time in Week 1
 
@@ -657,6 +789,17 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
   runs on into the order can walk past the company. Descriptive prefixes ("Inspection of
   Books of") are stripped only at the start.
 
+**Week 4.**
+- A column named `isin` (or `name`) collides with `DataFrame.isin` / row `.name`: `df.isin.notna()` fails and
+  `row.isin` is a bound method. Use `df["isin"]`, `row["isin"]`.
+- The runbook normaliser drops "Pvt"/"Private": without the private-company guard, "XYZ Pvt Ltd" matches the listed
+  "XYZ Ltd". Token-sort on whole names pairs firms that share only generic words ("Satia Paper Mills" ~ "Star Paper
+  Mills" 91): the distinctive-word check cut the review band from 1,665 names to 564.
+- A BSE holiday page is cached as a 200; never `force=` over it (raw/ is append-only) — re-ask with
+  `cache_key_extra="retry-1"`. NSE 404s are not cached: `price_days.parquet` keeps re-runs from re-asking.
+- A rerun of `fetch_prices` over a short range rewrites `corporate_actions.parquet` and `market_index.parquet` for
+  that range only (scratch slices then disagree with each other); the full run covers every year.
+
 ## 11. Next steps (runbook Week 2 onward)
 
 1. Week 2 is built (Day 5: `derived/orders.parquet`, `order_entities`). Settlement orders
@@ -697,5 +840,7 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    change log and the affected orders recoded. H4 (surveillance
    share < 50%) needs matter-level first detections: order-level shares swing with the ISO wave (42% with,
    26% without) and on listed-company frauds (55%; final figures with the model pass).
-7. Week 4 matching: `order_entities.pan` / `cin` and `orders.issuer_guess` are the
-   hooks; entity roles are a first guess to correct during validation.
+7. Week 4 is built (see §2 for the runs and the hand review). After it: record the coverage table and the
+   frozen sample's fingerprint in `results_log.md`; draw the Stage 3 matched controls (industry, size, pre-event
+   return) from the eligible pool once prices and ownership exist — industry is not in BSE's list and needs a
+   source; `orders.parquet` does not carry the issuer match yet (join `order_issuers` on `text_stem`).

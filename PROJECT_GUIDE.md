@@ -45,8 +45,14 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/classify_fraud.py` | stage 9: fraud category per order, from the violated provisions and (for PFUTP) the narrative, following `hand/coding_protocol.md` | — | code |
 | `src/detect_channel.py` | stage 10: detection channel per order (how the matter reached SEBI), from rules and a checked local-model fallback, following protocol §5 | — | code |
 | `src/build_orders.py` | stage 11: `derived/orders.parquet`, one row per order — the Week 2 checkpoint table, now with fraud category and detection channel | — | code |
-| `src/validation_sample.py` | Week 3: draws the 150-order blind coding sheet | — | code |
-| `tests/` | 696 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `src/validation_sample.py`, `src/score_validation.py` | Week 3: draws the 150-order blind coding sheet; scores it (Day 5) | — | code |
+| `src/universe.py`, `src/names.py` | Week 4 Day 1: every BSE/NSE equity (live, suspended, delisted) and the names each firm has had; the one name normaliser | — | code |
+| `src/match_entities.py` | Week 4 Day 2: order issuers and company noticees matched to listed firms (codes, then names; a hand-review band) | — | code |
+| `src/build_sample.py` | Week 4 Day 3: fraud firm-years, weighted control firms, enforcement events — frozen once | — | code |
+| `src/fetch_prices.py`, `src/prices.py` | Week 4 Day 4: NSE/BSE daily prices, corporate actions, BSE 500; split/bonus adjustment and the sanity plot | — | code |
+| `src/fetch_shareholding.py` | Week 4 Day 5: promoter holding and pledging from BSE shareholding patterns (Dec 2015 on) | — | code |
+| `src/build_panel.py` | Week 4 weekend: the firm-year panel and its coverage table | — | code |
+| `tests/` | 807 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -256,6 +262,18 @@ downloads only the new orders' documents, then stage 3.
 
 ## 6. Next
 
+- **Week 4, yours to run (built and dry-run 2026-10-14), in this order:** start the price download
+  (`setsid nohup .venv/bin/python -m src.fetch_prices > logs/fetch_prices.out 2>&1 &`, ~7–8 h), then
+  `python -m src.universe` and `python -m src.match_entities`; review `hand/match_review.csv`
+  (564 names: write `accept`, `reject`, or the right `firm_id` from the candidates in `decision`;
+  ~2 h) and re-run `match_entities`; freeze the sample (`python -m src.build_sample`, once); look
+  at `python -m src.prices --check TATASTEEL`; then the ownership download
+  (`setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholding.out 2>&1 &`,
+  ~6–9 h); finally `python -m src.build_panel` — its coverage table goes in the paper.
+- **Week 3, pending on you (deferred 2026-10-14; none of it run yet):** draw the sample
+  (`python -m src.validation_sample`), hand-code the 150, score them
+  (`python -m src.score_validation --official`), write the figures and the Gate 1
+  decision into `results_log.md`, then the Day 5 fixes. Week 4 proceeds meanwhile.
 - H4 (surveillance is not the dominant first-detection channel) needs first detections per
   *matter*, not per order: the ISO wave alone moves the order-level surveillance share from
   26% to 42%.

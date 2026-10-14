@@ -60,7 +60,6 @@ import json
 import logging
 import math
 import pathlib
-import re
 
 import numpy as np
 import pandas as pd
@@ -70,6 +69,7 @@ from src import cache
 from src import validation_sample as vs
 from src.detect_channel import FLAGGED
 from src.extract_text import assert_safe_output, setup_logging
+from src.names import names
 
 log = logging.getLogger("score_validation")
 
@@ -144,26 +144,6 @@ KAPPA_BY = ["era", "order_type"]
 
 
 # --- names ------------------------------------------------------------------------------------------------------
-
-_ALIAS = re.compile(r"\((?:formerly|now|earlier|erstwhile|previously)(?:\s+known\s+as)?\s*:?\s*([^)]*)\)", re.I)
-
-
-def norm(name: str) -> str:
-    """The Week 4 normaliser (timeline Week 4, Day 1), applied to both sides."""
-    s = name.upper()
-    s = re.sub(r"[^A-Z0-9& ]", " ", s)
-    s = s.replace("&", " AND ")
-    s = re.sub(r"\b(LIMITED|LTD|PVT|PRIVATE|M S|COMPANY|CO|THE|INDIA)\b", " ", s)
-    return re.sub(r"\s+", " ", s).strip()
-
-
-def names(value) -> list[str]:
-    """A name and any former or later name it gives in brackets, normalised."""
-    if not isinstance(value, str) or not value.strip():
-        return []
-    raw = [_ALIAS.sub(" ", value), *_ALIAS.findall(value)]
-    return [n for n in map(norm, raw) if n]
-
 
 def issuer_match(hand: str, machine) -> bool:
     if hand.strip().upper() == "NONE":
