@@ -256,14 +256,16 @@ downloads only the new orders' documents, then stage 3.
 
 ## 6. Next
 
-- Run stages 8–11 (`extract_parties`, `classify_fraud`, `detect_channel`, `build_orders`):
-  about 4 minutes, plus ~2 hours for the channel model pass (`--no-model` skips it).
 - H4 (surveillance is not the dominant first-detection channel) needs first detections per
   *matter*, not per order: the ISO wave alone moves the order-level surveillance share from
-  27% to 43%.
-- Week 3: `python -m src.validation_sample` writes the blind coding sheet
-  `hand/validation_sample.csv` (150 orders); don't open `derived/validation_key.parquet`
-  while coding.
+  26% to 42%.
+- Week 3, Days 3–4: `python -m src.validation_sample` writes the blind coding sheet
+  `hand/validation_sample.csv` (150 orders) and a copy of each order's PDF in
+  `hand/validation_pdfs/` (`001_<id>.pdf` …; annotate these freely, never the files in
+  `raw/pdfs`). Code from the copies with `hand/coding_protocol.md` open, in two sittings.
+  `python -m src.validation_sample --check` lists misspelt values, non-ISO dates (Excel
+  likes to reformat them) and protocol reminders; it never shows the pipeline's answers.
+  Don't open `derived/validation_key.parquet` or `derived/orders.parquet` while coding.
 - The window is the period of business activity SEBI examined — "investigation /
   examination / inspection / relevant period" are one quantity; inspection
   *visit* dates are never it. See CLAUDE.md §1.

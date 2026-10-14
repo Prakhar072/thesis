@@ -1,6 +1,6 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-09-30 (audit fixes; Week 3, Days 1–2 built). Read this before touching code or data.
+Last updated: 2026-10-14 (Week 3, Days 3–4: the blind sample built). Read this before touching code or data.
 Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
 schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
@@ -48,14 +48,29 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (audit fixes and Week 3, Days 1–2 built)
+## 2. Status (Week 3, Days 1–2 run; Days 3–4 blind sample built)
 
-**Pending (the user runs; no network except the local model), in order:**
-`python -m src.extract_parties` (the §15J fix, ~1 min) → `python -m src.classify_fraud` (fraud-v2, ~1.5 min)
-→ `python -m src.detect_channel` (rules ~1.3 min, then the local-model pass on ~5,300 orders, ~1.5–2.5 h; Ollama
-must be serving; `--no-model` gives rules only) → `python -m src.build_orders`. The regeneration after the audit
-fixes was done on 2026-09-30 15:09–15:12 and committed (78a8eab); `derived/` holds fraud-v1 and no
-`order_channels.parquet` until these run (so `build_orders` fails loudly).
+**Pending (the user runs):** `python -m src.validation_sample` (seconds; once — it refuses to overwrite a started
+sheet). Then the user codes the 150 orders in `hand/validation_sample.csv` from the copies in
+`hand/validation_pdfs/`, with `hand/coding_protocol.md` open, in two sittings, and checks the sheet as they go
+with `python -m src.validation_sample --check`. **Agents must not show the pipeline's answer for any sampled
+order** (the coding is blind until Day 5): no per-order output from `derived/` for ids in the sheet or the key.
+
+**Week 3 Days 3–4 (blind sample, 2026-10-14):** `src/validation_sample.py` updated before the draw.
+- **Excluded as seen: 539 orders** (458 → 539). Added: the 43 flagged windows the user reviewed with the
+  machine's window in view (`hand/window_review.csv`), and 39 orders quoted with their pipeline output in
+  `audit/`, `results_log.md` or here (appended to `hand/seen_while_building.csv`).
+- **Weights per (stratum, ISO) cell.** ISO is 22.5% of the regex stratum but capped at 3 of its 60, so a
+  stratum-wide weight would have under-weighted it 4.5-fold. Weights sum to the 20,849 orders with text.
+- **`detection_detail`** is coded too (the protocol §5 table); **copies** of the PDFs (inline orders: their text)
+  in `hand/validation_pdfs/` (gitignored; `raw/pdfs` files are hard links into `raw/cache`, so a viewer that saves
+  highlights must never open them); **`--check`** lists unreadable values and protocol reminders, never the
+  pipeline's answers.
+- Dry run (scratch, seed 20261006): AO 77 · WTM 54 · settlement 15 · ED/CGM 4; ISO 5; 136 PDFs + 14 texts.
+  Weighted shares match the corpus by type, era, category and channel.
+
+**Stages 8–11 were run into `derived/` on 2026-09-30** (16:56–18:08; the §15J fix, fraud-v2, the channel model
+pass, 69.7 min, 0 errors); `derived/orders.parquet` is 20,861 × 71.
 
 **Week 3 Day 2 (detection channel):** protocol §5 was written first. **User decisions (2026-09-30):**
 - INSPECTION becomes an eighth channel;
@@ -74,8 +89,10 @@ fixes was done on 2026-09-30 15:09–15:12 and committed (78a8eab); `derived/` h
 - AUDIT 10
 
 On the 58-order dev set: 54 of 58 right, and all 27 rule decisions right (tuned). The model is a cue-verified,
-medium-confidence fallback (`detection_method = model`). **458 orders read while building are excluded from the
-blind sample** (`validation_sample.SEEN`, including `hand/seen_while_building.csv`).
+medium-confidence fallback (`detection_method = model`). **Final, with the model pass (`derived/`):** UNCLEAR
+12,232 (58.7%) · SURVEILLANCE 3,609 · COMPLAINT 2,790 · INSPECTION 1,317 · REFERRAL 603 · MEDIA 194 ·
+SELF_DISCLOSURE 73 · AUDIT 31; method rule 8,208 · model 4,499 (897 channels, 3,602 UNCLEAR) · none 8,142;
+826 model answers unverified (left UNCLEAR, method `none`, confidence low).
 
 **Audit fixes (2026-09-30)** (`audit/AUDIT_REPORT.md`, "Status after fixes"; figures in `results_log.md`),
 all local to stages 6–8 and scratch-verified on the full chain:
@@ -160,9 +177,6 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 `derived/orders.parquet`: 20,861 × 62. **Pending:** the user runs
 `python -m src.extract_parties` then `python -m src.build_orders`.
 
-Built, not yet run into `hand/`: `src/validation_sample.py` (Week 3 blind
-sample, see §11); it reads `derived/windows_checked.parquet`, so run it after the
-Day 3 review.
 
 ## 3. Hard rules — do not break these
 
@@ -185,7 +199,7 @@ Day 3 review.
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (696 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (717 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -253,6 +267,7 @@ Day 3 review.
 | 9 category | `python -m src.classify_fraud` | order_parties, order_actions, listings, text_documents, `derived/text/` | `derived/order_categories.parquet`, `logs/classify_fraud.log` | none (~1.5 min) |
 | 10 channel | `python -m src.detect_channel [--no-model] [--offline]` | listings, text_documents, `derived/text/` | `derived/order_channels.parquet`, `raw/llm/`, `logs/detect_channel.log` | localhost Ollama only (rules ~1.3 min; model ~1.5–2.5 h, seconds when cached) |
 | 11 orders | `python -m src.build_orders` | listings, order_documents, text_documents, windows_checked, order_actions, order_parties, order_categories, order_channels | `derived/orders.parquet`, `logs/build_orders.log` | none (seconds) |
+| sample | `python -m src.validation_sample [--scratch DIR] [--check]` | windows_checked, listings, order_documents, `raw/pdfs`, `derived/text/`, the seen lists in `hand/` | `hand/validation_sample.csv`, `hand/validation_pdfs/`, `derived/validation_key.parquet` | none (seconds); once, not part of a rebuild |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
@@ -475,6 +490,18 @@ channels: `model`); `detection_confidence` (`high` linked source; `medium` flagg
 (JSON, every rule hit in order); `n_background`; `model_status` ∈ `MODEL_CHANNEL, MODEL_UNCLEAR, MODEL_UNVERIFIED,
 MODEL_ERROR`; `model_raw`; `rules_version`; `prompt_version`; `error`.
 
+`hand/validation_sample.csv` — the blind coding sheet (150 rows, Week 3 Days 3–4; shuffled, so strata are not
+visible from position): `sample_no`, `text_stem`, `order_id`, `order_date`, `order_type`, `title` (SEBI's),
+`order_page`, `pdf_url`, `local_file` (`hand/validation_pdfs/<sample_no>_<stem>.pdf`, or `.txt` for an inline-HTML
+order), then the coder's columns (`hand/coding_protocol.md`): `violation_start`, `violation_end` (YYYY-MM-DD),
+`window_kind` ∈ `stated_period, conduct_dates, none`, `fraud_category`, `detection_channel`, `detection_detail`,
+`primary_issuer` (or `NONE`), `notes` (`?` first = a judgement call; `OTHER-a`…`e`). No pipeline output.
+
+`derived/validation_key.parquet` — one row per sampled order; **not for the coder's eyes**: `text_stem`, `stratum` ∈
+`regex, model_stated, model_conduct, no_window`, `iso`, `stratum_population`, `stratum_sampled`, `cell_population`,
+`cell_sampled`, `weight` (= cell population / cell sampled, cells = stratum × iso; sums to 20,849), `seed`,
+`excluded_seen`. Day 5 joins it to `orders.parquet` on `text_stem` and weights agreement with `weight`.
+
 `src/regulations.py` — the citation parser: instrument catalogue (full titles, abbreviations,
 the order's own "hereinafter" aliases), provision lists ("3(a), (b), 4(1) and 4(2)(e)"), and the
 role of each citation (see `hand/recon_notes.md` §9).
@@ -615,9 +642,11 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    end); `earliest_scn_date` is the action against the entity. Decide with the unit
    of analysis (item 4).
 2. Week 3: draw the blind sample with `python -m src.validation_sample` (writes
-   `hand/validation_sample.csv` + `derived/validation_key.parquet`; strata 60
-   regex / 25 model stated / 25 model conduct / 40 no window; refuses to
-   overwrite a started sheet). Weight accuracy back with the key.
+   `hand/validation_sample.csv`, `hand/validation_pdfs/` + `derived/validation_key.parquet`; strata 60
+   regex / 25 model stated / 25 model conduct / 40 no window, ISO capped per stratum; refuses to
+   overwrite a started sheet). Weight accuracy back with the key's per-cell `weight`. At corpus
+   proportions the rare categories (RPT, ACCOUNTING, FUND; AUDIT, SELF_DISCLOSURE, MEDIA) get 0–3
+   orders each: κ and agreement are measurable overall, per-category accuracy only for the large ones.
 3. Regex dates use an explicit day-first grammar, not `dateutil` (which fills a
    missing day from today's date); keep it that way.
 4. **Unit of analysis = what one row of the Stage 1 data stands for.** The
@@ -632,10 +661,11 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
    matter-grouping step (not built).
 5. Build the finality classifier (interim / final / confirmatory) from order text;
    use `sat_appeals` as metadata. Stage 3 needs the event types by Week 7.
-6. Fraud category and detection channel are built (Week 3 Days 1–2). Next are **Days 3–4, the blind
-   sample**: `python -m src.validation_sample` (the user codes 150 orders from the PDFs, with the protocol open).
-   Day 5 measures agreement and κ for both fields, and window accuracy by method and era. H4 (surveillance
-   share < 50%) needs matter-level first detections: order-level shares swing with the ISO wave (43% with,
-   27% without) and on listed-company frauds (57%).
+6. Fraud category and detection channel are built and run (Week 3 Days 1–2); the blind sample is built (Days
+   3–4): the user draws it and codes 150 orders from the copies, with the protocol open. Day 5 (not built)
+   measures agreement and κ for both fields (weighted by the key), window exact and within-one-month match, and
+   accuracy by `violation_method` and era; then fixes, and never re-validates on the same 150. H4 (surveillance
+   share < 50%) needs matter-level first detections: order-level shares swing with the ISO wave (42% with,
+   26% without) and on listed-company frauds (55%; final figures with the model pass).
 7. Week 4 matching: `order_entities.pan` / `cin` and `orders.issuer_guess` are the
    hooks; entity roles are a first guess to correct during validation.

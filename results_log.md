@@ -310,3 +310,37 @@ model pass (~5,300 orders) is for the user to run.
 - A character-count test for a text layer (the runbook's "< 100 characters") misses broken layers; pages are judged on text quality, image coverage and vector-path count.
 - Older detail pages print the order inline and link annexures; taking the linked PDF would have archived annexures as orders (32 cases corrected).
 - All HTTP goes through a request-keyed disk cache, so the corpus rebuilds from `raw/` without network access.
+
+## 2026-09-30 — Week 3 Day 2: detection channel, final (model pass; logged 2026-10-14)
+
+The user ran stages 8–11 into `derived/` on 2026-09-30 (`extract_parties` 16:56 → `classify_fraud` 16:58 →
+`detect_channel` 16:58–18:08 → `build_orders` 18:08). The model pass (dc-v2, `qwen3.5:4b`) read the 5,325 orders the
+rules left undecided with a cue: 4,256 model calls, 69.7 min, 0 errors. Figures from `logs/detect_channel.log` and
+`derived/orders.parquet` (20,861 × 71).
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| **Channel** (rules + model) | UNCLEAR 12,232 (**58.7%**) · SURVEILLANCE 3,609 · COMPLAINT 2,790 · INSPECTION 1,317 · REFERRAL 603 · MEDIA 194 · SELF_DISCLOSURE 73 · AUDIT 31 | 20,849 orders with text; rules only had UNCLEAR at 63.0% |
+| Method | rule 8,208 · model 4,499 (897 channels, 3,602 UNCLEAR) · none 8,142 (7,316 with no candidate sentence, 826 model answers unverified → UNCLEAR, low) | model channels: SURVEILLANCE 266 · COMPLAINT 237 · REFERRAL 130 · MEDIA 117 · INSPECTION 78 · SELF_DISCLOSURE 48 · AUDIT 21, all medium confidence |
+| Share among orders with a channel (8,617) | SURVEILLANCE 41.9% · COMPLAINT 32.4% · INSPECTION 15.3% · REFERRAL 7.0% · MEDIA 2.3% · SELF_DISCLOSURE 0.8% · AUDIT 0.4% | order level, not matter level |
+| …excluding ISO (6,726) | COMPLAINT 41.5% · SURVEILLANCE 25.6% · INSPECTION 19.6% · REFERRAL 8.9% · MEDIA 2.9% · SELF_DISCLOSURE 1.1% · AUDIT 0.5% | |
+| …windowed listed-company frauds (not INTERMEDIARY/OTHER), excl. ISO: 2,002 with a channel of 7,367 | SURVEILLANCE 54.9% · COMPLAINT 23.4% · REFERRAL 9.2% · INSPECTION 5.9% · MEDIA 5.0% · AUDIT 0.8% · SELF_DISCLOSURE 0.6% | preliminary for H4; the decided orders are a selected subset (72.8% of this group is UNCLEAR) |
+| **UNCLEAR share** | 58.7% overall (56.9% of windowed orders) · Settlement 83.0% · AO 56.5% · WTM 55.9% · ED/CGM 46.8%; by era 2000–05 65.8% · 2006–10 69.6% · 2011–15 63.0% · 2016–20 58.7% · 2021–26 46.3% | by fraud category from 45.8% (INTERMEDIARY) to 82.5% (FUND_DIVERSION) |
+| Accuracy | not measured yet | the Week 3 blind sample measures it (Day 5) |
+
+## 2026-10-14 — Week 3 Days 3–4: the blind validation sample (built; the user draws and codes it)
+
+`src/validation_sample.py`, built in Week 2, was brought up to date before the draw. Figures are from a scratch dry
+run (`--scratch`, seed 20261006, 1.6 s); the real draw uses the same seed and inputs, so it gives the same 150.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Design | 150 = 60 regex windows · 25 model stated · 25 model conduct · 40 no window; ISO capped at 3 / 1 / 1 / 1; systematic within stratum over type × date | unchanged from Week 2 (runbook: "stratified by year and order category") |
+| Orders excluded as seen | **539** (was 458) | +43 flagged windows the user reviewed with the machine's window shown (`hand/window_review.csv`); +39 orders quoted with their pipeline output in `audit/`, `results_log.md` or `CLAUDE.md`. Week 2's agent-read samples (40 windows, 150 dry-run, 50 model windows, 20 penalty and 20 prior-action checks, 18 party lists) were not recorded and cannot be excluded; at random they would put about 3 orders in the sample |
+| Weights | per (stratum, ISO) cell; sum 20,849 | **fixed:** ISO is 2,361 of the 10,510 regex windows (22.5%) but 3 of 60 sampled. The Week 2 key weighted the whole stratum alike, which would have counted ISO at 5% of regex accuracy. Now ISO 787 per order, other regex 143, model conduct 39, model stated 27, no window 223 |
+| Sample by type | AO 77 · WTM 54 · Settlement 15 · ED/CGM 4 | weighted 58.2 / 30.3 / 9.8 / 1.7% vs corpus 57.5 / 30.8 / 9.6 / 2.1% |
+| Sample by order year | 2000–04: 9 · 2005–09: 24 · 2010–14: 38 · 2015–19: 32 · 2020–24: 39 · 2025–26: 8 | weighted shares within 5 points of the corpus (largest gap: 2020–24, 24.2% vs 29.1%) |
+| ISO orders | 5 | |
+| Local copies | 136 PDFs + 14 inline-order texts, 0 missing, 80 MB | `hand/validation_pdfs/`, gitignored. Copies because `raw/pdfs` files are hard links into `raw/cache` |
+| Rare classes (expected at corpus shares) | RPT ≈ 1 · ACCOUNTING ≈ 2 · FUND ≈ 2 · INSIDER ≈ 4; AUDIT, SELF_DISCLOSURE ≈ 0–1 · MEDIA ≈ 1–2 | κ and agreement are measurable overall; per-category accuracy only for MM, DISCLOSURE, INTERMEDIARY, OTHER and UNCLEAR, SURVEILLANCE, COMPLAINT. A rare-class check would need a separate draw |
+| Coded fields | `violation_start`, `violation_end`, `window_kind`, `fraud_category`, `detection_channel`, `detection_detail` (new), `primary_issuer`, `notes` | protocol §2–§5; `--check` validates values without showing pipeline output |
