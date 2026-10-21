@@ -65,12 +65,29 @@ PARTY_COLUMNS = ["text_stem", "matter_raw", "issuer_guess", "issuer_source", "n_
 
 
 def _read(path: pathlib.Path, columns: list[str] | None = None) -> pd.DataFrame:
+    """Read one stage's table (nullable dtypes, so ids stay integers).
+
+    Args:
+        path (pathlib.Path): the Parquet file.
+        columns (list[str] | None): the columns to read (None = all).
+    Returns:
+        pd.DataFrame: the table.
+    Raises:
+        FileNotFoundError: the stage that writes it has not been run.
+    """
     if not path.exists():
         raise FileNotFoundError(f"{path} missing — run the stage that writes it first")
     return pd.read_parquet(path, columns=columns, dtype_backend="numpy_nullable")
 
 
 def _with_stem(df: pd.DataFrame) -> pd.DataFrame:
+    """Add ``text_stem`` (the join key) to a table that has order_id and source_url.
+
+    Args:
+        df (pd.DataFrame): listings or order_documents.
+    Returns:
+        pd.DataFrame: a copy with a ``text_stem`` column.
+    """
     df = df.copy()
     df["text_stem"] = [text_stem(int(o) if pd.notna(o) else None, u) for o, u in zip(df["order_id"], df["source_url"])]
     return df
@@ -78,6 +95,18 @@ def _with_stem(df: pd.DataFrame) -> pd.DataFrame:
 
 def build(derived: pathlib.Path = DERIVED_DIR, parties: pathlib.Path | None = None,
           categories: pathlib.Path | None = None, channels: pathlib.Path | None = None) -> pd.DataFrame:
+    """Join every stage's per-order table onto the listings, one to one, asserting the row count each time.
+
+    Args:
+        derived (pathlib.Path): where the inputs are.
+        parties (pathlib.Path | None): another order_parties.parquet (scratch runs).
+        categories (pathlib.Path | None): another order_categories.parquet.
+        channels (pathlib.Path | None): another order_channels.parquet.
+    Returns:
+        pd.DataFrame: one row per listed order (20,861 × 71), sorted by date and stem.
+    Raises:
+        ValueError: an input has orders that are not in the listings.
+    """
     listings = _with_stem(_read(derived / "listings.parquet"))[LISTING_COLUMNS]
     n = len(listings)
     assert listings["text_stem"].is_unique, "duplicate text_stem in listings"
@@ -103,10 +132,25 @@ def build(derived: pathlib.Path = DERIVED_DIR, parties: pathlib.Path | None = No
 
 
 def summarise(orders: pd.DataFrame) -> dict:
+    """Coverage summary for the log.
+
+    Args:
+        orders (pd.DataFrame): the built table.
+    Returns:
+        dict: shares of orders with a window, prior action, penalty, parties, regulations, issuer;
+        fraud categories, channels and top regimes.
+    """
     with_text = orders[orders["text_status"] == "OK"]
     n = len(with_text)
 
     def share(mask) -> str:
+        """Count and percentage of orders with text where a condition holds.
+
+        Args:
+            mask (pd.Series): bool per order with text.
+        Returns:
+            str: e.g. "12142 (58.2%)".
+        """
         k = int(mask.sum())
         return f"{k} ({k / n:.1%})" if n else "0"
 
@@ -128,6 +172,14 @@ def summarise(orders: pd.DataFrame) -> dict:
 
 
 def write(orders: pd.DataFrame, path: pathlib.Path) -> None:
+    """Write ``orders.parquet`` atomically.
+
+    Args:
+        orders (pd.DataFrame): the table.
+        path (pathlib.Path): the destination.
+    Returns:
+        None.
+    """
     assert_safe_output(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / f"{path.name}.tmp-{os.urandom(6).hex()}"
@@ -136,6 +188,11 @@ def write(orders: pd.DataFrame, path: pathlib.Path) -> None:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.build_orders``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.build_orders",
                                      description="Week 2 checkpoint: derived/orders.parquet (one row per order)")
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR, help="where the inputs are")
@@ -152,6 +209,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 11: build and write ``derived/orders.parquet``.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     log_file = (args.scratch / "build_orders.log") if args.scratch else LOGS_DIR / "build_orders.log"

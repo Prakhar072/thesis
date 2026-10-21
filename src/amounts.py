@@ -69,6 +69,12 @@ def parse_figure(num: str, unit: str | None = None) -> int | None:
     A unit after a grouped figure of a lakh or more is redundant: "Rs.
     10,00,000 lakhs (Rupees Ten Lakhs only)", "Rs. 5,00,00,000 Crore" — nobody
     writes ten lakh lakh. The figure is the amount.
+
+    Args:
+        num (str): the figure as matched, e.g. "26,00,00,000", "1.5", "1,00.000".
+        unit (str | None): "crore", "lakh", "million", "thousand" … if one follows.
+    Returns:
+        int | None: whole rupees, or None if the figure cannot be read.
     """
     s = re.sub(r"\s", "", num)
     if unit and "," in s and (plain := parse_figure(num)) is not None and plain >= 100_000:
@@ -97,7 +103,13 @@ def parse_figure(num: str, unit: str | None = None) -> int | None:
 
 def malformed(num: str) -> bool:
     """Digit groups that fit neither Indian (2-2-3) nor western (3-3-3)
-    grouping: "2,00,00" has lost a zero."""
+    grouping: "2,00,00" has lost a zero.
+
+    Args:
+        num (str): a figure with separators.
+    Returns:
+        bool: True if its digit groups fit neither Indian nor western grouping.
+    """
     groups = re.split(r",\s?", re.sub(r"\.\d{1,2}$", "", num.strip()))
     if len(groups) < 2 or not all(g.isdigit() for g in groups):
         return False
@@ -109,6 +121,15 @@ def malformed(num: str) -> bool:
 
 @dataclass(frozen=True)
 class Amount:
+    """One rupee amount found in text.
+
+    Attributes:
+        rupees (int): the amount (the words' value when the figure is malformed).
+        text (str): the figure as written.
+        words_rupees (int | None): the "(Rupees … only)" reading.
+        start (int), end (int): offsets in the text (end includes the words when read).
+        figure_rupees (int | None): the figure's own reading, when the words were preferred.
+    """
     rupees: int                   # the amount: the figure, or its words if the figure is malformed
     text: str                     # the figure as written
     words_rupees: int | None      # the "(Rupees … only)" reading, if any
@@ -118,11 +139,27 @@ class Amount:
 
     @property
     def words_agree(self) -> bool | None:
+        """Whether the figure and its words say the same amount.
+
+        Returns:
+            bool | None: True/False, or None when there are no words.
+        """
         figure = self.figure_rupees if self.figure_rupees is not None else self.rupees
         return None if self.words_rupees is None else self.words_rupees == figure
 
 
 def _with_words(text: str, rupees: int, figure: str, start: int, end: int, num: str) -> Amount:
+    """Attach the amount-in-words that follows a figure, and prefer it when the figure is broken.
+
+    Args:
+        text (str): the text.
+        rupees (int): the figure's value.
+        figure (str): the matched figure text.
+        start (int), end (int): the figure's span.
+        num (str): the digits part (for the malformed check).
+    Returns:
+        Amount: the amount.
+    """
     words = None
     if w := WORDS_AFTER.match(text, end):
         words = words_to_rupees(w.group("words"))
@@ -140,6 +177,12 @@ def find_amounts(text: str, bare: bool = False) -> list[Amount]:
 
     ``bare=True`` also takes figures without a rupee mark that "/-" or words
     follow — safe only in a sentence already known to state a sanction.
+
+    Args:
+        text (str): a sentence or passage.
+        bare (bool): also take unmarked figures followed by "/-" or words.
+    Returns:
+        list[Amount]: every amount, by position.
     """
     out = []
     for m in AMOUNT.finditer(text):
@@ -172,7 +215,13 @@ _FILLER = {"rupees", "rupee", "rs", "rs.", "inr", "only", "and", "a", "of"}
 
 
 def words_to_number(words: str) -> int | None:
-    """Indian number words to an integer; None if any word is not a number word."""
+    """Indian number words to an integer; None if any word is not a number word.
+
+    Args:
+        words (str): e.g. "Two Lakh Forty Five Thousand".
+    Returns:
+        int | None: the number, or None.
+    """
     tokens = [t for t in re.split(r"[\s,-]+", words.lower().strip()) if t]
     # A scale word larger than the last one multiplies everything before it
     # ("Seven Thousand Two Hundred Sixty Nine Crore" = 7,269 crore); a smaller
@@ -204,6 +253,13 @@ def words_to_number(words: str) -> int | None:
 
 
 def words_to_rupees(words: str) -> int | None:
+    """Rupees from an amount in words (the same as words_to_number).
+
+    Args:
+        words (str): the words.
+    Returns:
+        int | None: rupees, or None.
+    """
     return words_to_number(words)
 
 
@@ -217,7 +273,13 @@ DURATION = re.compile(
 
 
 def duration_months(text: str) -> int | None:
-    """"two years", "4 (four) years", "06 (six) months" -> months; None if not a duration."""
+    """"two years", "4 (four) years", "06 (six) months" -> months; None if not a duration.
+
+    Args:
+        text (str): text holding a duration, e.g. "for a period of 4 (four) years".
+    Returns:
+        int | None: months, or None if there is no duration.
+    """
     m = DURATION.search(text)
     if not m:
         return None

@@ -93,7 +93,13 @@ NO_DOC = "NO_DOCUMENT"
 
 @dataclass(frozen=True)
 class DocumentRef:
-    """What a detail page points at. Pure parse result, no network."""
+    """What a detail page points at. Pure parse result, no network.
+
+    Attributes:
+        shape (str): IFRAME_PDF, ANCHOR_PDF, DIRECT_PDF, INLINE_HTML, NO_DOCUMENT or DETAIL_FAILED.
+        pdf_url (str | None): the document's absolute URL, when there is one.
+        inline_text_chars (int): length of the order text printed on the page (inline orders).
+    """
 
     shape: str
     pdf_url: str | None = None
@@ -102,6 +108,18 @@ class DocumentRef:
 
 @dataclass
 class DocumentRow:
+    """One order's document: a row of ``derived/order_documents.parquet``.
+
+    Attributes:
+        order_id (int | None), order_type (str), order_date (datetime.date | None), title (str),
+        source_url (str), listing_doc_kind (str): carried from the listing.
+        doc_shape (str): what the detail page pointed at (see DocumentRef.shape).
+        pdf_url (str | None), pdf_path (str | None, repo-relative under raw/pdfs/),
+        pdf_bytes (int | None), pdf_sha256 (str | None): the archived PDF.
+        inline_text_chars (int): inline orders' text length.
+        status (str): OK, OK_INLINE, FAILED_DETAIL, FAILED_DOWNLOAD, NOT_A_PDF or NO_DOCUMENT.
+        error (str | None), resolved_at (datetime.datetime | None).
+    """
     order_id: int | None
     order_type: str
     order_date: dt.date | None
@@ -124,19 +142,38 @@ class DocumentRow:
 # --------------------------------------------------------------------------
 
 def unwrap_viewer_url(src: str) -> str:
-    """``/web/?file=<real url>`` -> ``<real url>``; anything else unchanged."""
+    """``/web/?file=<real url>`` -> ``<real url>``; anything else unchanged.
+
+    Args:
+        src (str): an iframe ``src``.
+    Returns:
+        str: the URL inside ``?file=``, or ``src`` unchanged.
+    """
     query = urllib.parse.urlparse(src).query
     target = urllib.parse.parse_qs(query).get("file")
     return target[0] if target and target[0] else src
 
 
 def looks_like_pdf_url(url: str) -> bool:
+    """Whether a URL's path ends in .pdf (any case).
+
+    Args:
+        url (str): a URL.
+    Returns:
+        bool: True for a PDF link.
+    """
     path = urllib.parse.urlparse(url).path
     return path.lower().endswith((".pdf", ".pdf/"))
 
 
 def extract_inline_text(html: str | bytes) -> str:
-    """The order body from an inline-HTML order. Empty string when absent."""
+    """The order body from an inline-HTML order. Empty string when absent.
+
+    Args:
+        html (str | bytes): a detail page.
+    Returns:
+        str: the text of ``section.main_section``, whitespace collapsed ("" if absent).
+    """
     soup = _soup(html)
     body = soup.find("section", class_="main_section")
     if body is None:
@@ -147,6 +184,13 @@ def extract_inline_text(html: str | bytes) -> str:
 
 
 def _soup(html: str | bytes) -> BeautifulSoup:
+    """Parse HTML (bytes decoded as UTF-8, bad bytes replaced) with lxml.
+
+    Args:
+        html (str | bytes): the page.
+    Returns:
+        BeautifulSoup: the parsed document.
+    """
     if isinstance(html, bytes):
         html = html.decode("utf-8", errors="replace")
     return BeautifulSoup(html, "lxml")
@@ -154,7 +198,13 @@ def _soup(html: str | bytes) -> BeautifulSoup:
 
 def upgrade_scheme(url: str) -> str:
     """SEBI no longer serves plain HTTP (port 80 gives "No route to host"), but
-    a few old links still use it. Only SEBI's own host is rewritten."""
+    a few old links still use it. Only SEBI's own host is rewritten.
+
+    Args:
+        url (str): any URL.
+    Returns:
+        str: the URL with https for sebi.gov.in hosts; other URLs unchanged.
+    """
     parts = urllib.parse.urlsplit(url)
     if parts.scheme == "http" and parts.hostname and parts.hostname.endswith("sebi.gov.in"):
         return urllib.parse.urlunsplit(parts._replace(scheme="https"))
@@ -169,6 +219,12 @@ def extract_document_ref(html: str | bytes, base_url: str) -> DocumentRef:
     corpus that link was an annexure ("ANNEXURE 1 STATUS OF 195 DEMAT
     REQUESTS…"), a PDF copy of the same order, a SAT judgment cited by the
     order, or a dead link. Taking the anchor first archived annexures as orders.
+
+    Args:
+        html (str | bytes): a detail page.
+        base_url (str): the page's URL, to resolve relative links.
+    Returns:
+        DocumentRef: the document's shape and URL.
     """
     soup = _soup(html)
 
@@ -197,7 +253,13 @@ def extract_document_ref(html: str | bytes, base_url: str) -> DocumentRef:
 
 
 def is_pdf_bytes(content: bytes) -> bool:
-    """SEBI occasionally serves an HTML error page with a .pdf URL and HTTP 200."""
+    """SEBI occasionally serves an HTML error page with a .pdf URL and HTTP 200.
+
+    Args:
+        content (bytes): a downloaded body.
+    Returns:
+        bool: True if it starts with ``%PDF-``.
+    """
     return content[:5] == b"%PDF-"
 
 
@@ -206,7 +268,14 @@ def is_pdf_bytes(content: bytes) -> bool:
 # --------------------------------------------------------------------------
 
 def archive_name(order_id: int | None, source_url: str) -> str:
-    """``<order_id>.pdf``; rows with no id get a stable url-derived surrogate."""
+    """``<order_id>.pdf``; rows with no id get a stable url-derived surrogate.
+
+    Args:
+        order_id (int | None): SEBI's id.
+        source_url (str): the listing URL (for id-less rows).
+    Returns:
+        str: ``<order_id>.pdf`` or ``noid_<12 hex>.pdf``.
+    """
     if order_id is not None:
         return f"{order_id}.pdf"
     digest = hashlib.sha256(source_url.encode("utf-8")).hexdigest()[:12]
@@ -219,6 +288,13 @@ def archive_pdf(content: bytes, dest: pathlib.Path, cache_file: pathlib.Path | N
     A hard link keeps one copy of the bytes on disk while both paths stay valid,
     so archiving 20k PDFs does not double disk use. Falls back to a real copy
     when linking is not possible (different filesystem, or no cache file).
+
+    Args:
+        content (bytes): the PDF bytes.
+        dest (pathlib.Path): where it goes (``raw/pdfs/<name>.pdf``).
+        cache_file (pathlib.Path | None): the cache entry to hard-link from.
+    Returns:
+        None. Creates ``dest`` (a hard link to the cache entry, else a copy); never overwrites.
     """
     dest.parent.mkdir(parents=True, exist_ok=True)
     if dest.exists():
@@ -246,6 +322,12 @@ def resolve_document(row, *, force: bool = False) -> tuple[DocumentRef, str | No
     """Stage 1: find the document URL for one listing row.
 
     Returns ``(ref, error)``. A direct-PDF listing row needs no detail fetch.
+
+    Args:
+        row (ListingInput): the listing row.
+        force (bool): re-fetch the detail page even if cached.
+    Returns:
+        tuple[DocumentRef, str | None]: what the page points at, and an error message if the fetch failed.
     """
     if row.listing_doc_kind == "DIRECT_PDF" or looks_like_pdf_url(row.source_url):
         return DocumentRef(DIRECT_PDF, upgrade_scheme(row.source_url)), None
@@ -259,7 +341,15 @@ def resolve_document(row, *, force: bool = False) -> tuple[DocumentRef, str | No
 def download_document(ref: DocumentRef, referer: str,
                       *, force: bool = False) -> tuple[bytes | None, str | None]:
     """Stage 2: fetch the document bytes. Archiving is the caller's job, so that
-    nothing reaches ``raw/`` before it has been checked to be a real PDF."""
+    nothing reaches ``raw/`` before it has been checked to be a real PDF.
+
+    Args:
+        ref (DocumentRef): a reference with a pdf_url.
+        referer (str): the detail page URL, sent as Referer.
+        force (bool): re-fetch even if cached.
+    Returns:
+        tuple[bytes | None, str | None]: (the bytes, None) or (None, the error).
+    """
     assert ref.pdf_url is not None
     try:
         content = cache.get(ref.pdf_url, headers={"Referer": referer}, force=force)
@@ -269,7 +359,15 @@ def download_document(ref: DocumentRef, referer: str,
 
 
 def process_row(row, *, force: bool = False, skip_download: bool = False) -> DocumentRow:
-    """Resolve and download one order. Never raises — failures become rows."""
+    """Resolve and download one order. Never raises — failures become rows.
+
+    Args:
+        row (ListingInput): the listing row.
+        force (bool): bypass the cache.
+        skip_download (bool): resolve the URL only (``--resolve-only``).
+    Returns:
+        DocumentRow: the order's document row; the PDF is archived under raw/pdfs/ when it is one.
+    """
     ref, error = resolve_document(row, force=force)
     base = DocumentRow(
         order_id=row.order_id,
@@ -347,6 +445,13 @@ PARQUET_SCHEMA = pa.schema(
 
 
 def rows_to_table(rows: list[DocumentRow]) -> pa.Table:
+    """Rows → an Arrow table with the fixed ``PARQUET_SCHEMA``.
+
+    Args:
+        rows (list[DocumentRow]): the rows.
+    Returns:
+        pyarrow.Table: one row per order.
+    """
     columns = {name: [] for name in PARQUET_SCHEMA.names}
     for row in rows:
         payload = asdict(row)
@@ -356,13 +461,28 @@ def rows_to_table(rows: list[DocumentRow]) -> pa.Table:
 
 
 def write_parquet(rows: list[DocumentRow], path: pathlib.Path = DOCUMENTS_OUT) -> pathlib.Path:
+    """Write ``derived/order_documents.parquet`` (not atomic: a crash mid-write leaves a bad file).
+
+    Args:
+        rows (list[DocumentRow]): the rows.
+        path (pathlib.Path): output file.
+    Returns:
+        pathlib.Path: the path written.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(rows_to_table(rows), path, compression="snappy")
     return path
 
 
 def write_failures(rows: list[DocumentRow], path: pathlib.Path = FAILURES_OUT) -> pathlib.Path:
-    """Failures go to CSV rather than crashing the run (runbook Day 3)."""
+    """Failures go to CSV rather than crashing the run (runbook Day 3).
+
+    Args:
+        rows (list[DocumentRow]): all rows (only failures are written).
+        path (pathlib.Path): output CSV, default ``derived/fetch_failures.csv``.
+    Returns:
+        pathlib.Path: the path written.
+    """
     failures = [r for r in rows if r.status not in (OK, OK_INLINE)]
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as fh:
@@ -376,6 +496,13 @@ def write_failures(rows: list[DocumentRow], path: pathlib.Path = FAILURES_OUT) -
 
 
 def sort_rows(rows: list[DocumentRow]) -> list[DocumentRow]:
+    """Deterministic order: type, date (newest first, undated last), id, URL.
+
+    Args:
+        rows (list[DocumentRow]): rows to sort.
+    Returns:
+        list[DocumentRow]: the sorted rows.
+    """
     return sorted(
         rows,
         key=lambda r: (
@@ -389,6 +516,14 @@ def sort_rows(rows: list[DocumentRow]) -> list[DocumentRow]:
 
 
 def setup_logging(level: str = "INFO", log_file: pathlib.Path | None = None) -> None:
+    """Log to stdout (and a file); silence httpx's per-request lines.
+
+    Args:
+        level (str): logging level name.
+        log_file (pathlib.Path | None): also log here.
+    Returns:
+        None.
+    """
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
     if log_file is not None:
@@ -408,7 +543,12 @@ def setup_logging(level: str = "INFO", log_file: pathlib.Path | None = None) -> 
 
 @dataclass
 class ListingInput:
-    """The subset of a listing row this stage needs."""
+    """The subset of a listing row this stage needs.
+
+    Attributes:
+        order_id (int | None), order_type (str), order_date (datetime.date | None), title (str),
+        source_url (str), listing_doc_kind (str): the listing's doc_kind.
+    """
 
     order_id: int | None
     order_type: str
@@ -419,6 +559,13 @@ class ListingInput:
 
 
 def load_listings(path: pathlib.Path = LISTINGS_IN) -> list[ListingInput]:
+    """Read the stage 1 table into the fields this stage needs.
+
+    Args:
+        path (pathlib.Path): ``derived/listings.parquet``.
+    Returns:
+        list[ListingInput]: one per listed order.
+    """
     table = pq.read_table(path)
     data = table.to_pylist()
     return [
@@ -436,6 +583,16 @@ def load_listings(path: pathlib.Path = LISTINGS_IN) -> list[ListingInput]:
 
 def select(rows: list[ListingInput], *, categories: list[str] | None = None,
            limit: int | None = None, order_ids: list[int] | None = None) -> list[ListingInput]:
+    """Restrict the listing rows to categories, ids or the first N (development runs).
+
+    Args:
+        rows (list[ListingInput]): all rows.
+        categories (list[str] | None): order types to keep.
+        limit (int | None): keep the first N.
+        order_ids (list[int] | None): ids to keep.
+    Returns:
+        list[ListingInput]: the selected rows.
+    """
     out = rows
     if categories:
         wanted = set(categories)
@@ -449,6 +606,11 @@ def select(rows: list[ListingInput], *, categories: list[str] | None = None,
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.fetch_pdfs``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.fetch_pdfs",
         description="Resolve SEBI orders to their PDFs and archive them under raw/pdfs/",
@@ -476,6 +638,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 2: resolve and download every selected order, checkpointing as it goes.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0 (failures are recorded in ``derived/fetch_failures.csv``, not in the exit code).
+    """
     args = build_arg_parser().parse_args(argv)
     setup_logging(args.log_level, LOGS_DIR / "fetch_pdfs.log")
 

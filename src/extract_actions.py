@@ -139,6 +139,15 @@ _PREFILTER = re.compile(r"show[\s-]*cause|\bSCN|interim|ex[\s-]*parte|confirmato
 
 @dataclass
 class PriorMention:
+    """One recited prior action: a row of ``derived/prior_action_mentions.parquet``.
+
+    Attributes:
+        text_stem (str): the order; kind (str): scn, interim, confirmatory or ao_appointment.
+        date (datetime.date), precision (str): the date recited.
+        match_text (str): the matched phrase; snippet (str): surrounding text.
+        rel_pos (float): position in the order, 0–1.
+        plausible (bool), reason (str | None): the plausibility verdict and why not.
+    """
     text_stem: str
     kind: str
     date: dt.date
@@ -151,6 +160,13 @@ class PriorMention:
 
 
 def _dates(text: str) -> list[ew.ParsedDate]:
+    """Every full date (with a year) in a text.
+
+    Args:
+        text (str): the text.
+    Returns:
+        list[extract_windows.ParsedDate]: the dates, in order.
+    """
     out = []
     for m in ew.DATE.finditer(text):
         p = ew.parse_date(m.group(0))
@@ -161,6 +177,15 @@ def _dates(text: str) -> list[ew.ParsedDate]:
 
 def plausibility(d: dt.date, order_date: dt.date | None,
                  window_start: dt.date | None) -> tuple[bool, str | None]:
+    """Whether a recited date can be a prior action of this order.
+
+    Args:
+        d (datetime.date): the recited date.
+        order_date (datetime.date | None): the order's date.
+        window_start (datetime.date | None): its violation window's start.
+    Returns:
+        tuple[bool, str | None]: (plausible, the reason if not).
+    """
     if d < SEBI_ACT:
         return False, "before the SEBI Act"
     if order_date is not None and d > order_date:
@@ -172,6 +197,16 @@ def plausibility(d: dt.date, order_date: dt.date | None,
 
 def find_prior_mentions(flat: str, stem: str, order_date: dt.date | None,
                         window_start: dt.date | None) -> list[PriorMention]:
+    """Every SCN, interim, confirmatory and AO-appointment date the order recites.
+
+    Args:
+        flat (str): the order's text, headers stripped, whitespace normalised.
+        stem (str): its text stem.
+        order_date (datetime.date | None): the order's date.
+        window_start (datetime.date | None): its violation window's start.
+    Returns:
+        list[PriorMention]: one per (kind, date) found, plausible or not.
+    """
     if not _PREFILTER.search(flat):
         return []
     text = _ABBREV_DOT.sub(r"\1", flat)  # same length minus the dots is not needed: snippets use it too
@@ -265,6 +300,16 @@ _NO_PENALTY = re.compile(
 
 @dataclass
 class SanctionMention:
+    """One sanction statement (one row per amount): a row of ``derived/sanction_mentions.parquet``.
+
+    Attributes:
+        text_stem (str); kind (str): penalty, settlement, disgorgement, debarment, registration, warning, no_penalty.
+        sentence (str), rel_pos (float): where it was read.
+        amount_rupees (int | None), amount_text (str | None), words_rupees (int | None), words_agree (bool | None).
+        is_total (bool): a Total row; each (bool): "… each"; joint (bool): jointly and severally.
+        who_text (str | None): the text naming whom it is imposed on; amount_pos (int | None).
+        months (int | None), indefinite (bool): debarment / suspension length; action (str | None).
+    """
     text_stem: str
     kind: str
     sentence: str
@@ -301,7 +346,16 @@ _OTHER_MONEY_AFTER = re.compile(r"^\s*(?:/-\s*)?(?:\([^)]{0,90}\)\s*)?(?:is|are|
 def _is_sanction_amount(kind: str, sentence: str, start: int, end: int, anchor: int) -> bool:
     """Is this amount the sanction? It must follow the imposing words (for a
     penalty), no other money word may sit between the nearest sanction word and
-    it, and it must not be money "to be refunded / raised / diverted"."""
+    it, and it must not be money "to be refunded / raised / diverted".
+
+    Args:
+        kind (str): penalty, settlement or disgorgement.
+        sentence (str): the sentence.
+        start (int), end (int): the amount's span.
+        anchor (int): where the imposing words start (penalties must come after them).
+    Returns:
+        bool: True if the amount is the sanction.
+    """
     if kind == PENALTY and start < anchor:
         return False
     if _OTHER_MONEY_AFTER.match(sentence[end:end + 120]):
@@ -316,6 +370,18 @@ def _is_sanction_amount(kind: str, sentence: str, start: int, end: int, anchor: 
 
 def _amount_mentions(stem: str, kind: str, sentence: str, rel: float, joint: bool,
                      anchor: int = 0) -> list[SanctionMention]:
+    """Sanction amounts in one sentence, each with its words, Total/each/joint marks and whom it names.
+
+    Args:
+        stem (str): the order.
+        kind (str): penalty, settlement or disgorgement.
+        sentence (str): the sentence (possibly with its continuation).
+        rel (float): its position in the order.
+        joint (bool): "jointly and severally" nearby.
+        anchor (int): offset of the imposing words.
+    Returns:
+        list[SanctionMention]: one per sanction amount.
+    """
     out = []
     for a in am.find_amounts(sentence, bare=True):
         after = sentence[a.end:a.end + 120]
@@ -347,6 +413,12 @@ def _with_continuation(s: str, pieces: list[str] | None) -> str:
     next (46128; AUDIT_REPORT.md C-1). The following pieces of the same sentence
     are read with the clause, up to ``CONTINUATION_MAX`` characters and never past
     a piece that imposes something itself.
+
+    Args:
+        s (str): an imposing sentence.
+        pieces (list[str] | None): the pieces that follow it inside the same over-long sentence.
+    Returns:
+        str: the sentence with its continuation.
     """
     out = s
     for p in pieces or ():
@@ -375,7 +447,14 @@ def _with_following(s: str, following: list[str]) -> str:
     with the table as the next sentence(s) (47376, 53836): the clause names no
     amount, so the sentences after it are read with it — up to
     ``CONTINUATION_MAX`` characters, and never past another imposing sentence,
-    another sanction or the payment instructions."""
+    another sanction or the payment instructions.
+
+    Args:
+        s (str): an imposing sentence that names no amount.
+        following (list[str]): the next sentences.
+    Returns:
+        str: the clause with the table rows that follow it.
+    """
     out = s
     for p in following:
         if _IMPOSE.search(p) or _TABLE_END.search(p) or _QUOTING.search(p) or len(out) + len(p) > CONTINUATION_MAX:
@@ -389,7 +468,17 @@ def _with_following(s: str, following: list[str]) -> str:
 def find_sanctions(sentences: list[tuple[str, float]], stem: str, order_type: str | None,
                    continuations: list[list[str]] | None = None) -> list[SanctionMention]:
     """``continuations[i]``: the pieces that follow sentence ``i`` within the same
-    over-long sentence (``split_sentences(..., groups=True)``), if any."""
+    over-long sentence (``split_sentences(..., groups=True)``), if any.
+
+    Args:
+        sentences (list[tuple[str, float]]): (sentence, position 0–1) for the whole order.
+        stem (str): the order.
+        order_type (str | None): settlement amounts are read only in settlement orders.
+        continuations (list[list[str]] | None): per sentence, the pieces that follow it.
+    Returns:
+        list[SanctionMention]: penalties, settlement amounts, disgorgements, debarments, registration actions,
+        warnings and no-penalty statements, in order.
+    """
     out: list[SanctionMention] = []
     for i, (s, rel) in enumerate(sentences):
         nearby = " ".join(x for x, _ in sentences[i:i + 3])
@@ -441,6 +530,12 @@ def find_sanctions(sentences: list[tuple[str, float]], stem: str, order_type: st
 
 @dataclass
 class Job:
+    """One order to read: its text and, for plausibility, its window's start.
+
+    Attributes:
+        text_stem (str), order_id (int | None), order_type (str | None), order_date (datetime.date | None),
+        text_path (str | None), text_status (str), window_start (datetime.date | None).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -452,6 +547,16 @@ class Job:
 
 @dataclass
 class OrderActions:
+    """One order's prior action and sanctions: a row of ``derived/order_actions.parquet`` (CLAUDE.md §8).
+
+    Attributes:
+        prior_action_date / kind / raw, n_prior_mentions, n_prior_implausible, earliest_scn_date,
+        earliest_interim_date, ao_appointment_date, first_action_date, first_action_source;
+        penalty_total (int | None), penalty_total_basis, penalty_n, penalty_max, penalty_each, penalty_joint,
+        penalty_words_checked, penalty_words_disagree, penalty_raw, penalty_outcome;
+        settlement_amount, disgorgement_total, debarred, debarment_months_max, debarment_indefinite,
+        registration_action, warned, no_penalty_stated; rules_version, error.
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -501,6 +606,13 @@ _IDENTIFYING = re.compile(r"\d|\bviz\b|\(|\bnamely\b|\bi\.?\s?e\b|m/s|\bshri\b|\
 
 
 def _generic(who: str | None) -> bool:
+    """Whether the text naming the payer names no one in particular (“on the Noticee”).
+
+    Args:
+        who (str | None): who_text.
+    Returns:
+        bool: True if it could be any party.
+    """
     if not who:
         return True
     m = _GENERIC_HEAD.match(who.strip())
@@ -508,6 +620,13 @@ def _generic(who: str | None) -> bool:
 
 
 def _who(s: SanctionMention) -> str:
+    """A comparable key for whom a penalty is imposed on ('' when generic).
+
+    Args:
+        s (SanctionMention): a penalty mention.
+    Returns:
+        str: lower-case letters and digits of who_text, or "".
+    """
     return "" if _generic(s.who_text) else re.sub(r"[^a-z0-9]", "", s.who_text.lower())
 
 
@@ -519,6 +638,11 @@ def penalty_rows(pen: list[SanctionMention]) -> list[SanctionMention]:
     amounts already imposed on the same parties is a restatement — "I impose a
     penalty of ₹35,00,000 …" in the discussion of quantum, then again in the
     ORDER — and is not counted again. "Total" amounts are not rows.
+
+    Args:
+        pen (list[SanctionMention]): penalty (or disgorgement) mentions of one order.
+    Returns:
+        list[SanctionMention]: the rows imposed, restatements and Total rows removed.
     """
     by_sentence: dict[str, list[SanctionMention]] = {}
     for s in pen:
@@ -547,7 +671,13 @@ def _sentence_amount(items: list[SanctionMention]) -> int:
     """What one sentence says is paid: its stated total; else, when the largest
     amount is the sum of at least two others ("Rs. 35,964 consisting of Rs. 25,964
     … and Rs. 10,000"), that amount; else the sum (several applicants in a table,
-    "Rs. 25,000 towards settlement charges and Rs. 25,000 towards expenses")."""
+    "Rs. 25,000 towards settlement charges and Rs. 25,000 towards expenses").
+
+    Args:
+        items (list[SanctionMention]): settlement amounts of one sentence.
+    Returns:
+        int: rupees that sentence says are paid.
+    """
     totals = [s.amount_rupees for s in items if s.is_total]
     if totals:
         return max(totals)
@@ -570,6 +700,11 @@ def settlement_amount(mentions: list[SanctionMention]) -> int:
     Summing across sentences counted one ₹92.6 lakh settlement as ₹1.85 crore
     (100354; AUDIT_REPORT.md C-2). An order in which several applicants each pay
     in a sentence of their own is under-counted by this rule.
+
+    Args:
+        mentions (list[SanctionMention]): settlement amounts of one order.
+    Returns:
+        int: the order's settlement amount in rupees (largest per-sentence amount).
     """
     by_sentence: dict[str, list[SanctionMention]] = {}
     for s in mentions:
@@ -578,6 +713,15 @@ def settlement_amount(mentions: list[SanctionMention]) -> int:
 
 
 def summarise_order(job: Job, prior: list[PriorMention], sanctions: list[SanctionMention]) -> OrderActions:
+    """Turn one order's mentions into its ``order_actions`` row.
+
+    Args:
+        job (Job): the order.
+        prior (list[PriorMention]): its recited prior actions.
+        sanctions (list[SanctionMention]): its sanction mentions.
+    Returns:
+        OrderActions: the summary row.
+    """
     o = OrderActions(job.text_stem, job.order_id, job.order_type, job.order_date, job.text_status)
     o.n_prior_mentions = len(prior)
     o.n_prior_implausible = sum(not p.plausible for p in prior)
@@ -650,7 +794,14 @@ def summarise_order(job: Job, prior: list[PriorMention], sanctions: list[Sanctio
 
 
 def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
-    """Extract one order. Never raises."""
+    """Extract one order. Never raises.
+
+    Args:
+        job (Job): the order.
+        repo_root (pathlib.Path): base for its text path.
+    Returns:
+        tuple[OrderActions, list[PriorMention], list[SanctionMention]]: the summary and the mentions.
+    """
     if job.text_status != "OK" or not job.text_path:
         return OrderActions(job.text_stem, job.order_id, job.order_type, job.order_date, job.text_status), [], []
     try:
@@ -676,6 +827,14 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
 
 
 def _process_many(jobs, repo_root):
+    """Process a batch of orders (one worker task).
+
+    Args:
+        jobs (list[Job]): the batch.
+        repo_root (pathlib.Path): base for text paths.
+    Returns:
+        list[tuple[OrderActions, list[PriorMention], list[SanctionMention]]]: one result per order.
+    """
     return [process(j, repo_root) for j in jobs]
 
 
@@ -684,6 +843,14 @@ def _process_many(jobs, repo_root):
 # --------------------------------------------------------------------------
 
 def load_jobs(documents: pathlib.Path = TEXT_DOCUMENTS_IN, windows: pathlib.Path = WINDOWS_IN) -> list[Job]:
+    """Read the orders with text and their window starts.
+
+    Args:
+        documents (pathlib.Path): ``derived/text_documents.parquet``.
+        windows (pathlib.Path): ``derived/windows_checked.parquet`` (optional).
+    Returns:
+        list[Job]: one per order.
+    """
     docs = pq.read_table(documents, columns=["text_stem", "order_id", "order_type", "order_date",
                                              "text_path", "status"]).to_pylist()
     starts = {}
@@ -695,6 +862,15 @@ def load_jobs(documents: pathlib.Path = TEXT_DOCUMENTS_IN, windows: pathlib.Path
 
 
 def select(jobs, *, categories=None, order_ids=None, stems=None, sample=None, limit=None, seed=7):
+    """Restrict the orders (types, ids, stems, a random sample, the first N).
+
+    Args:
+        jobs (list[Job]): all orders.
+        categories, order_ids, stems (list | None): keep only these.
+        sample (int | None): random sample size; limit (int | None): first N; seed (int).
+    Returns:
+        list[Job]: the selection.
+    """
     out = jobs
     if categories:
         out = [j for j in out if j.order_type in set(categories)]
@@ -710,6 +886,13 @@ def select(jobs, *, categories=None, order_ids=None, stems=None, sample=None, li
 
 
 def _schema(cls) -> pa.Schema:
+    """An Arrow schema from a dataclass's field types (str, int, float, bool, dt.date; all nullable).
+
+    Args:
+        cls (type): PriorMention, SanctionMention or OrderActions.
+    Returns:
+        pyarrow.Schema: the schema.
+    """
     types = {"str": pa.string(), "int": pa.int64(), "float": pa.float64(), "bool": pa.bool_(),
              "dt.date": pa.date32()}
     fields = []
@@ -720,6 +903,15 @@ def _schema(cls) -> pa.Schema:
 
 
 def _write(rows: list, cls, path: pathlib.Path) -> None:
+    """Write dataclass rows to Parquet atomically.
+
+    Args:
+        rows (list): the rows.
+        cls (type): their dataclass (gives the schema).
+        path (pathlib.Path): the destination.
+    Returns:
+        None.
+    """
     schema = _schema(cls)
     table = pa.Table.from_pylist([asdict(r) for r in rows], schema=schema)
     tmp = path.parent / f"{path.name}.tmp-{os.urandom(6).hex()}"
@@ -728,6 +920,14 @@ def _write(rows: list, cls, path: pathlib.Path) -> None:
 
 
 def write_outputs(orders, prior, sanctions, out_dir: pathlib.Path) -> list[pathlib.Path]:
+    """Write ``order_actions``, ``prior_action_mentions`` and ``sanction_mentions``.
+
+    Args:
+        orders (list[OrderActions]), prior (list[PriorMention]), sanctions (list[SanctionMention]): the rows.
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+    Returns:
+        list[pathlib.Path]: the three paths written.
+    """
     assert_safe_output(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = [out_dir / "order_actions.parquet", out_dir / "prior_action_mentions.parquet",
@@ -739,9 +939,26 @@ def write_outputs(orders, prior, sanctions, out_dir: pathlib.Path) -> list[pathl
 
 
 def run(jobs, *, workers=1, repo_root=REPO_ROOT, chunk=200):
+    """Process every order (in worker processes when workers > 1).
+
+    Args:
+        jobs (list[Job]): the orders.
+        workers (int): processes.
+        repo_root (pathlib.Path): base for text paths.
+        chunk (int): orders per worker task.
+    Returns:
+        tuple[list[OrderActions], list[PriorMention], list[SanctionMention]]: all rows.
+    """
     orders, prior, sanctions = [], [], []
 
     def collect(res):
+        """Gather one order's result.
+
+        Args:
+            res (tuple[OrderActions, list[PriorMention], list[SanctionMention]]): one order's output.
+        Returns:
+            None.
+        """
         o, p, s = res
         orders.append(o)
         prior.extend(p)
@@ -763,6 +980,13 @@ def run(jobs, *, workers=1, repo_root=REPO_ROOT, chunk=200):
 
 
 def summarise(orders: list[OrderActions]) -> dict:
+    """Run summary for the log.
+
+    Args:
+        orders (list[OrderActions]): the summary rows.
+    Returns:
+        dict: prior actions found, first-action sources, penalty quantiles, words checks, sanctions by type.
+    """
     with_text = [o for o in orders if o.text_status == "OK"]
     by_type = collections.defaultdict(lambda: collections.Counter())
     for o in with_text:
@@ -799,6 +1023,11 @@ def summarise(orders: list[OrderActions]) -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.extract_actions``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.extract_actions",
                                      description="Prior actions and sanctions (runbook Week 2, Day 4)")
     parser.add_argument("--documents", type=pathlib.Path, default=TEXT_DOCUMENTS_IN)
@@ -816,6 +1045,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 7: prior actions and sanctions for every selected order.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         out_dir, log_file = args.scratch, args.scratch / "extract_actions.log"

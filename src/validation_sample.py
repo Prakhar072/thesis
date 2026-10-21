@@ -115,6 +115,14 @@ EARLY_START = dt.date(1990, 1, 1)
 
 
 def stratum(row) -> str | None:
+    """The sampling stratum of one order, from the pipeline's window outcome.
+
+    Args:
+        row: a row of the window table (needs text_status, violation_start, violation_method, window_status,
+            window_kind).
+    Returns:
+        str | None: regex, model_stated, model_conduct or no_window; None for an order without text.
+    """
     if row.text_status != "OK":
         return None
     if pd.isna(row.violation_start):
@@ -127,7 +135,16 @@ def stratum(row) -> str | None:
 
 def load_frame(windows: pathlib.Path = WINDOWS_IN, listings: pathlib.Path = LISTINGS_IN,
                documents: pathlib.Path = DOCUMENTS_IN) -> pd.DataFrame:
-    """One row per order that could be sampled, with its stratum and links."""
+    """One row per order that could be sampled, with its stratum and links.
+
+    Args:
+        windows (pathlib.Path): ``derived/windows_checked.parquet``.
+        listings (pathlib.Path): ``derived/listings.parquet``.
+        documents (pathlib.Path): ``derived/order_documents.parquet``.
+    Returns:
+        pd.DataFrame: one row per order with text: the window columns, title, source_url, pdf_url, pdf_path,
+        stratum, iso (bool).
+    """
     w = pd.read_parquet(windows)
     lst = pd.read_parquet(listings, dtype_backend="numpy_nullable")
     lst["text_stem"] = [text_stem(int(o) if pd.notna(o) else None, u)
@@ -145,6 +162,13 @@ def load_frame(windows: pathlib.Path = WINDOWS_IN, listings: pathlib.Path = LIST
 
 
 def seen_stems(paths=SEEN) -> set[str]:
+    """Every order read while building the pipeline (never in the blind sample).
+
+    Args:
+        paths (tuple[pathlib.Path, ...]): the hand files listing them (default SEEN).
+    Returns:
+        set[str]: their text stems.
+    """
     out: set[str] = set()
     for p in paths:
         if p.exists():
@@ -153,7 +177,15 @@ def seen_stems(paths=SEEN) -> set[str]:
 
 
 def systematic(pool: pd.DataFrame, n: int, rng: random.Random) -> pd.DataFrame:
-    """Every k-th order of the pool sorted by type and date, from a random start."""
+    """Every k-th order of the pool sorted by type and date, from a random start.
+
+    Args:
+        pool (pd.DataFrame): the orders to draw from.
+        n (int): how many to draw.
+        rng (random.Random): the random source (seeded).
+    Returns:
+        pd.DataFrame: n rows (the whole pool if it is smaller).
+    """
     if n <= 0 or pool.empty:
         return pool.iloc[0:0]
     if n >= len(pool):
@@ -166,6 +198,17 @@ def systematic(pool: pd.DataFrame, n: int, rng: random.Random) -> pd.DataFrame:
 
 def draw(frame: pd.DataFrame, *, sizes: dict[str, int] = SIZES, exclude: set[str] = frozenset(),
          iso_cap: dict[str, int] = ISO_CAP, seed: int = SEED) -> pd.DataFrame:
+    """Draw the blind sample: per stratum, ISO capped, systematic over type × date, then shuffled.
+
+    Args:
+        frame (pd.DataFrame): from load_frame.
+        sizes (dict[str, int]): orders per stratum (60 / 25 / 25 / 40).
+        exclude (set[str]): stems never to draw (seen while building).
+        iso_cap (dict[str, int]): at most this many Illiquid Stock Options orders per stratum.
+        seed (int): the random seed.
+    Returns:
+        pd.DataFrame: the sampled orders, in a shuffled order.
+    """
     rng = random.Random(seed)
     frame = frame[~frame.text_stem.isin(exclude)]
     parts = []
@@ -183,13 +226,27 @@ def draw(frame: pd.DataFrame, *, sizes: dict[str, int] = SIZES, exclude: set[str
 
 
 def local_name(sample_no: int, row) -> str:
-    """``012_46128.pdf``; ``.txt`` for an inline-HTML order, which has no PDF."""
+    """``012_46128.pdf``; ``.txt`` for an inline-HTML order, which has no PDF.
+
+    Args:
+        sample_no (int): the order's place on the sheet (1-based).
+        row: a sampled order (text_stem, pdf_path).
+    Returns:
+        str: the copy's file name.
+    """
     return f"{sample_no:03d}_{row.text_stem}.{'pdf' if pd.notna(row.pdf_path) else 'txt'}"
 
 
 def copy_files(sample: pd.DataFrame, out_dir: pathlib.Path) -> list[str]:
     """Copy each sampled order's PDF (or inline text) to ``out_dir``; return the
-    file names in sample order, blank where the source is missing."""
+    file names in sample order, blank where the source is missing.
+
+    Args:
+        sample (pd.DataFrame): the sampled orders, in sheet order.
+        out_dir (pathlib.Path): ``hand/validation_pdfs`` (or a scratch folder).
+    Returns:
+        list[str]: the file name written per order ("" where the source file is missing).
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     names = []
     for no, row in enumerate(sample.itertuples(), start=1):
@@ -206,6 +263,14 @@ def copy_files(sample: pd.DataFrame, out_dir: pathlib.Path) -> list[str]:
 
 
 def sheet(sample: pd.DataFrame, local_files: list[str] | None = None) -> pd.DataFrame:
+    """The blind coding sheet: identity, SEBI's own title and links, and empty coding columns.
+
+    Args:
+        sample (pd.DataFrame): the sampled orders, in sheet order.
+        local_files (list[str] | None): the copies' paths, one per order.
+    Returns:
+        pd.DataFrame: ``hand/validation_sample.csv``'s rows (no pipeline output).
+    """
     out = pd.DataFrame({
         "sample_no": range(1, len(sample) + 1),
         "text_stem": sample.text_stem.values,
@@ -229,7 +294,17 @@ def key(sample: pd.DataFrame, frame: pd.DataFrame, exclude: set[str], seed: int)
     included, since accuracy is weighted back to the whole corpus. ISO orders
     are capped within each stratum, so a sampled ISO order stands for many more
     orders than a non-ISO one: ``weight = cell_population / cell_sampled`` with
-    cells (stratum, iso)."""
+    cells (stratum, iso).
+
+    Args:
+        sample (pd.DataFrame): the sampled orders.
+        frame (pd.DataFrame): every order that could be sampled (the population).
+        exclude (set[str]): the seen orders (only counted).
+        seed (int): the draw's seed.
+    Returns:
+        pd.DataFrame: ``derived/validation_key.parquet``: text_stem, stratum, iso, stratum/cell population and
+        sampled counts, weight, seed, excluded_seen.
+    """
     cells = ["stratum", "iso"]
     k = sample[["text_stem", "stratum", "iso"]].copy()
     at = pd.MultiIndex.from_frame(k[cells])
@@ -245,7 +320,14 @@ def key(sample: pd.DataFrame, frame: pd.DataFrame, exclude: set[str], seed: int)
 
 def uncovered_cells(sample: pd.DataFrame, frame: pd.DataFrame) -> dict:
     """(stratum, iso) cells with orders in the corpus but none sampled: their
-    orders carry no weight, so the weights sum short of the corpus."""
+    orders carry no weight, so the weights sum short of the corpus.
+
+    Args:
+        sample (pd.DataFrame): the sampled orders.
+        frame (pd.DataFrame): the population.
+    Returns:
+        dict: "<stratum>[ ISO]" → orders in that cell, for cells with none sampled.
+    """
     pop = frame.groupby(["stratum", "iso"]).size()
     drawn = sample.groupby(["stratum", "iso"]).size().reindex(pop.index, fill_value=0)
     return {f"{s}{' ISO' if i else ''}": int(n) for (s, i), n in pop[drawn == 0].items()}
@@ -254,6 +336,13 @@ def uncovered_cells(sample: pd.DataFrame, frame: pd.DataFrame) -> dict:
 # --- checking the coded sheet ---------------------------------------------------------------------------------
 
 def _date(value: str) -> dt.date | None:
+    """A strict YYYY-MM-DD date from the sheet.
+
+    Args:
+        value (str): a cell.
+    Returns:
+        datetime.date | None: the date, or None if the cell is not exactly YYYY-MM-DD or not a real date.
+    """
     if not ISO_DATE.fullmatch(value):
         return None
     try:
@@ -263,6 +352,14 @@ def _date(value: str) -> dt.date | None:
 
 
 def _suggest(value: str, allowed) -> str:
+    """A “did you mean …?” hint for a misspelt value.
+
+    Args:
+        value (str): what was typed.
+        allowed: the allowed values.
+    Returns:
+        str: " (did you mean X?)", or "".
+    """
     near = difflib.get_close_matches(re.sub(r"[\s-]+", "_", value.strip()).upper(),
                                      [a.upper() for a in allowed], n=1, cutoff=0.6)
     if not near:
@@ -271,7 +368,13 @@ def _suggest(value: str, allowed) -> str:
 
 
 def read_sheet(path: pathlib.Path) -> tuple[pd.DataFrame, list[str]]:
-    """The sheet as strings. Excel on Windows may re-save it in cp1252."""
+    """The sheet as strings. Excel on Windows may re-save it in cp1252.
+
+    Args:
+        path (pathlib.Path): the coding sheet.
+    Returns:
+        tuple[pd.DataFrame, list[str]]: the sheet (all strings, stripped), and notes about how it was read.
+    """
     notes = []
     try:
         df = pd.read_csv(path, dtype=str, keep_default_na=False, encoding="utf-8-sig")
@@ -283,7 +386,13 @@ def read_sheet(path: pathlib.Path) -> tuple[pd.DataFrame, list[str]]:
 
 def check_row(r: dict) -> list[tuple[str, str]]:
     """Problems with one coded row as (level, message); level ``error`` = the
-    Day 5 scorer cannot read it, ``remind`` = a protocol rule to look at."""
+    Day 5 scorer cannot read it, ``remind`` = a protocol rule to look at.
+
+    Args:
+        r (dict): one sheet row (column → string).
+    Returns:
+        list[tuple[str, str]]: (level, message) per problem.
+    """
     out = []
     note = r.get("notes", "")
     dates = {}
@@ -339,7 +448,15 @@ def check_row(r: dict) -> list[tuple[str, str]]:
 
 
 def check(path: pathlib.Path, stems: set[str] | None = None) -> tuple[list[tuple[str, str, str]], dict]:
-    """Check a coding sheet: (sample_no, level, message) problems and progress counts."""
+    """Check a coding sheet: (sample_no, level, message) problems and progress counts.
+
+    Args:
+        path (pathlib.Path): the coding sheet.
+        stems (set[str] | None): the sampled stems from the key (None skips the identity check).
+    Returns:
+        tuple[list[tuple[str, str, str]], dict]: problems, and counts {rows, started, complete, doubts, errors,
+        reminders}.
+    """
     df, read_notes = read_sheet(path)
     problems = [("—", "remind", n) for n in read_notes]
     missing = [c for c in ["sample_no", "text_stem", "order_date", *CODING_COLUMNS] if c not in df.columns]
@@ -367,6 +484,14 @@ def check(path: pathlib.Path, stems: set[str] | None = None) -> tuple[list[tuple
 
 
 def run_check(sheet_path: pathlib.Path, key_path: pathlib.Path) -> int:
+    """Print the check of the coding sheet (``--check``).
+
+    Args:
+        sheet_path (pathlib.Path): the coding sheet.
+        key_path (pathlib.Path): the key (for the sampled stems; optional).
+    Returns:
+        int: 1 if any error, else 0.
+    """
     if not sheet_path.exists():
         log.error("no coding sheet at %s", sheet_path)
         return 1
@@ -381,6 +506,11 @@ def run_check(sheet_path: pathlib.Path, key_path: pathlib.Path) -> int:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.validation_sample``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.validation_sample",
         description="Draw the Week 3 validation sample and write the blind coding sheet",
@@ -398,6 +528,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Draw the sample and write the sheet, the copies and the key — or, with ``--check``, check the sheet.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0, or 1 (a sheet already exists, or ``--check`` found errors).
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         sheet_out, files_out = args.scratch / "validation_sample.csv", args.scratch / "validation_pdfs"

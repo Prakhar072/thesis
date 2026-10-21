@@ -93,6 +93,12 @@ def earliest_end(end: dt.date, precision: str | None) -> dt.date:
     2023). A whole year or financial year does not: "FY 2021-22" in an order of
     28 March 2022 (57262, a Union Budget year quoted in an insider-trading
     order) should be looked at, not waved through.
+
+    Args:
+        end (datetime.date): the window's end.
+        precision (str | None): its precision (day, month, year, fy).
+    Returns:
+        datetime.date: the 1st of the month for a month-precision end, else ``end``.
     """
     if precision == "month":
         return end.replace(day=1)
@@ -101,6 +107,16 @@ def earliest_end(end: dt.date, precision: str | None) -> dt.date:
 
 def flags_for(start: dt.date, end: dt.date, end_precision: str | None,
               order_date: dt.date | None) -> list[str]:
+    """The sanity rules a window breaks (R1–R4).
+
+    Args:
+        start (datetime.date), end (datetime.date): the window.
+        end_precision (str | None): the end's precision.
+        order_date (datetime.date | None): the order's date.
+    Returns:
+        list[str]: flags among end_after_order, start_after_end, lag_not_positive, lag_20_years,
+        start_before_1995 (empty = passes).
+    """
     out = []
     if start > end:
         out.append("start_after_end")
@@ -118,6 +134,13 @@ def flags_for(start: dt.date, end: dt.date, end_precision: str | None,
 
 
 def severity(flags: list[str]) -> str | None:
+    """The worst severity among a window's flags.
+
+    Args:
+        flags (list[str]): its flags.
+    Returns:
+        str | None: "impossible", "implausible", or None when there are none.
+    """
     if not flags:
         return None
     return IMPOSSIBLE if any(RULES[f] == IMPOSSIBLE for f in flags) else IMPLAUSIBLE
@@ -128,6 +151,13 @@ def severity(flags: list[str]) -> str | None:
 # --------------------------------------------------------------------------
 
 def read_review(path: pathlib.Path) -> pd.DataFrame:
+    """Read ``hand/window_review.csv`` (all text; missing columns added empty).
+
+    Args:
+        path (pathlib.Path): the review sheet.
+    Returns:
+        pd.DataFrame: one row per reviewed window, REVIEW_COLUMNS.
+    """
     if not path.exists():
         return pd.DataFrame(columns=REVIEW_COLUMNS)
     df = pd.read_csv(path, dtype=str, keep_default_na=False)
@@ -143,7 +173,13 @@ _DAY_FIRST = re.compile(r"(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})")
 
 
 def _date(text: str) -> dt.date | None:
-    """A review date: YYYY-MM-DD, or DD-MM-YYYY / DD/MM/YYYY as a spreadsheet saves it."""
+    """A review date: YYYY-MM-DD, or DD-MM-YYYY / DD/MM/YYYY as a spreadsheet saves it.
+
+    Args:
+        text (str): a cell.
+    Returns:
+        datetime.date | None: the date, or None if it is not one.
+    """
     t = (text or "").strip()
     try:
         return dt.date.fromisoformat(t)
@@ -158,13 +194,26 @@ def _date(text: str) -> dt.date | None:
 
 
 def _iso(text: str) -> str:
-    """A date cell normalised to YYYY-MM-DD; anything else left as it is."""
+    """A date cell normalised to YYYY-MM-DD; anything else left as it is.
+
+    Args:
+        text (str): a cell.
+    Returns:
+        str: YYYY-MM-DD if the cell is a date, else the cell unchanged.
+    """
     d = _date(text)
     return d.isoformat() if d else text
 
 
 def decisions(review: pd.DataFrame) -> tuple[dict[str, tuple], list[str]]:
-    """Valid decisions by text_stem, and messages for the invalid ones."""
+    """Valid decisions by text_stem, and messages for the invalid ones.
+
+    Args:
+        review (pd.DataFrame): the review sheet.
+    Returns:
+        tuple[dict[str, tuple], list[str]]: text_stem → (decision, start, end, note) for valid rows, and one
+        message per invalid row.
+    """
     out, problems = {}, []
     for r in review.itertuples():
         d = (r.decision or "").strip().lower()
@@ -187,7 +236,14 @@ def decisions(review: pd.DataFrame) -> tuple[dict[str, tuple], list[str]]:
 
 
 def update_review(review: pd.DataFrame, flagged: pd.DataFrame) -> pd.DataFrame:
-    """Append newly flagged orders; never touch existing rows."""
+    """Append newly flagged orders; never touch existing rows.
+
+    Args:
+        review (pd.DataFrame): the current sheet.
+        flagged (pd.DataFrame): every flagged window (with its original sentence and method).
+    Returns:
+        pd.DataFrame: the sheet with new flags appended and dates written as YYYY-MM-DD.
+    """
     known = set(review.text_stem)
     new = flagged[~flagged.text_stem.isin(known)]
     rows = pd.DataFrame({
@@ -212,7 +268,14 @@ def _clear(w: pd.DataFrame, i) -> None:
     dates *and* its method, rule, kind, confidence and sentence are cleared (the
     flagged dates stay in ``flagged_start``/``flagged_end``, the sentence in
     ``window_flagged.csv``). Leaving ``violation_confidence = high`` on a row with
-    no dates let a filter on confidence alone count it (AUDIT_REPORT.md M-9)."""
+    no dates let a filter on confidence alone count it (AUDIT_REPORT.md M-9).
+
+    Args:
+        w (pd.DataFrame): the window table being checked (changed in place).
+        i: the row's index label.
+    Returns:
+        None.
+    """
     for col in ("violation_start", "violation_end", "start_precision", "end_precision", "violation_raw",
                 "violation_method", "violation_rule", "window_kind", "char_start"):
         if col in w.columns:
@@ -221,6 +284,15 @@ def _clear(w: pd.DataFrame, i) -> None:
 
 
 def check(windows: pd.DataFrame, decided: dict[str, tuple]) -> pd.DataFrame:
+    """Apply the rules and the review decisions to every window.
+
+    Args:
+        windows (pd.DataFrame): ``violation_windows``, one row per order.
+        decided (dict[str, tuple]): review decisions by text_stem (from decisions()).
+    Returns:
+        pd.DataFrame: the table plus sanity_status, sanity_flags, sanity_severity, flagged_start/end,
+        review_note; flagged and dropped windows cleared, fixed ones carry the hand dates.
+    """
     w = windows.copy()
     for col in ("flagged_start", "flagged_end", "sanity_flags", "sanity_severity", "review_note"):
         w[col] = pd.Series([None] * len(w), index=w.index, dtype=object)
@@ -258,6 +330,13 @@ def check(windows: pd.DataFrame, decided: dict[str, tuple]) -> pd.DataFrame:
 # --------------------------------------------------------------------------
 
 def _cramers_v(table: pd.DataFrame) -> tuple[float, float]:
+    """Cramér's V and the chi-square p-value of a contingency table.
+
+    Args:
+        table (pd.DataFrame): counts (e.g. order type × has-a-window).
+    Returns:
+        tuple[float, float]: (V, p).
+    """
     from scipy.stats import chi2_contingency
     chi2, p, _, _ = chi2_contingency(table.values)
     n = table.values.sum()
@@ -266,7 +345,15 @@ def _cramers_v(table: pd.DataFrame) -> tuple[float, float]:
 
 
 def extraction_rate(checked: pd.DataFrame, iso: pd.Series) -> tuple[pd.DataFrame, dict]:
-    """Share of orders with text holding a high- or medium-confidence window."""
+    """Share of orders with text holding a high- or medium-confidence window.
+
+    Args:
+        checked (pd.DataFrame): the checked windows.
+        iso (pd.Series): bool per row: an Illiquid Stock Options order.
+    Returns:
+        tuple[pd.DataFrame, dict]: the rate table (by, group, orders_with_window, orders, share), and
+        {"rate", "verdict" (the runbook's band), "drop_out_tests" (Cramér's V by type and year)}.
+    """
     t = checked[checked.text_status == "OK"].copy()
     t["has"] = t.violation_start.notna() & t.violation_confidence.isin(["high", "medium"])
     t["year_band"] = pd.cut(pd.to_datetime(t.order_date).dt.year, [1999, 2005, 2010, 2015, 2020, 2026],
@@ -302,6 +389,14 @@ def extraction_rate(checked: pd.DataFrame, iso: pd.Series) -> tuple[pd.DataFrame
 # --------------------------------------------------------------------------
 
 def iso_flags(windows: pd.DataFrame, listings: pathlib.Path = LISTINGS_IN) -> pd.Series:
+    """Which orders belong to the Illiquid Stock Options cluster (by title).
+
+    Args:
+        windows (pd.DataFrame): the window table (text_stem column).
+        listings (pathlib.Path): ``derived/listings.parquet``.
+    Returns:
+        pd.Series: bool, aligned with ``windows``' index.
+    """
     lst = pd.read_parquet(listings, columns=["order_id", "source_url", "title"], dtype_backend="numpy_nullable")
     lst["text_stem"] = [text_stem(int(o) if pd.notna(o) else None, u)
                         for o, u in zip(lst.order_id, lst.source_url)]
@@ -310,12 +405,25 @@ def iso_flags(windows: pd.DataFrame, listings: pathlib.Path = LISTINGS_IN) -> pd
 
 
 def _write_atomic_csv(df: pd.DataFrame, path: pathlib.Path) -> None:
+    """Write a CSV through a temporary file and a rename.
+
+    Args:
+        df (pd.DataFrame): the table.
+        path (pathlib.Path): the destination.
+    Returns:
+        None.
+    """
     tmp = path.parent / f"{path.name}.tmp-{os.urandom(6).hex()}"
     df.to_csv(tmp, index=False)
     tmp.replace(path)
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.check_windows``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.check_windows",
         description="Sanity rules on violation windows, flagged file for review, extraction rate "
@@ -329,6 +437,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 6: rules, review decisions, the flagged file, the review sheet and the extraction rate.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         out_dir, review_path = args.scratch, args.scratch / "window_review.csv"

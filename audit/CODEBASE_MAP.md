@@ -1,5 +1,9 @@
 # Codebase map
 
+> **A snapshot.** This map was traced from commit `44f7c88` (2026-09-28) and covers stages 1–8 and the first
+> `build_orders`. For the current guide to every file — including stages 9–10, the Week 3 validation tools and the
+> Week 4 market-data modules — see [`CODE_GUIDE.md`](../CODE_GUIDE.md).
+
 What the pipeline does, traced from the code (commit `44f7c88`, 2026-09-28) and
 checked against the files it produced in `derived/`. Counts in this document
 come from those files unless marked otherwise.

@@ -76,16 +76,37 @@ SEED = 20261015
 
 
 def fy(d) -> int:
-    """Financial year (April–March) a date falls in, named by its end year."""
+    """Financial year (April–March) a date falls in, named by its end year.
+
+    Args:
+        d (datetime.date): a date.
+    Returns:
+        int: its financial year (2011-04-01 → 2012).
+    """
     return d.year + (1 if d.month >= 4 else 0)
 
 
 def fy_bounds(year: int) -> tuple[dt.date, dt.date]:
+    """The first and last day of a financial year.
+
+    Args:
+        year (int): the financial year (its end year).
+    Returns:
+        tuple[datetime.date, datetime.date]: (1 April of year − 1, 31 March of year).
+    """
     return dt.date(year - 1, 4, 1), dt.date(year, 3, 31)
 
 
 def fraud_years(windows: pd.DataFrame) -> pd.DataFrame:
-    """One row per (firm, financial year) a violation window overlaps."""
+    """One row per (firm, financial year) a violation window overlaps.
+
+    Args:
+        windows (pd.DataFrame): windowed orders with a matched issuer (issuer_firm_id, violation_start/end,
+            text_stem, fraud_category, issuer_noticee, window_kind, violation_method).
+    Returns:
+        pd.DataFrame: firm_id, fy, overlap_days, n_orders, categories (JSON), issuer_noticee,
+        stated_period_only, text_stems (JSON), in_period.
+    """
     rows = []
     for r in windows.itertuples():
         for y in range(fy(r.violation_start), fy(r.violation_end) + 1):
@@ -109,7 +130,14 @@ def fraud_years(windows: pd.DataFrame) -> pd.DataFrame:
 
 
 def events(orders: pd.DataFrame) -> pd.DataFrame:
-    """Public enforcement events per matched issuer: the order itself and any recited interim order."""
+    """Public enforcement events per matched issuer: the order itself and any recited interim order.
+
+    Args:
+        orders (pd.DataFrame): orders with issuer_firm_id, order_date, order_type, earliest_interim_date …
+    Returns:
+        pd.DataFrame: firm_id, event_date, kind (order / interim_recited), order_type, n_orders, text_stems,
+        categories.
+    """
     o = orders[orders.issuer_firm_id.notna()]
     a = o[["issuer_firm_id", "order_date", "order_type", "text_stem", "fraud_category"]].assign(kind="order")
     b = (o[o.earliest_interim_date.notna()][["issuer_firm_id", "earliest_interim_date", "order_type", "text_stem",
@@ -125,6 +153,16 @@ def events(orders: pd.DataFrame) -> pd.DataFrame:
 
 
 def draw_controls(firms: pd.DataFrame, excluded: set[str], n: int = N_CONTROLS, seed: int = SEED) -> pd.DataFrame:
+    """Draw the Stage 2 control firms: a seeded simple random sample of the eligible universe.
+
+    Args:
+        firms (pd.DataFrame): Day 1's firm table.
+        excluded (set[str]): firms that are an issuer or a review candidate of any order.
+        n (int): how many to draw.
+        seed (int): the random seed.
+    Returns:
+        pd.DataFrame: the drawn firms, with role "control", weight (eligible / drawn) and eligible_controls.
+    """
     eligible = firms[~firms.firm_id.str.contains(":") & ~firms.firm_id.isin(excluded)]
     picked = eligible.sample(n=min(n, len(eligible)), random_state=np.random.RandomState(seed))
     return picked.assign(role="control", weight=len(eligible) / len(picked), eligible_controls=len(eligible))
@@ -132,6 +170,16 @@ def draw_controls(firms: pd.DataFrame, excluded: set[str], n: int = N_CONTROLS, 
 
 def build(orders: pd.DataFrame, order_issuers: pd.DataFrame, entity_matches: pd.DataFrame, firms: pd.DataFrame,
           n_controls: int = N_CONTROLS, seed: int = SEED):
+    """Define the sample: fraud firms and their firm-years, controls, events.
+
+    Args:
+        orders (pd.DataFrame): orders.parquet columns (dates, window, category, interim date).
+        order_issuers (pd.DataFrame), entity_matches (pd.DataFrame): Day 2's matches.
+        firms (pd.DataFrame): Day 1's firm table.
+        n_controls (int), seed (int): the control draw.
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: (sample, sample_fraud_years, sample_events).
+    """
     oi = order_issuers[["text_stem", "issuer_firm_id", "match_method", "candidate_firm_id", "issuer_isin",
                         "issuer_ticker", "issuer_nse_symbol", "issuer_bse_code"]]
     o = orders.merge(oi, on="text_stem", how="left", validate="one_to_one")
@@ -173,11 +221,23 @@ def build(orders: pd.DataFrame, order_issuers: pd.DataFrame, entity_matches: pd.
 
 
 def fingerprint(sample: pd.DataFrame) -> str:
+    """A short hash of the frozen firm list (firm_id, role), for results_log.md.
+
+    Args:
+        sample (pd.DataFrame): the sample.
+    Returns:
+        str: 16 hex characters.
+    """
     s = sample[["firm_id", "role"]].sort_values(["role", "firm_id"]).to_csv(index=False)
     return hashlib.sha256(s.encode()).hexdigest()[:16]
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.build_sample``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.build_sample",
                                      description="Define and freeze the Week 4 analysis sample")
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR,
@@ -191,6 +251,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run Week 4 Day 3: build and freeze the sample (refuses to replace a frozen one).
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0, or 1 if the sample is already frozen.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     frozen = (args.scratch / "sample_frozen.csv") if args.scratch else FROZEN

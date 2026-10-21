@@ -1,11 +1,30 @@
-# Project guide — what we built in Week 1, where it lives, how to use it
+# Project guide — what we built, where it lives, how to use it
 
-*Written 2026-09-24 for Week 1; file map, pipeline and next steps updated 2026-09-30 (Week 3 Day 1).* Figures with provenance: [results_log.md](results_log.md).
-Technical briefing for AI agents: [CLAUDE.md](CLAUDE.md). Runbook: [timeline.md](timeline.md). Thesis design: [technical_plan.md](technical_plan.md).
+*Written 2026-09-24 for Week 1; updated 2026-10-21 (Weeks 3–4 built).*
+
+- **What is left for you:** [TASKS.md](TASKS.md).
+- **How each file of the code works:** [CODE_GUIDE.md](CODE_GUIDE.md).
+- **Figures with provenance:** [results_log.md](results_log.md).
+- **Technical briefing for AI agents:** [CLAUDE.md](CLAUDE.md).
+- **Runbook:** [timeline.md](timeline.md). **Thesis design:** [technical_plan.md](technical_plan.md).
+
+Every function in `src/` documents its inputs and output with their types (`Args:` / `Returns:` in its docstring).
 
 ---
 
-## 1. The week in one page
+## 0. Where things stand (2026-10-21)
+
+| Part | State |
+|---|---|
+| Week 1 — corpus: listings, documents, text | run |
+| Week 2 — windows, prior actions, sanctions, parties, regulations | run; `derived/orders.parquet` |
+| Week 3 — fraud category, detection channel | run |
+| Week 3 — blind validation sample and scorer | built; **yours to draw, code and score** |
+| Week 4 — listed universe, matching, analysis sample, prices, ownership, panel | built and dry-run; **yours to run** (two downloads, one hand review) |
+
+The order to do your part in, with instructions: [TASKS.md](TASKS.md).
+
+## 1. Week 1 in one page (the history)
 
 **Result:** every order in SEBI's four primary enforcement categories —
 **20,861 orders, Dec 2000 to Sep 2026** — is listed, its document downloaded,
@@ -78,6 +97,16 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `derived/order_channels.parquet` | one row per order: detection channel, finer detail, confidence, method (rule / model / none), the sentence it was read from | small | rules ~1.3 min; model ~2 h first time, seconds from `raw/llm/` (stage 10) |
 | `derived/orders.parquet` | **one row per order, 71 columns — the table to browse**: window, prior action, penalty, matter, issuer, regulations, fraud category, detection channel | small | yes, seconds (stage 11) |
 | `derived/extraction_rate.csv` | extraction rate overall and by type, year, method | tiny | with stage 6 |
+| `derived/validation_key.parquet`, `derived/validation_*` | the blind sample's strata and weights (don't open while coding); later the scoring, the errors and the tables | small | from your sheet |
+| `derived/universe.parquet`, `firms.parquet`, `name_aliases.parquet` | every BSE/NSE equity (live, suspended, delisted); one row per firm; every name a firm has had | small | yes, seconds (cached lists) |
+| `derived/order_issuers.parquet`, `entity_matches.parquet`, `name_matches.parquet` | each order's issuer matched to a listed firm; company parties matched; one row per distinct name | small | yes, ~35 s + your review |
+| `derived/sample.parquet`, `sample_fraud_years.parquet`, `sample_events.parquet` | the frozen analysis sample: fraud firms and controls, fraud firm-years, enforcement events | small | **frozen once** (`hand/sample_frozen.csv` keeps the list) |
+| `derived/prices/`, `price_days.parquet`, `corporate_actions.parquet`, `market_index.parquet` | daily NSE/BSE prices from 2004, the download ledger, splits and bonuses, the BSE 500 | ~1–2 GB | from the cache in minutes once downloaded (~7–8 h first time) |
+| `derived/shareholding.parquet` | promoter holding and pledging per firm and March quarter (Dec 2015 on) | small | from the cache once downloaded (~6–9 h first time) |
+| `derived/panel.parquet`, `panel_coverage.csv` | the firm-year panel FY2010–2025 and its coverage table | small | yes, ~1 min |
+| `hand/validation_sample.csv`, `hand/validation_pdfs/` | your blind coding sheet (150 orders) and copies of their PDFs | — | git (your coding); the copies are not in git |
+| `hand/match_review.csv` | your accept / reject / firm_id decision on each borderline name match | — | git (your decisions) |
+| `hand/sample_frozen.csv`, `hand/validation_official.json` | the frozen firm list; the official validation figures | — | git |
 | `hand/window_review.csv` | your keep / fix / drop decision on each flagged window | — | git (your decisions) |
 | `derived/fetch_failures.csv` | the orders whose document could not be fetched | tiny | with stage 2 |
 | `reports/listing_*.csv` | per-page scrape log, duplicate conflicts (none), rows needing review | tiny | with stage 1 |
@@ -200,7 +229,7 @@ Full column list: [CLAUDE.md §8](CLAUDE.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 696 passed
+python -m pytest tests -q                                   # 807 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached
@@ -214,6 +243,19 @@ python -m src.classify_fraud                                # stage 9, fraud cat
 python -m src.detect_channel                                # stage 10, detection channel: rules, then the model (~2 h on the GPU)
 python -m src.detect_channel --offline                      # stage 10 again, model answers from raw/llm/ (--no-model: rules only)
 python -m src.build_orders                                  # stage 11, derived/orders.parquet, seconds
+
+# Week 3 (validation) — see TASKS.md B
+python -m src.validation_sample                             # draw the blind sample once; --check while coding
+python -m src.score_validation --official                   # score the finished sheet once
+
+# Week 4 (market data) — see TASKS.md A; the two fetches run for hours, one at a time
+python -m src.fetch_prices                                  # prices, corporate actions, BSE 500 (~7-8 h first time)
+python -m src.universe                                      # listed universe, seconds
+python -m src.match_entities                                # issuers -> listed firms, ~35 s (re-run after your review)
+python -m src.build_sample                                  # freeze the analysis sample, once
+python -m src.prices --check TATASTEEL                      # the price sanity plot
+python -m src.fetch_shareholding                            # promoter holding and pledging (~6-9 h first time)
+python -m src.build_panel                                   # the firm-year panel and its coverage table, ~1 min
 ```
 
 `derived/orders.parquet` is the table to open when you want to look at rows: one
@@ -250,48 +292,35 @@ downloads only the new orders' documents, then stage 3.
   pass to correct in validation.
 - 19% of orders have no violated-regulation list (charges written as circulars, or
   phrasing the parser misses); `regimes_cited` and `penalty_provisions` still help.
-- Fraud category: 945 orders are `unresolved` (coded OTHER, low confidence) and 3,076
-  rest on a fallback (low). Development agreement is 58 of 65, measured on the orders
+- Fraud category: 959 orders are `unresolved` (coded OTHER, low confidence) and about 3,060
+  rest on a fallback (low). Development agreement is 75 of 81, measured on the orders
   used to build the rules, so it is optimistic; the blind sample gives the real figure.
 - Settlement amounts: where several applicants each pay in separate sentences, only the
   largest counts (an under-count).
-- Detection channel: 63% of orders do not say what started SEBI's work (UNCLEAR; 86% of
-  settlement orders, falling from 73% before 2011 to 49% since 2021). That share is a
+- Detection channel: 58.7% of orders do not say what started SEBI's work (UNCLEAR; 83% of
+  settlement orders; 66–70% in the eras before 2011, 46% since 2021). That share is a
   finding, not a gap to fill by guessing. Model-read channels (`detection_method = model`)
   are less reliable than rule-read ones: keep them separable in any analysis.
+- Listed firms: companies listed only on regional exchanges are in neither BSE's nor NSE's
+  lists and stay unmatched; rename history is NSE's only.
+- Prices are price returns (splits and bonuses adjusted; dividends, rights and demergers not).
+- Ownership (promoter holding, pledging) exists from December 2015 only, so the fraud years
+  FY2010–2015 have none. Audit qualifications were dropped (they need annual-report PDFs).
 
 ## 6. Next
 
-- **Week 4, yours to run (built and dry-run 2026-10-14), in this order:** start the price download
-  (`setsid nohup .venv/bin/python -m src.fetch_prices > logs/fetch_prices.out 2>&1 &`, ~7–8 h), then
-  `python -m src.universe` and `python -m src.match_entities`; review `hand/match_review.csv`
-  (564 names: write `accept`, `reject`, or the right `firm_id` from the candidates in `decision`;
-  ~2 h) and re-run `match_entities`; freeze the sample (`python -m src.build_sample`, once); look
-  at `python -m src.prices --check TATASTEEL`; then the ownership download
-  (`setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholding.out 2>&1 &`,
-  ~6–9 h); finally `python -m src.build_panel` — its coverage table goes in the paper.
-- **Week 3, pending on you (deferred 2026-10-14; none of it run yet):** draw the sample
-  (`python -m src.validation_sample`), hand-code the 150, score them
-  (`python -m src.score_validation --official`), write the figures and the Gate 1
-  decision into `results_log.md`, then the Day 5 fixes. Week 4 proceeds meanwhile.
-- H4 (surveillance is not the dominant first-detection channel) needs first detections per
-  *matter*, not per order: the ISO wave alone moves the order-level surveillance share from
-  26% to 42%.
-- Week 3, Days 3–4: `python -m src.validation_sample` writes the blind coding sheet
-  `hand/validation_sample.csv` (150 orders) and a copy of each order's PDF in
-  `hand/validation_pdfs/` (`001_<id>.pdf` …; annotate these freely, never the files in
-  `raw/pdfs`). Code from the copies with `hand/coding_protocol.md` open, in two sittings.
-  `python -m src.validation_sample --check` lists misspelt values, non-ISO dates (Excel
-  likes to reformat them) and protocol reminders; it never shows the pipeline's answers.
-  Don't open `derived/validation_key.parquet` or `derived/orders.parquet` while coding.
-- Week 3, Day 5, once all 150 are coded: `python -m src.score_validation --official`. It
-  writes the validation tables (`derived/validation_table.md`: window exact / within a
-  month, agreement and Cohen's κ for category and channel, issuer agreement, by method,
-  era and order type), every disagreement with the pipeline's evidence
-  (`derived/validation_errors.csv`, for the fixes) and the Gate 1 reading. `--official`
-  saves the figures once, in `hand/validation_official.json`; scoring the same 150 again
-  after fixes is labelled as not the validation.
+**Your remaining tasks, in order and with instructions, are in [TASKS.md](TASKS.md):** the two
+Week 4 downloads, the match review and the sample freeze; drawing, coding and scoring the 150
+validation orders; the decisions only you can make (the unit of analysis first); the code review
+(guided by [CODE_GUIDE.md](CODE_GUIDE.md)); and the writing.
+
+Three things to keep in mind throughout:
+
 - The window is the period of business activity SEBI examined — "investigation /
   examination / inspection / relevant period" are one quantity; inspection
   *visit* dates are never it. See CLAUDE.md §1.
-- Settle the unit of analysis (order / matter / noticee), given the ISO cluster.
+- H4 (surveillance is not the dominant first-detection channel) needs first detections per
+  *matter*, not per order: the ISO wave alone moves the order-level surveillance share from
+  26% to 42%.
+- The unit of analysis (order / matter / noticee) decides what one Stage 1 observation is
+  (TASKS.md D1).

@@ -170,6 +170,14 @@ FRAUD_WORDS = re.compile(r"fraud|irregularit|misappropriat|forensic|misstat|siph
 
 @dataclass(frozen=True)
 class Rule:
+    """One channel rule: a pattern that states a trigger.
+
+    Attributes:
+        channel (str): the channel it gives; detail (str): the finer code ("agency" is resolved to the agency).
+        rx (re.Pattern): the pattern.
+        linked (bool): the pattern itself ties the source to SEBI's work (high confidence); False for
+        company_disclosure and inspection, which need the investigation cue in the sentence for high.
+    """
     channel: str
     detail: str
     rx: re.Pattern
@@ -177,6 +185,13 @@ class Rule:
 
 
 def _r(pattern: str) -> re.Pattern:
+    """Compile a case-insensitive pattern.
+
+    Args:
+        pattern (str): the regex.
+    Returns:
+        re.Pattern: the compiled pattern.
+    """
     return re.compile(pattern, _I)
 
 
@@ -280,6 +295,12 @@ RULES: list[Rule] = [
 
 @dataclass
 class Hit:
+    """A trigger found in the background.
+
+    Attributes:
+        channel (str), detail (str), sentence_no (int): 0-based index into the background sentences,
+        pos (int): offset in the sentence, confidence (str), evidence (str): the sentence (clipped).
+    """
     channel: str
     detail: str
     sentence_no: int       # 0-based index into the background sentences
@@ -289,6 +310,14 @@ class Hit:
 
 
 def _agency_detail(m: re.Match, default: str) -> str:
+    """Which agency a REFERRAL match names.
+
+    Args:
+        m (re.Match): a match of a REFERRAL rule.
+        default (str): the rule's own detail.
+    Returns:
+        str: mca_roc, sfio, rbi, tax, police_ed_cbi, court, regulator, government, or the default.
+    """
     for name, _ in AGENCIES:
         if m.groupdict().get(name):
             return name
@@ -296,7 +325,13 @@ def _agency_detail(m: re.Match, default: str) -> str:
 
 
 def background(text: str) -> list[str]:
-    """The sentences of the order's background, whitespace-normalised."""
+    """The sentences of the order's background, whitespace-normalised.
+
+    Args:
+        text (str): the order's text.
+    Returns:
+        list[str]: normalised sentences starting in the first 45% of the text (at least 6,000 characters).
+    """
     stripped = ew.strip_repeated_lines(text)
     limit = max(BACKGROUND_MIN_CHARS, int(len(stripped) * BACKGROUND_SHARE))
     out = []
@@ -310,7 +345,16 @@ def background(text: str) -> list[str]:
 
 
 def _accept(rule: Rule, m: re.Match, sentence: str, has_start_near: bool) -> str | None:
-    """The confidence of a match, or None if it is not a trigger."""
+    """The confidence of a match, or None if it is not a trigger.
+
+    Args:
+        rule (Rule): the rule that matched.
+        m (re.Match): the match.
+        sentence (str): the sentence.
+        has_start_near (bool): an investigation cue in this sentence or the next NEAR.
+    Returns:
+        str | None: "high" or "medium", or None (negated, procedural, enclosed with a notice, not tied to the start).
+    """
     before = sentence[max(0, m.start() - 60):m.start()]
     if NEGATED.search(before) or re.match(r"\s*(?:no|not)\b", sentence[m.start():m.start() + 4], _I):
         return None
@@ -341,7 +385,13 @@ def _accept(rule: Rule, m: re.Match, sentence: str, has_start_near: bool) -> str
 
 def trigger_window(sentences: list[str]) -> int:
     """Index of the last sentence that can state the trigger: it is stated before,
-    or just after, SEBI's work starts — not in the findings or the replies."""
+    or just after, SEBI's work starts — not in the findings or the replies.
+
+    Args:
+        sentences (list[str]): the background sentences.
+    Returns:
+        int: the index of the last sentence searched (SEBI's work starting + WORK_WINDOW, or the last one).
+    """
     first_work = next((i for i, s in enumerate(sentences)
                        if START.search(s) and WORK_START.search(s) and not SUBMISSION.search(s)
                        and not re.search(r"\bsettlement\s+application|\bconsent\s+(?:application|terms)", s, _I)), None)
@@ -349,7 +399,13 @@ def trigger_window(sentences: list[str]) -> int:
 
 
 def find_triggers(sentences: list[str]) -> list[Hit]:
-    """Every accepted trigger in the background, in text order."""
+    """Every accepted trigger in the background, in text order.
+
+    Args:
+        sentences (list[str]): the background sentences.
+    Returns:
+        list[Hit]: accepted triggers, by sentence and position (at most one per rule per sentence).
+    """
     hits: list[Hit] = []
     starts = [bool(START.search(s)) for s in sentences]
     for i, s in enumerate(sentences[:trigger_window(sentences) + 1]):
@@ -382,7 +438,13 @@ def find_triggers(sentences: list[str]) -> list[Hit]:
 def choose(hits: list[Hit]) -> Hit | None:
     """The earliest trigger (protocol §5 rule 3). An UNCLEAR one (an exchange
     reference with no stated basis, SEBI suo motu) gives way to a real channel
-    stated within the next three sentences — its basis."""
+    stated within the next three sentences — its basis.
+
+    Args:
+        hits (list[Hit]): the triggers found.
+    Returns:
+        Hit | None: the order's trigger, or None if there are none.
+    """
     if not hits:
         return None
     first = hits[0]
@@ -456,22 +518,50 @@ SCHEMA = {
 
 
 def model_sentences(sentences: list[str]) -> list[str]:
-    """The sentences worth sending: in the trigger window, carrying a channel cue."""
+    """The sentences worth sending: in the trigger window, carrying a channel cue.
+
+    Args:
+        sentences (list[str]): the background sentences.
+    Returns:
+        list[str]: up to MODEL_MAX_SENTENCES sentences (clipped) to send to the model.
+    """
     window = sentences[:trigger_window(sentences) + 1]
     return [s[:MAX_SENTENCE_CHARS] for s in window
             if not SUBMISSION.search(s) and any(rx.search(s) for rx in CHANNEL_CUES.values())][:MODEL_MAX_SENTENCES]
 
 
 def build_user(sentences: list[str]) -> str:
+    """The user prompt: the candidate sentences, numbered.
+
+    Args:
+        sentences (list[str]): the sentences.
+    Returns:
+        str: "Sentences from the order:" followed by "[1] …".
+    """
     return "\n".join(["Sentences from the order:"] + [f"[{i}] {s}" for i, s in enumerate(sentences, start=1)])
 
 
 def _alnum(text: str) -> str:
+    """Lower-case letters and digits only (for quote checking).
+
+    Args:
+        text (str): any text.
+    Returns:
+        str: the reduced text.
+    """
     return re.sub(r"[^0-9a-z]", "", text.lower())
 
 
 def read_answer(content: str, sentences: list[str]) -> tuple[str, str | None, int, str]:
-    """(model_status, channel, sentence_no, note)."""
+    """(model_status, channel, sentence_no, note).
+
+    Args:
+        content (str): the model's JSON answer.
+        sentences (list[str]): the sentences it was shown.
+    Returns:
+        tuple[str, str | None, int, str]: (MODEL_CHANNEL / MODEL_UNCLEAR / MODEL_UNVERIFIED / MODEL_ERROR,
+        the channel, the sentence number, a note).
+    """
     try:
         ans = json.loads(content)
         channel, no, quote = ans["channel"], int(ans["sentence"]), str(ans.get("quote") or "")
@@ -494,6 +584,12 @@ def read_answer(content: str, sentences: list[str]) -> tuple[str, str | None, in
 
 @dataclass
 class Job:
+    """One order to read.
+
+    Attributes:
+        text_stem (str), order_id (int | None), order_type (str | None), order_date (datetime.date | None),
+        text_status (str | None), text_path (str | None).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -504,6 +600,13 @@ class Job:
 
 @dataclass
 class OrderChannel:
+    """One order's channel: a row of ``derived/order_channels.parquet`` (columns in CLAUDE.md §8).
+
+    Attributes:
+        detection_channel, detection_detail, detection_confidence, detection_method, detection_raw (str | None);
+        channels_found (str, JSON); n_background (int); model_status, model_raw, prompt_version (str | None);
+        rules_version (str); error (str | None); candidates (list[str]): sentences for the model, not written.
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -526,6 +629,14 @@ class OrderChannel:
 
 
 def classify_text(o: OrderChannel, text: str) -> OrderChannel:
+    """Apply the rules to one order's text; keep candidate sentences for the model when none fire.
+
+    Args:
+        o (OrderChannel): the order's row (changed in place).
+        text (str): the order's text.
+    Returns:
+        OrderChannel: the same row, with a rule channel or UNCLEAR / none / low and ``candidates``.
+    """
     sentences = background(text)
     o.n_background = len(sentences)
     hits = find_triggers(sentences)
@@ -542,7 +653,14 @@ def classify_text(o: OrderChannel, text: str) -> OrderChannel:
 
 
 def process(job: Job, repo_root: pathlib.Path = REPO_ROOT) -> OrderChannel:
-    """Rules only. Never raises."""
+    """Rules only. Never raises.
+
+    Args:
+        job (Job): the order.
+        repo_root (pathlib.Path): base for its text path.
+    Returns:
+        OrderChannel: the rules' answer (errors recorded in ``error``).
+    """
     o = OrderChannel(job.text_stem, job.order_id, job.order_type, job.order_date, job.text_status)
     if job.text_status != "OK" or not job.text_path:
         return o
@@ -554,7 +672,15 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT) -> OrderChannel:
 
 
 def ask_model(o: OrderChannel, spec: llm.ModelSpec, root: pathlib.Path | None = None) -> OrderChannel:
-    """Model pass for an order the rules left UNCLEAR with candidate sentences. Never raises."""
+    """Model pass for an order the rules left UNCLEAR with candidate sentences. Never raises.
+
+    Args:
+        o (OrderChannel): an order left UNCLEAR with candidates (changed in place).
+        spec (llm.ModelSpec): the model.
+        root (pathlib.Path | None): model cache root (scratch runs).
+    Returns:
+        OrderChannel: the row with the model's verified channel (method "model", detail "model", medium).
+    """
     o.prompt_version = PROMPT_VERSION
     try:
         record = llm.chat_json(spec, SYSTEM, build_user(o.candidates), SCHEMA, root=root)
@@ -573,6 +699,14 @@ def ask_model(o: OrderChannel, spec: llm.ModelSpec, root: pathlib.Path | None = 
 
 
 def _process_many(jobs, repo_root):
+    """Apply the rules to a batch of orders (one worker task).
+
+    Args:
+        jobs (list[Job]): the batch.
+        repo_root (pathlib.Path): base for text paths.
+    Returns:
+        list[OrderChannel]: one per order.
+    """
     return [process(j, repo_root) for j in jobs]
 
 
@@ -581,6 +715,13 @@ def _process_many(jobs, repo_root):
 # --------------------------------------------------------------------------
 
 def load_jobs(derived: pathlib.Path = DERIVED_DIR) -> list[Job]:
+    """Read each order's text location and listing fields.
+
+    Args:
+        derived (pathlib.Path): where listings and text_documents are.
+    Returns:
+        list[Job]: one per order with a text row.
+    """
     listings = pq.read_table(derived / "listings.parquet",
                              columns=["order_id", "source_url", "order_type", "order_date"]).to_pylist()
     meta = {text_stem(r["order_id"], r["source_url"]): r for r in listings}
@@ -595,6 +736,15 @@ def load_jobs(derived: pathlib.Path = DERIVED_DIR) -> list[Job]:
 
 def select(jobs: list[Job], *, order_ids=None, stems=None, categories=None, sample=None, limit=None,
            seed: int = 7) -> list[Job]:
+    """Restrict the orders (ids, stems, types, a random sample, the first N).
+
+    Args:
+        jobs (list[Job]): all orders.
+        order_ids, stems, categories (list | None): keep only these.
+        sample (int | None), limit (int | None), seed (int).
+    Returns:
+        list[Job]: the selection.
+    """
     out = jobs
     if categories:
         out = [j for j in out if j.order_type in set(categories)]
@@ -631,6 +781,14 @@ SCHEMA_OUT = pa.schema([
 
 
 def write(rows: list[OrderChannel], path: pathlib.Path) -> None:
+    """Write ``order_channels.parquet`` atomically (the ``candidates`` field is not written).
+
+    Args:
+        rows (list[OrderChannel]): the rows.
+        path (pathlib.Path): the destination.
+    Returns:
+        None.
+    """
     assert_safe_output(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     table = pa.Table.from_pylist([{k: asdict(r)[k] for k in SCHEMA_OUT.names} for r in
@@ -641,6 +799,13 @@ def write(rows: list[OrderChannel], path: pathlib.Path) -> None:
 
 
 def summarise(rows: list[OrderChannel]) -> dict:
+    """Run summary for the log.
+
+    Args:
+        rows (list[OrderChannel]): the rows.
+    Returns:
+        dict: channels, methods, confidence, top details, by type, model statuses and calls.
+    """
     ok = [r for r in rows if r.text_status == "OK"]
     return {
         "orders_with_text": len(ok),
@@ -658,6 +823,11 @@ def summarise(rows: list[OrderChannel]) -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.detect_channel``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.detect_channel",
                                      description="Detection channel per order (runbook Week 3, Day 2)")
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR, help="where the inputs are")
@@ -677,6 +847,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 10: rules for every order, then the model for the undecided ones with cue sentences.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     log_file = (args.scratch / "detect_channel.log") if args.scratch else LOGS_DIR / "detect_channel.log"
@@ -726,6 +903,16 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _cached_digest(name: str, root: pathlib.Path) -> str:
+    """The model's weights digest from a cached channel answer (offline runs).
+
+    Args:
+        name (str): the model name.
+        root (pathlib.Path): the model cache root.
+    Returns:
+        str: the digest.
+    Raises:
+        llm.CacheMiss: no cached channel answer for this model.
+    """
     for path in sorted(root.glob("*/*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
         if record.get("request", {}).get("model") == name and record["request"]["system"] == SYSTEM:

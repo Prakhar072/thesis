@@ -51,6 +51,15 @@ class CacheMiss(LlmError):
 
 @dataclass(frozen=True)
 class ModelSpec:
+    """Which model answers, and how: every field is part of the cache key.
+
+    Attributes:
+        name (str): the Ollama model name, e.g. "qwen3.5:4b".
+        digest (str): the weights digest the server reports (a re-pulled model gets new cache keys).
+        think (bool): thinking mode on/off (off in this project: no measured gain, ~70x slower).
+        options (dict): generation options (temperature, seed, num_ctx …).
+        keep_alive (str): how long the server keeps the model loaded between calls.
+    """
     name: str
     digest: str  # weights digest from the server: part of the cache key
     think: bool = False
@@ -58,17 +67,35 @@ class ModelSpec:
     keep_alive: str = "30m"
 
     def identity(self) -> dict:
+        """The fields that identify the model's behaviour, for the cache key and the stored record.
+
+        Returns:
+            dict: {"model", "digest", "think", "options" (sorted)}.
+        """
         return {"model": self.name, "digest": self.digest, "think": self.think,
                 "options": dict(sorted(self.options.items()))}
 
 
 def _client():
+    """An Ollama client for ``OLLAMA_HOST`` (imported lazily, so tests never need the package).
+
+    Returns:
+        ollama.Client: the client.
+    """
     import ollama  # imported lazily: tests and offline runs never need it
     return ollama.Client(host=OLLAMA_HOST)
 
 
 def model_digest(name: str) -> str:
-    """The server's digest for ``name``; raises LlmError if it is not served."""
+    """The server's digest for ``name``; raises LlmError if it is not served.
+
+    Args:
+        name (str): the model name.
+    Returns:
+        str: the weights digest the server reports for it.
+    Raises:
+        LlmError: the server cannot be reached or does not serve the model.
+    """
     try:
         models = _client().list().models
     except Exception as exc:  # connection refused, server down
@@ -81,12 +108,30 @@ def model_digest(name: str) -> str:
 
 
 def cache_key(spec: ModelSpec, system: str, user: str, schema: dict | None) -> str:
+    """The cache key of one chat turn: a hash of the model identity, both prompts and the schema.
+
+    Args:
+        spec (ModelSpec): the model.
+        system (str): the system prompt.
+        user (str): the user prompt.
+        schema (dict | None): the JSON schema the answer must follow.
+    Returns:
+        str: a SHA-256 hex digest.
+    """
     payload = {**spec.identity(), "system": system, "user": user, "schema": schema}
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False)
                           .encode("utf-8")).hexdigest()
 
 
 def cache_path(key: str, root: pathlib.Path | None = None) -> pathlib.Path:
+    """Where a model answer is stored: ``raw/llm/<key[:2]>/<key>.json``.
+
+    Args:
+        key (str): the cache key.
+        root (pathlib.Path | None): another cache root (tests); default ``raw/llm``.
+    Returns:
+        pathlib.Path: the JSON file's path.
+    """
     return (root or LLM_CACHE) / key[:2] / f"{key}.json"
 
 
@@ -96,6 +141,20 @@ def chat_json(spec: ModelSpec, system: str, user: str, schema: dict | None = Non
 
     Returns the stored record: ``content`` (the model's text, JSON when a schema
     is given), ``thinking``, token counts, ``seconds`` and ``from_cache``.
+
+    Args:
+        spec (ModelSpec): the model.
+        system (str): the system prompt.
+        user (str): the user prompt.
+        schema (dict | None): JSON schema for structured output.
+        root (pathlib.Path | None): another cache root (tests).
+        timeout_retries (int): retries after a failed call (2 s, 4 s … apart).
+    Returns:
+        dict: key, request, content, thinking, prompt_tokens, output_tokens, seconds, created_at,
+        from_cache (bool).
+    Raises:
+        CacheMiss: ``OFFLINE`` and not cached.
+        LlmError: every attempt failed.
     """
     global MODEL_CALLS
     key = cache_key(spec, system, user, schema)

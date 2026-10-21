@@ -72,6 +72,14 @@ COLUMNS = ["date", "exchange", "code", "series", "isin", "name", "open", "high",
 
 
 def bhav_url(exchange: str, d: dt.date) -> str:
+    """The bhavcopy URL of one exchange and day (the format switches on 8 July 2024).
+
+    Args:
+        exchange (str): "NSE" or "BSE".
+        d (datetime.date): the trading day.
+    Returns:
+        str: the archive URL.
+    """
     if exchange == "NSE":
         if d >= NEW_FORMAT_FROM:
             return f"https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_{d:%Y%m%d}_F_0000.csv.zip"
@@ -84,6 +92,13 @@ def bhav_url(exchange: str, d: dt.date) -> str:
 
 
 def weekdays(start: dt.date, end: dt.date):
+    """Every Monday–Friday from start to end, inclusive.
+
+    Args:
+        start (datetime.date), end (datetime.date): the range.
+    Yields:
+        datetime.date: each weekday.
+    """
     d = start
     while d <= end:
         if d.weekday() < 5:
@@ -92,7 +107,13 @@ def weekdays(start: dt.date, end: dt.date):
 
 
 def csv_bytes(content: bytes) -> bytes | None:
-    """The CSV inside a bhavcopy (zipped or not); None for an HTML page or anything else."""
+    """The CSV inside a bhavcopy (zipped or not); None for an HTML page or anything else.
+
+    Args:
+        content (bytes): a downloaded body.
+    Returns:
+        bytes | None: the CSV bytes, or None (a holiday page, a broken zip).
+    """
     if content[:2] == b"PK":
         try:
             z = zipfile.ZipFile(io.BytesIO(content))
@@ -104,11 +125,29 @@ def csv_bytes(content: bytes) -> bytes | None:
 
 
 def _num(s: pd.Series) -> pd.Series:
+    """Numbers from text cells (commas removed; unreadable → NaN).
+
+    Args:
+        s (pd.Series): text values.
+    Returns:
+        pd.Series: floats.
+    """
     return pd.to_numeric(s.astype(str).str.replace(",", "").str.strip(), errors="coerce")
 
 
 def parse_bhav(content: bytes, exchange: str, d: dt.date) -> pd.DataFrame:
-    """One bhavcopy → the common columns, equities only."""
+    """One bhavcopy → the common columns, equities only.
+
+    Args:
+        content (bytes): the downloaded bhavcopy.
+        exchange (str): "NSE" or "BSE".
+        d (datetime.date): its trading day.
+    Returns:
+        pd.DataFrame: COLUMNS (date, exchange, code, series, isin, name, OHLC, last, prev_close, volume,
+        turnover, trades).
+    Raises:
+        ValueError: the content is not a bhavcopy.
+    """
     raw = csv_bytes(content)
     if raw is None:
         raise ValueError("not a bhavcopy")
@@ -145,7 +184,16 @@ def parse_bhav(content: bytes, exchange: str, d: dt.date) -> pd.DataFrame:
 
 
 def fetch_day(exchange: str, d: dt.date, *, offline: bool, retry_key: str | None = None) -> tuple[str, bytes | None]:
-    """(status, content): ok, holiday (no file that day), missing (not cached, offline), error."""
+    """(status, content): ok, holiday (no file that day), missing (not cached, offline), error.
+
+    Args:
+        exchange (str): "NSE" or "BSE".
+        d (datetime.date): the day.
+        offline (bool): cache only.
+        retry_key (str | None): a cache-key extra to ask again without overwriting ("retry-1").
+    Returns:
+        tuple[str, bytes | None]: (status, the content when "ok").
+    """
     try:
         b = cache.get(bhav_url(exchange, d), headers=BSE_HEADERS if exchange == "BSE" else None, retries=2,
                       timeout=90, offline=offline, cache_key_extra=retry_key)
@@ -163,7 +211,14 @@ BONUS_RE = re.compile(r"bonus.*?(\d+)\s*:\s*(\d+)", re.I)
 
 
 def parse_purpose(purpose: str) -> tuple[str, float | None]:
-    """(kind, factor): shares after / shares before, for the actions prices are adjusted for."""
+    """(kind, factor): shares after / shares before, for the actions prices are adjusted for.
+
+    Args:
+        purpose (str): BSE's purpose text.
+    Returns:
+        tuple[str, float | None]: (kind: split, bonus, consolidation, rights, dividend, demerger, merger,
+        buyback or other; factor for splits and bonuses).
+    """
     p = purpose or ""
     if m := SPLIT_RE.search(p):
         old, new = float(m.group(1)), float(m.group(2))
@@ -180,12 +235,28 @@ def parse_purpose(purpose: str) -> tuple[str, float | None]:
 
 
 def ca_params(year: int, end: dt.date) -> dict:
+    """Query parameters for one year of BSE corporate actions (capped at ``end``).
+
+    Args:
+        year (int): the year.
+        end (datetime.date): the run's last day.
+    Returns:
+        dict: the query string.
+    """
     to = min(dt.date(year, 12, 31), end)
     return {"Fdate": f"{year}0101", "TDate": f"{to:%Y%m%d}", "Purposecode": "", "ddlcategorys": "E",
             "ddlindustrys": "", "scripcode": "", "segment": "0", "strSearch": "S"}
 
 
 def corporate_actions(start: dt.date, end: dt.date, offline: bool) -> pd.DataFrame:
+    """Every BSE corporate action from start to end, one request per year.
+
+    Args:
+        start (datetime.date), end (datetime.date): the range.
+        offline (bool): cache only.
+    Returns:
+        pd.DataFrame: scrip_code, short_name, long_name, ex_date, purpose, kind, factor.
+    """
     rows = []
     for y in range(start.year, end.year + 1):
         for r in json.loads(cache.get(CA_URL, params=ca_params(y, end), headers=BSE_HEADERS, retries=2,
@@ -198,6 +269,13 @@ def corporate_actions(start: dt.date, end: dt.date, offline: bool) -> pd.DataFra
 
 
 def month_ranges(start: dt.date, end: dt.date):
+    """Calendar months from start to end (the first and last clipped to the range).
+
+    Args:
+        start (datetime.date), end (datetime.date): the range.
+    Yields:
+        tuple[datetime.date, datetime.date]: (first day, last day) of each month.
+    """
     d = dt.date(start.year, start.month, 1)
     while d <= end:
         nxt = dt.date(d.year + (d.month == 12), d.month % 12 + 1, 1)
@@ -206,6 +284,14 @@ def month_ranges(start: dt.date, end: dt.date):
 
 
 def market_index(start: dt.date, end: dt.date, offline: bool) -> pd.DataFrame:
+    """The BSE 500's daily values, one request per month (responses stop at 26 rows).
+
+    Args:
+        start (datetime.date), end (datetime.date): the range.
+        offline (bool): cache only.
+    Returns:
+        pd.DataFrame: date, index, open, high, low, close, prev_close.
+    """
     rows = []
     for lo, hi in month_ranges(start, end):
         b = cache.get(INDEX_URL, params={"fmdt": f"{lo:%d/%m/%Y}", "index": INDEX, "period": "D", "todt": f"{hi:%d/%m/%Y}"},
@@ -220,6 +306,13 @@ def market_index(start: dt.date, end: dt.date, offline: bool) -> pd.DataFrame:
 # --- the run ---------------------------------------------------------------------------------------------------
 
 def read_days(path: pathlib.Path) -> dict[tuple[str, dt.date], str]:
+    """The status of every (exchange, day) seen by earlier runs.
+
+    Args:
+        path (pathlib.Path): ``derived/price_days.parquet``.
+    Returns:
+        dict[tuple[str, datetime.date], str]: (exchange, date) → status ({} if the file does not exist).
+    """
     if not path.exists():
         return {}
     d = pd.read_parquet(path)
@@ -228,6 +321,18 @@ def read_days(path: pathlib.Path) -> dict[tuple[str, dt.date], str]:
 
 def run(start: dt.date, end: dt.date, exchanges, out_dir: pathlib.Path, *, offline: bool, retry_holidays: bool,
         progress_every: int = 250) -> pd.DataFrame:
+    """Fetch and parse every weekday's bhavcopies, writing each year's prices as it completes.
+
+    Args:
+        start (datetime.date), end (datetime.date): the range.
+        exchanges (tuple[str, ...]): ("NSE", "BSE") or one of them.
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+        offline (bool): cache only.
+        retry_holidays (bool): ask NSE again for days it 404ed.
+        progress_every (int): log every N days.
+    Returns:
+        pd.DataFrame: the ledger of this run: date, exchange, status, rows, url.
+    """
     days_path = out_dir / "price_days.parquet"
     known = read_days(days_path)
     ledger = []
@@ -272,6 +377,14 @@ def run(start: dt.date, end: dt.date, exchanges, out_dir: pathlib.Path, *, offli
 
 
 def _flush(buffers, out_dir: pathlib.Path) -> None:
+    """Write the buffered years to ``prices/<EX>_<year>.parquet`` (merged with a partial earlier file).
+
+    Args:
+        buffers (dict[tuple[str, int], list[pd.DataFrame]]): (exchange, year) → parsed days (emptied).
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+    Returns:
+        None.
+    """
     for (ex, year), frames in list(buffers.items()):
         p = out_dir / "prices" / f"{ex}_{year}.parquet"
         assert_safe_output(p)
@@ -284,6 +397,14 @@ def _flush(buffers, out_dir: pathlib.Path) -> None:
 
 
 def _write_days(path: pathlib.Path, ledger: list[dict]) -> None:
+    """Merge this run's ledger into ``price_days.parquet`` (later statuses win).
+
+    Args:
+        path (pathlib.Path): the ledger file.
+        ledger (list[dict]): this run's rows.
+    Returns:
+        None.
+    """
     new = pd.DataFrame(ledger)
     if path.exists():
         new = pd.concat([pd.read_parquet(path), new], ignore_index=True)
@@ -291,6 +412,11 @@ def _write_days(path: pathlib.Path, ledger: list[dict]) -> None:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.fetch_prices``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.fetch_prices",
                                      description="Fetch and parse NSE/BSE bhavcopies, corporate actions, BSE 500")
     parser.add_argument("--start", type=dt.date.fromisoformat, default=START)
@@ -305,6 +431,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run Week 4 Day 4: corporate actions, the BSE 500 index, then the bhavcopies.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     for p in (out_dir / "prices", out_dir / "price_days.parquet", out_dir / "corporate_actions.parquet",

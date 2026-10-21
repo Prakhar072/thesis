@@ -146,6 +146,14 @@ KAPPA_BY = ["era", "order_type"]
 # --- names ------------------------------------------------------------------------------------------------------
 
 def issuer_match(hand: str, machine) -> bool:
+    """Whether the coder's issuer and the pipeline's issuer_guess name the same company.
+
+    Args:
+        hand (str): the coded name, or "NONE".
+        machine (str | None): the pipeline's issuer_guess.
+    Returns:
+        bool: True for equal normalised names (or former names), token-sort ratio ≥ 92, or NONE vs no guess.
+    """
     if hand.strip().upper() == "NONE":
         return not names(machine)
     return any(a == b or fuzz.token_sort_ratio(a, b) >= ISSUER_RATIO
@@ -155,12 +163,28 @@ def issuer_match(hand: str, machine) -> bool:
 # --- one row per order ------------------------------------------------------------------------------------------
 
 def _blank(v) -> bool:
+    """Whether a value is missing: None, NaN, pd.NA, NaT or an empty string.
+
+    Args:
+        v: any value.
+    Returns:
+        bool: True if blank.
+    """
     return v is None or (isinstance(v, float) and math.isnan(v)) or (isinstance(v, str) and not v.strip()) \
         or v is pd.NA or v is pd.NaT
 
 
 def window_fields(h_kind: str, h_start, h_end, m_start, m_end) -> dict:
-    """Presence class and match flags for one order. ``None`` = not in that measure's denominator."""
+    """Presence class and match flags for one order. ``None`` = not in that measure's denominator.
+
+    Args:
+        h_kind (str): the coded window_kind ("" = not coded).
+        h_start, h_end (datetime.date | None): the coded dates.
+        m_start, m_end (datetime.date | None): the pipeline's window.
+    Returns:
+        dict: presence (both / missed / spurious / neither / None), d_start and d_end (days, pipeline − hand),
+        win_exact and win_month (bool, or None when not scored).
+    """
     out = dict.fromkeys(["presence", "d_start", "d_end", "win_exact", "win_month"])
     if not h_kind:
         return out
@@ -185,13 +209,27 @@ def window_fields(h_kind: str, h_start, h_end, m_start, m_end) -> dict:
 
 
 def _flagged_unclear(ch, detail):
+    """The channel with flagged SURVEILLANCE details counted as UNCLEAR (the H4 robustness).
+
+    Args:
+        ch (str | None): a channel.
+        detail (str | None): its detail.
+    Returns:
+        str | None: the channel, UNCLEAR for a flagged surveillance detail, or None when blank.
+    """
     if _blank(ch):
         return None
     return "UNCLEAR" if ch == "SURVEILLANCE" and detail in FLAGGED else ch
 
 
 def score_rows(frame: pd.DataFrame) -> pd.DataFrame:
-    """Hand and machine values side by side, with every agreement flag (None = not scored)."""
+    """Hand and machine values side by side, with every agreement flag (None = not scored).
+
+    Args:
+        frame (pd.DataFrame): from load() — h_* coded values, m_* pipeline values, stratum, iso, weight, era.
+    Returns:
+        pd.DataFrame: one row per coded order with the agreement flags (nullable boolean).
+    """
     rows = []
     for r in frame.to_dict("records"):
         h_kind = r["h_window_kind"] or None
@@ -245,15 +283,38 @@ def score_rows(frame: pd.DataFrame) -> pd.DataFrame:
 # --- rates, κ, intervals ----------------------------------------------------------------------------------------
 
 def _values(s: pd.Series) -> np.ndarray:
+    """A nullable boolean or numeric column as floats (NA → NaN).
+
+    Args:
+        s (pd.Series): the column.
+    Returns:
+        np.ndarray: float values.
+    """
     return s.astype("Float64").to_numpy(dtype=float, na_value=np.nan)
 
 
 def wrate(v: np.ndarray, w: np.ndarray) -> float:
+    """A weighted rate over the values that are not NaN.
+
+    Args:
+        v (np.ndarray): 1/0/NaN per order.
+        w (np.ndarray): weights.
+    Returns:
+        float: Σ w·v / Σ w, or NaN when nothing is scored.
+    """
     m = ~np.isnan(v)
     return float((v[m] * w[m]).sum() / w[m].sum()) if m.any() else math.nan
 
 
 def codes(h: pd.Series, m: pd.Series) -> tuple[np.ndarray, np.ndarray, list]:
+    """Integer codes for two label columns on one shared label set.
+
+    Args:
+        h (pd.Series): hand labels.
+        m (pd.Series): pipeline labels.
+    Returns:
+        tuple[np.ndarray, np.ndarray, list]: hand codes, pipeline codes (-1 = blank), and the labels.
+    """
     labels = sorted({str(x) for x in pd.concat([h, m]).dropna()})
     at = {l: i for i, l in enumerate(labels)}
     enc = lambda s: np.array([at[str(x)] if not _blank(x) else -1 for x in s], dtype=int)  # noqa: E731
@@ -261,7 +322,15 @@ def codes(h: pd.Series, m: pd.Series) -> tuple[np.ndarray, np.ndarray, list]:
 
 
 def wkappa(h: np.ndarray, m: np.ndarray, w: np.ndarray) -> float:
-    """Cohen's κ from (weighted) proportions; codes -1 = not coded."""
+    """Cohen's κ from (weighted) proportions; codes -1 = not coded.
+
+    Args:
+        h (np.ndarray): hand codes.
+        m (np.ndarray): pipeline codes.
+        w (np.ndarray): weights (ones for the unweighted κ).
+    Returns:
+        float: κ, or NaN when undefined (nothing coded, or one category on both sides).
+    """
     ok = (h >= 0) & (m >= 0)
     h, m, w = h[ok], m[ok], w[ok]
     if not len(h):
@@ -274,7 +343,16 @@ def wkappa(h: np.ndarray, m: np.ndarray, w: np.ndarray) -> float:
 
 
 def boot_ci(stat, cells: list[np.ndarray], reps: int, seed: int) -> tuple[float, float]:
-    """95% percentile interval of ``stat(idx)`` over resamples drawn within each cell."""
+    """95% percentile interval of ``stat(idx)`` over resamples drawn within each cell.
+
+    Args:
+        stat (Callable[[np.ndarray], float]): the statistic, computed from row indices.
+        cells (list[np.ndarray]): row indices of each stratum × ISO cell.
+        reps (int): resamples (0 = no interval).
+        seed (int): the random seed.
+    Returns:
+        tuple[float, float]: (2.5th, 97.5th percentile), or (NaN, NaN).
+    """
     if reps <= 0:
         return math.nan, math.nan
     rng = np.random.default_rng(seed)
@@ -284,7 +362,15 @@ def boot_ci(stat, cells: list[np.ndarray], reps: int, seed: int) -> tuple[float,
 
 
 def summarise(scored: pd.DataFrame, reps: int = REPS, seed: int = BOOT_SEED) -> pd.DataFrame:
-    """Every figure: rates and κ overall (with intervals) and by each breakdown."""
+    """Every figure: rates and κ overall (with intervals) and by each breakdown.
+
+    Args:
+        scored (pd.DataFrame): from score_rows.
+        reps (int): bootstrap resamples.
+        seed (int): bootstrap seed.
+    Returns:
+        pd.DataFrame: measure, by, group, n, matches, rate, weighted, ci_low, ci_high.
+    """
     scored = scored.reset_index(drop=True)
     w = scored.weight.to_numpy(dtype=float)
     cells = list(scored.groupby(["stratum", "iso"]).indices.values())
@@ -309,10 +395,26 @@ def summarise(scored: pd.DataFrame, reps: int = REPS, seed: int = BOOT_SEED) -> 
 
 
 def _group(g) -> str:
+    """A group's label for the summary.
+
+    Args:
+        g: a group key.
+    Returns:
+        str: the key as text, or "(none)" for a blank one.
+    """
     return "(none)" if _blank(g) else str(g)
 
 
 def _rate_row(measure, by, group, v, w, ci=(math.nan, math.nan)) -> dict:
+    """One summary row for an agreement flag.
+
+    Args:
+        measure (str), by (str), group: the row's identity.
+        v (np.ndarray), w (np.ndarray): flag values and weights.
+        ci (tuple[float, float]): the interval (overall rows only).
+    Returns:
+        dict: measure, by, group, n, matches, rate, weighted, ci_low, ci_high.
+    """
     m = ~np.isnan(v)
     n, k = int(m.sum()), int(v[m].sum())
     return {"measure": measure, "by": by, "group": _group(group), "n": n, "matches": k,
@@ -320,6 +422,15 @@ def _rate_row(measure, by, group, v, w, ci=(math.nan, math.nan)) -> dict:
 
 
 def _kappa_row(measure, by, group, h, m, w, ci=(math.nan, math.nan)) -> dict:
+    """One summary row for a κ measure.
+
+    Args:
+        measure (str), by (str), group: the row's identity.
+        h (np.ndarray), m (np.ndarray): label codes; w (np.ndarray): weights.
+        ci (tuple[float, float]): the interval (overall rows only).
+    Returns:
+        dict: as _rate_row, with rate = unweighted κ and weighted = weighted κ.
+    """
     ok = (h >= 0) & (m >= 0)
     return {"measure": measure, "by": by, "group": _group(group), "n": int(ok.sum()),
             "matches": int((h[ok] == m[ok]).sum()), "rate": wkappa(h, m, np.ones(len(h))),
@@ -327,12 +438,27 @@ def _kappa_row(measure, by, group, h, m, w, ci=(math.nan, math.nan)) -> dict:
 
 
 def confusion(scored: pd.DataFrame, hc: str, mc: str) -> pd.DataFrame:
-    """Unweighted counts: hand (rows) × pipeline (columns)."""
+    """Unweighted counts: hand (rows) × pipeline (columns).
+
+    Args:
+        scored (pd.DataFrame): the scored rows.
+        hc (str): hand column; mc (str): pipeline column.
+    Returns:
+        pd.DataFrame: a crosstab with totals.
+    """
     d = scored[scored[hc].notna() & scored[mc].notna()]
     return pd.crosstab(d[hc].rename("hand"), d[mc].rename("pipeline"), margins=True, margins_name="total")
 
 
 def per_class(scored: pd.DataFrame, hc: str, mc: str) -> pd.DataFrame:
+    """Recall and precision of the pipeline per class (unweighted).
+
+    Args:
+        scored (pd.DataFrame): the scored rows.
+        hc (str): hand column; mc (str): pipeline column.
+    Returns:
+        pd.DataFrame: class, hand, pipeline, both, recall, precision.
+    """
     d = scored[scored[hc].notna() & scored[mc].notna()]
     rows = []
     for c in sorted(set(d[hc]) | set(d[mc])):
@@ -346,11 +472,26 @@ def per_class(scored: pd.DataFrame, hc: str, mc: str) -> pd.DataFrame:
 # --- errors -----------------------------------------------------------------------------------------------------
 
 def errors(scored: pd.DataFrame, frame: pd.DataFrame) -> pd.DataFrame:
-    """One row per disagreement, with the machine's evidence (to find systematic errors)."""
+    """One row per disagreement, with the machine's evidence (to find systematic errors).
+
+    Args:
+        scored (pd.DataFrame): the scored rows.
+        frame (pd.DataFrame): from load() (for the machine's evidence).
+    Returns:
+        pd.DataFrame: ``derived/validation_errors.csv``'s rows.
+    """
     ev = frame.set_index("text_stem")
     rows = []
 
     def add(r, field, error, hand, machine, method, rule, conf, evidence, detail=""):
+        """Append one disagreement row.
+
+        Args:
+            r: the scored row; field (str), error (str), hand, machine: what disagrees;
+            method, rule, conf, evidence: the machine's provenance; detail (str): e.g. days off.
+        Returns:
+            None.
+        """
         rows.append({"sample_no": r.sample_no, "text_stem": r.text_stem, "order_id": r.order_id,
                      "order_date": r.order_date, "order_type": r.order_type, "era": r.era, "field": field,
                      "error": error, "hand": hand, "machine": machine, "detail": detail,
@@ -358,6 +499,13 @@ def errors(scored: pd.DataFrame, frame: pd.DataFrame) -> pd.DataFrame:
                      "machine_evidence": evidence, "hand_notes": r.notes})
 
     def no(x) -> bool:  # an agreement flag that is False (not NA)
+        """Whether an agreement flag is False (not NA).
+
+        Args:
+            x: a flag value.
+        Returns:
+            bool: True only for a definite disagreement.
+        """
         return not pd.isna(x) and not bool(x)
 
     for r in scored.itertuples():
@@ -395,7 +543,14 @@ def errors(scored: pd.DataFrame, frame: pd.DataFrame) -> pd.DataFrame:
 # --- Gate 1 -----------------------------------------------------------------------------------------------------
 
 def gate1(extraction: float, kappas: dict[str, float]) -> str:
-    """The runbook's Gate 1 table (Week 3 weekend), read with the weaker κ."""
+    """The runbook's Gate 1 table (Week 3 weekend), read with the weaker κ.
+
+    Args:
+        extraction (float): the extraction rate, 0–1.
+        kappas (dict[str, float]): weighted κ per field.
+    Returns:
+        str: the decision text.
+    """
     if extraction < 0.50:
         return "Fall back: hand-code a stratified 300–400 and run Stage 1 on that"
     known = {k: v for k, v in kappas.items() if not math.isnan(v)}
@@ -411,6 +566,13 @@ def gate1(extraction: float, kappas: dict[str, float]) -> str:
 
 
 def extraction_rate(path: pathlib.Path = EXTRACTION_IN) -> float:
+    """The overall extraction rate from stage 6's table.
+
+    Args:
+        path (pathlib.Path): ``derived/extraction_rate.csv``.
+    Returns:
+        float: the share in its "all" row (0.5824).
+    """
     t = pd.read_csv(path)
     return float(t[(t["by"] == "all") & (t.group == "all")].share.iloc[0])
 
@@ -418,7 +580,17 @@ def extraction_rate(path: pathlib.Path = EXTRACTION_IN) -> float:
 # --- inputs and fingerprints ------------------------------------------------------------------------------------
 
 def load(sheet: pd.DataFrame, key: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
-    """Sheet ⋈ key ⋈ orders on text_stem, one to one; hand columns h_*, machine columns m_*."""
+    """Sheet ⋈ key ⋈ orders on text_stem, one to one; hand columns h_*, machine columns m_*.
+
+    Args:
+        sheet (pd.DataFrame): the coded rows (strings).
+        key (pd.DataFrame): the sample key.
+        orders (pd.DataFrame): ``derived/orders.parquet``.
+    Returns:
+        pd.DataFrame: one row per coded order with h_*, m_*, stratum, iso, weight and era.
+    Raises:
+        ValueError: a coded order is missing from the key or from orders.parquet.
+    """
     h = sheet[["sample_no", "text_stem", *vs.CODING_COLUMNS]].rename(columns={c: f"h_{c}" for c in vs.CODING_COLUMNS})
     m = orders.rename(columns={
         "violation_start": "m_start", "violation_end": "m_end", "window_kind": "m_kind", "violation_method": "m_method",
@@ -440,11 +612,27 @@ def load(sheet: pd.DataFrame, key: pd.DataFrame, orders: pd.DataFrame) -> pd.Dat
 
 
 def fingerprint(df: pd.DataFrame, cols: list[str]) -> str:
+    """A short hash of some columns, to tell whether the coding or the pipeline's answers changed.
+
+    Args:
+        df (pd.DataFrame): the frame.
+        cols (list[str]): the columns to hash.
+    Returns:
+        str: 16 hex characters.
+    """
     d = df.sort_values("text_stem")[["text_stem", *cols]].astype(str)
     return hashlib.sha256(d.to_csv(index=False).encode()).hexdigest()[:16]
 
 
 def provenance(frame: pd.DataFrame, official: pathlib.Path) -> tuple[dict, str]:
+    """Compare this scoring with the saved official one.
+
+    Args:
+        frame (pd.DataFrame): from load().
+        official (pathlib.Path): ``hand/validation_official.json``.
+    Returns:
+        tuple[dict, str]: the fingerprints {coding, pipeline}, and the status line for the report.
+    """
     fp = {"coding": fingerprint(frame, [f"h_{c}" for c in vs.CODING_COLUMNS]),
           "pipeline": fingerprint(frame, MACHINE_COLS)}
     if not official.exists():
@@ -464,14 +652,35 @@ def provenance(frame: pd.DataFrame, official: pathlib.Path) -> tuple[dict, str]:
 # --- report -----------------------------------------------------------------------------------------------------
 
 def _pct(x) -> str:
+    """A share as a percentage string.
+
+    Args:
+        x (float | None): a share.
+    Returns:
+        str: e.g. "58.2%", or "—".
+    """
     return "—" if x is None or (isinstance(x, float) and math.isnan(x)) else f"{100 * x:.1f}%"
 
 
 def _k(x) -> str:
+    """A κ with two decimals.
+
+    Args:
+        x (float | None): κ.
+    Returns:
+        str: e.g. "0.74", or "—".
+    """
     return "—" if x is None or (isinstance(x, float) and math.isnan(x)) else f"{x:.2f}"
 
 
 def _md(df: pd.DataFrame) -> str:
+    """A DataFrame as a Markdown table.
+
+    Args:
+        df (pd.DataFrame): the table.
+    Returns:
+        str: Markdown.
+    """
     cols = [str(c) for c in df.columns]
     lines = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
     lines += ["| " + " | ".join(str(v) for v in row) + " |" for row in df.itertuples(index=False)]
@@ -479,6 +688,13 @@ def _md(df: pd.DataFrame) -> str:
 
 
 def headline(summary: pd.DataFrame) -> pd.DataFrame:
+    """The paper's headline table, in HEADLINE order.
+
+    Args:
+        summary (pd.DataFrame): from summarise().
+    Returns:
+        pd.DataFrame: Field, Measure, n, Unweighted, Weighted (corpus), 95% CI.
+    """
     s = summary[summary["by"] == "all"].set_index("measure")
     rows = []
     for field, label, measure in HEADLINE:
@@ -491,6 +707,15 @@ def headline(summary: pd.DataFrame) -> pd.DataFrame:
 
 
 def breakdown(summary: pd.DataFrame, measures: list[str], by: str) -> pd.DataFrame:
+    """A breakdown table: measures as columns, one row per group.
+
+    Args:
+        summary (pd.DataFrame): from summarise().
+        measures (list[str]): the measures to show.
+        by (str): the breakdown variable.
+    Returns:
+        pd.DataFrame: one row per group, cells "matches/n (unweighted%; w weighted%)".
+    """
     s = summary[(summary["by"] == by) & summary.measure.isin(measures)]
     if s.empty:
         return s
@@ -502,6 +727,17 @@ def breakdown(summary: pd.DataFrame, measures: list[str], by: str) -> pd.DataFra
 
 def report(scored: pd.DataFrame, summary: pd.DataFrame, status: str, extraction: float, decision: str,
            partial: bool) -> str:
+    """``derived/validation_table.md``: headline, breakdowns, confusion matrices, Gate 1.
+
+    Args:
+        scored (pd.DataFrame), summary (pd.DataFrame): the scoring.
+        status (str): the provenance line.
+        extraction (float): the extraction rate.
+        decision (str): Gate 1's reading.
+        partial (bool): a --partial scoring.
+    Returns:
+        str: the Markdown report.
+    """
     n_cat = scored.h_cat.notna().sum()
     parts = [
         "# Week 3 validation: pipeline vs blind hand coding", "",
@@ -538,6 +774,14 @@ def report(scored: pd.DataFrame, summary: pd.DataFrame, status: str, extraction:
 
 
 def _kappa(summary: pd.DataFrame, measure: str) -> float:
+    """The overall weighted κ of a measure.
+
+    Args:
+        summary (pd.DataFrame): from summarise().
+        measure (str): e.g. "cat_kappa".
+    Returns:
+        float: κ, or NaN.
+    """
     s = summary[(summary.measure == measure) & (summary["by"] == "all")]
     return float(s.weighted.iloc[0]) if len(s) else math.nan
 
@@ -545,6 +789,11 @@ def _kappa(summary: pd.DataFrame, measure: str) -> float:
 # --- command line -----------------------------------------------------------------------------------------------
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.score_validation``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.score_validation",
         description="Score the pipeline against the blind hand coding (Week 3 Day 5)",
@@ -564,6 +813,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Score the coded sheet (Day 5): refuse an unfinished or invalid sheet, write every output.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0, or 1 (missing input, sheet errors, unfinished sheet, official scoring already saved).
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         sheet_in, key_in = args.scratch / "validation_sample.csv", args.scratch / "validation_key.parquet"

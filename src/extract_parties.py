@@ -149,12 +149,26 @@ _RESTART = re.compile(r"\b(?:filed|submitted|made|preferred)\s+by\b\s*[:;.\-–]
 
 
 def header_end(flat: str) -> int:
+    """Where the order's header ends and its body begins (BACKGROUND, WHEREAS, paragraph 1 …).
+
+    Args:
+        flat (str): the order's text, normalised.
+    Returns:
+        int: the offset of the body's start (at most HEADER_MAX).
+    """
     m = _BODY.search(flat, 0, HEADER_MAX)
     return m.start() if m else min(len(flat), HEADER_MAX)
 
 
 def noticee_segment(flat: str, end: int) -> tuple[int, int] | None:
-    """(start, end) of the text naming the noticees in the header."""
+    """(start, end) of the text naming the noticees in the header.
+
+    Args:
+        flat (str): the order's text, normalised.
+        end (int): the header's end.
+    Returns:
+        tuple[int, int] | None: the segment's span, or None if no cue ("In respect of", "Against" …) is found.
+    """
     for cue in list(_CUE.finditer(flat, 0, end)) + list(_TABLE_CUE.finditer(flat, 0, end)):
         start = cue.end() if cue.re is _CUE else cue.start()
         stop = _SEG_END.search(flat, start + 3, end)
@@ -172,7 +186,14 @@ def noticee_segment(flat: str, end: int) -> tuple[int, int] | None:
 def _marker(k: int, punct: str | None = None) -> re.Pattern:
     """Serial number ``k`` before a name. After the first, it must be written like
     the first ("1." → "2.", "1)" → "2)", "1" → "2"), so "Level 7 Maximus Towers"
-    in an address is not entry 7; "Flat No. 2" never is."""
+    in an address is not entry 7; "Flat No. 2" never is.
+
+    Args:
+        k (int): the serial number.
+        punct (str | None): how the first serial was written ("." , ")" or ""); None for the first.
+    Returns:
+        re.Pattern: matches serial k before a name.
+    """
     no = "" if k == 1 else r"(?<!No\.\s)(?<!No\s)(?<!Nos\.\s)"
     p = r"\s*[.):\]]?" if punct is None else (rf"\s*{re.escape(punct)}" if punct else "")
     return re.compile(rf"(?<![\w/.,:%&-]){no}(?P<open>\()?{k}(?P<p>{p})\s+(?=M/s|[A-Z\[‘'\"“])")
@@ -180,11 +201,24 @@ def _marker(k: int, punct: str | None = None) -> re.Pattern:
 
 #: Prose, not a row: many lower-case words ("1. Several advertisements … appeared in …").
 def _prose(item: str) -> bool:
+    """Whether an entry is running prose rather than a list row.
+
+    Args:
+        item (str): an entry's text.
+    Returns:
+        bool: True if its first 300 characters hold 9 or more lower-case words.
+    """
     return len(re.findall(r"\b[a-z]{3,}\b", item[:300])) >= 9
 
 
 def numbered_items(seg: str) -> list[tuple[int, str]] | None:
-    """Entries by serial number 1, 2, 3 … in order (at least two)."""
+    """Entries by serial number 1, 2, 3 … in order (at least two).
+
+    Args:
+        seg (str): the noticee segment.
+    Returns:
+        list[tuple[int, str]] | None: (serial, entry text) per entry, or None if fewer than two.
+    """
     marks, pos, punct = [], 0, None
     for k in range(1, 500):
         m = _marker(k, punct).search(seg, pos)
@@ -214,7 +248,14 @@ _SPLIT = re.compile(
 
 
 def split_entries(seg: str) -> tuple[str, list[tuple[int | None, str]]]:
-    """How the segment lists its parties, and the entries."""
+    """How the segment lists its parties, and the entries.
+
+    Args:
+        seg (str): the noticee segment.
+    Returns:
+        tuple[str, list[tuple[int | None, str]]]: how the list was split ("numbered", "pan", "list" or
+        "single"), and (serial or None, entry text) per entry.
+    """
     if items := numbered_items(seg):
         return "numbered", [(k, t) for k, t in items]
     if (m := _marker(1).search(seg)) and _prose(seg[m.end():]):
@@ -243,6 +284,13 @@ def split_entries(seg: str) -> tuple[str, list[tuple[int | None, str]]]:
 
 
 def _mask_brackets(s: str) -> str:
+    """Replace text inside brackets with underscores (same length), so splits never cut inside them.
+
+    Args:
+        s (str): the text.
+    Returns:
+        str: the masked text.
+    """
     out, depth = [], 0
     for ch in s:
         if ch in "([":
@@ -257,7 +305,13 @@ def _mask_brackets(s: str) -> str:
 
 def split_outside_brackets(seg: str) -> list[str]:
     """``_SPLIT`` that never cuts inside brackets: "M/s GSL Nova Petrochemicals
-    Limited (Erstwhile M/s Nova Petrochemicals Limited)" is one party."""
+    Limited (Erstwhile M/s Nova Petrochemicals Limited)" is one party.
+
+    Args:
+        seg (str): a list of names.
+    Returns:
+        list[str]: the pieces between separators (commas before honorifics, "and", semicolons …).
+    """
     masked = _mask_brackets(seg)
     out, prev = [], 0
     for m in _SPLIT.finditer(masked):
@@ -339,7 +393,13 @@ _TAIL_WORD = re.compile(r"\s+(?:and|&|or)$", _I)
 
 def _strip_tail(s: str) -> str:
     """Trailing punctuation and "and" / "&" — in a loop: one regex with nested
-    repetition anchored at "$" backtracks exponentially on long entries."""
+    repetition anchored at "$" backtracks exponentially on long entries.
+
+    Args:
+        s (str): a name with possible trailing punctuation or "and".
+    Returns:
+        str: the trimmed name.
+    """
     prev = None
     while prev != s:
         prev = s
@@ -348,7 +408,13 @@ def _strip_tail(s: str) -> str:
 
 
 def clean_entry(entry: str) -> str | None:
-    """The name at the start of one entry, as printed (trimmed)."""
+    """The name at the start of one entry, as printed (trimmed).
+
+    Args:
+        entry (str): one header entry (name, then PAN, address, role …).
+    Returns:
+        str | None: the party's name as printed, or None if the entry holds no valid name.
+    """
     s = " ".join(entry[:1200].split())[:600]  # a name is at the start
     # "the past Directors of Sunplant Constructions Limited, viz. Shri Yoganand Prasad"
     if m := re.search(r"\b(?:viz|namely|i\.\s?e)\b\.?\s*[:,]?\s*", s, _I):
@@ -375,11 +441,24 @@ _OTHER_NAME = re.compile(r"[(\[]\s*(?:formerly|now|earlier|erstwhile|previously|
 
 
 def other_names(entry: str) -> list[str]:
-    """Former / current names: "Uttam Financial Services Ltd. (Presently known as Mansukh Stock Brokers Ltd.)"."""
+    """Former / current names: "Uttam Financial Services Ltd. (Presently known as Mansukh Stock Brokers Ltd.)".
+
+    Args:
+        entry (str): a header entry.
+    Returns:
+        list[str]: names given in "(formerly / presently known as …)" brackets.
+    """
     return [" ".join(m.group("n").split()).strip(" .,") for m in _OTHER_NAME.finditer(entry)]
 
 
 def valid_name(s: str | None) -> bool:
+    """Whether a string can be a party's name (not a heading, a sentence, an address or SEBI's officer).
+
+    Args:
+        s (str | None): the candidate.
+    Returns:
+        bool: True if it looks like a name.
+    """
     if not s or not (3 <= len(s) <= 150) or len(re.findall(r"[A-Za-z]", s)) < 3:
         return False
     if not re.match(rf"(?:{_HONORIFIC}\s*)?[A-Z0-9]", s) or re.match(r"(?:19|20)\d\d\b", s):
@@ -391,7 +470,13 @@ def valid_name(s: str | None) -> bool:
 
 
 def name_clean(name: str) -> str:
-    """Upper case, honorifics and "(formerly …)" dropped, Ltd → LIMITED, Pvt → PRIVATE."""
+    """Upper case, honorifics and "(formerly …)" dropped, Ltd → LIMITED, Pvt → PRIVATE.
+
+    Args:
+        name (str): a name as printed.
+    Returns:
+        str: the cleaned upper-case name (``entity_name_clean``).
+    """
     s = re.sub(r"[(\[]\s*(?:formerly|now|earlier|erstwhile|previously|presently|currently|since|old|new|known)\b"
                r"[^)\]]*[)\]]?", " ", name, flags=_I)
     s = re.sub(rf"^\s*(?:{_HONORIFIC}\s*)+", "", s, flags=_I)
@@ -403,6 +488,14 @@ def name_clean(name: str) -> str:
 
 
 def entity_type(name: str, pan: str | None) -> str:
+    """What kind of party a name is: the PAN's 4th letter first, else the name's words.
+
+    Args:
+        name (str): the name.
+        pan (str | None): its PAN.
+    Returns:
+        str: individual, company, firm, huf, trust or other.
+    """
     if pan:
         return PAN_TYPE.get(pan[3], "other")
     if re.search(r"\bHUF\b", name, _I):
@@ -416,7 +509,13 @@ def entity_type(name: str, pan: str | None) -> str:
 
 @functools.lru_cache(maxsize=65536)
 def name_pattern(clean: str) -> re.Pattern | None:
-    """A mention of the party in text: its name tokens with any punctuation between."""
+    """A mention of the party in text: its name tokens with any punctuation between.
+
+    Args:
+        clean (str): a cleaned name.
+    Returns:
+        re.Pattern | None: a pattern for the name in running text, or None for a name too short to match safely.
+    """
     toks = []
     for t in clean.split():
         if t in _CORE_END and toks:
@@ -450,7 +549,14 @@ _CONNECTORS = {"and", "&", "of", "de", "da", "del", "la", "van", "von", "bin", "
 
 
 def name_before(text: str, pos: int) -> str | None:
-    """The name ending just before ``pos`` (a definition's bracket)."""
+    """The name ending just before ``pos`` (a definition's bracket).
+
+    Args:
+        text (str): the order's text.
+        pos (int): where a definition's bracket opens.
+    Returns:
+        str | None: the name before it, or None.
+    """
     chunk = text[max(0, pos - 180):pos].rstrip()
     toks = chunk.split(" ")
     out: list[str] = []
@@ -481,7 +587,14 @@ def name_before(text: str, pos: int) -> str | None:
 
 
 def definitions(flat: str, limit: int) -> list[tuple[str, list[str], int]]:
-    """(name, aliases, position) for every definition before ``limit``."""
+    """(name, aliases, position) for every definition before ``limit``.
+
+    Args:
+        flat (str): the order's text, normalised.
+        limit (int): search only before this offset.
+    Returns:
+        list[tuple[str, list[str], int]]: (name, aliases defined for it, position), by position.
+    """
     out = []
     for rx in (_DEFN, _DEFN_SHORT):
         for m in rx.finditer(flat, 0, limit):
@@ -524,10 +637,26 @@ _APPEAL_TAIL = re.compile(r"\s*\[?\s*(?:SAT|Civil)\s+Appeal\b.*$"
 
 
 def strip_appeals(title: str | None) -> str | None:
+    """Remove SEBI's SAT-appeal annotation from a listing title.
+
+    Args:
+        title (str | None): the title.
+    Returns:
+        str | None: the title without the annotation.
+    """
     return _APPEAL_TAIL.sub("", title).strip() if title else title
 
 
 def matter_from(title: str | None, flat: str, end: int) -> tuple[str | None, str | None]:
+    """The order's matter: the title's “in the matter of …” if any, else the header's.
+
+    Args:
+        title (str | None): the listing title.
+        flat (str): the order's text, normalised.
+        end (int): the header's end.
+    Returns:
+        tuple[str | None, str | None]: (matter text, source "title" or "header"), or (None, None).
+    """
     title = strip_appeals(title)
     if title and (ms := list(_MATTER.finditer(title))):
         return title[ms[-1].end():].strip(" .,;-–"), "title"
@@ -555,12 +684,26 @@ _DESCRIPTOR = re.compile(
 
 
 def strip_descriptor(s: str) -> str:
+    """Remove what the matter is about from its start (“Inspection of Books of …”).
+
+    Args:
+        s (str): the matter text.
+    Returns:
+        str: the text after the descriptors.
+    """
     while d := _DESCRIPTOR.match(s):
         s = s[d.end():]
     return s
 
 
 def issuer_from_matter(matter: str | None) -> str | None:
+    """The company the matter is about — the source of ``issuer_guess``.
+
+    Args:
+        matter (str | None): the matter text.
+    Returns:
+        str | None: the company's name ending at its suffix (Ltd, Limited …), or None.
+    """
     if not matter:
         return None
     s = re.sub(r"[(\[]\s*(?:formerly|now|earlier|erstwhile|previously)\b[^)\]]*[)\]]?", " ", matter, flags=_I)
@@ -589,6 +732,13 @@ _COUNT_PHRASE = re.compile(r"^\s*(?:\d+|two|three|four|five|six|seven|eight|nine
 
 
 def title_parties(title: str | None) -> list[str]:
+    """Parties named in the listing title (“Adjudication Order in respect of X and Y”).
+
+    Args:
+        title (str | None): the listing title.
+    Returns:
+        list[str]: the names (empty for "in respect of 12 entities").
+    """
     title = strip_appeals(title)
     if not title or not (m := _TITLE_PARTIES.search(title)) or _COUNT_PHRASE.match(m.group("p")):
         return []
@@ -629,6 +779,13 @@ _TRADING_MATTER = re.compile(r"stock\s+options|\bscrip\b|\bshares?\s+of\b|tradin
 
 
 def _same_company(a: str, b: str) -> bool:
+    """Whether two names are the same company (suffixes ignored; one may contain the other).
+
+    Args:
+        a (str), b (str): two names.
+    Returns:
+        bool: True if they match.
+    """
     ta = [t for t in name_clean(a).split() if t not in _SUFFIX_TOKENS]
     tb = [t for t in name_clean(b).split() if t not in _SUFFIX_TOKENS]
     return bool(ta) and bool(tb) and (ta == tb or (len(ta) >= 2 and " ".join(ta) in " ".join(tb))
@@ -636,7 +793,17 @@ def _same_company(a: str, b: str) -> bool:
 
 
 def guess_role(p: Party, window: str, issuer: str | None, matter: str | None) -> tuple[str, str]:
-    """(role, basis). Evidence first from the party's own row, then its first mention in the body."""
+    """(role, basis). Evidence first from the party's own row, then its first mention in the body.
+
+    Args:
+        p (Party): the party.
+        window (str): text around its first mention in the body.
+        issuer (str | None): the issuer guessed from the matter.
+        matter (str | None): the matter text.
+    Returns:
+        tuple[str, str]: (role, basis) — role ISSUER, PROMOTER, DIRECTOR, AUDITOR, INTERMEDIARY, TRADER or
+        UNKNOWN; basis is the evidence (registration_no, matter, din, list, context:<word>, suffix, none …).
+    """
     row = p.rest or ""
     if re.search(r"chartered\s+accountants?", p.name, _I):
         return AUDITOR, "name"
@@ -680,7 +847,13 @@ _PLURAL_GENERIC = re.compile(r"\b(?:noticees|applicants)\b|\b(?:all\s+(?:the\s+)
 
 
 def noticee_numbers(text: str) -> list[tuple[int, int, set[int]]]:
-    """"Noticee Nos. 1 to 3 and 5" → (start, end, {1, 2, 3, 5})."""
+    """"Noticee Nos. 1 to 3 and 5" → (start, end, {1, 2, 3, 5}).
+
+    Args:
+        text (str): a sentence.
+    Returns:
+        list[tuple[int, int, set[int]]]: (start, end, the numbers) per "Noticee No(s)." mention.
+    """
     out = []
     for m in _NOTICEE_NOS.finditer(text):
         nums: set[int] = set()
@@ -702,6 +875,13 @@ def noticee_numbers(text: str) -> list[tuple[int, int, set[int]]]:
 
 @dataclass
 class Party:
+    """A party found in the order (before the output row is built).
+
+    Attributes:
+        name (str), source (str): where it was found; noticee_no (int | None); pan, din, cin, regno (str | None);
+        rest (str | None): the rest of its header entry; hint (str | None): role stated by the list;
+        org (bool): named as "X and its directors"; aliases (list[str]); entity_type (str); clean (str).
+    """
     name: str
     source: str                       # header_numbered / header_pan / header_list / header / definition / title
     noticee_no: int | None = None
@@ -717,6 +897,11 @@ class Party:
     clean: str = ""
 
     def patterns(self) -> list[re.Pattern]:
+        """Every way the party may be named in the text: name, PAN, aliases, “Noticee No. k”.
+
+        Returns:
+            list[re.Pattern]: the patterns.
+        """
         out = []
         if p := name_pattern(self.clean):
             out.append(p)
@@ -733,7 +918,14 @@ class Party:
 
 
 def mentions(parties: list[Party], text: str) -> list[tuple[int, int]]:
-    """(position, party index) of every party named in ``text``, in order."""
+    """(position, party index) of every party named in ``text``, in order.
+
+    Args:
+        parties (list[Party]): the order's parties.
+        text (str): a sentence.
+    Returns:
+        list[tuple[int, int]]: (offset, party index) per mention, sorted.
+    """
     found = []
     for i, p in enumerate(parties):
         for rx in p.patterns():
@@ -749,6 +941,14 @@ def mentions(parties: list[Party], text: str) -> list[tuple[int, int]]:
 
 @dataclass
 class Link:
+    """How an order's penalty rows were linked to its parties.
+
+    Attributes:
+        amounts (dict[int, int]): party index → rupees; rows (dict[int, int]): party index → rows linked;
+        each (set[int]), joint (set[int]): parties with an "each" / joint amount;
+        unassigned (int): rupees linked to no one; n_rows (int), n_linked (int);
+        expanded_total (int): the total with each "… each" amount counted once per party named.
+    """
     amounts: dict[int, int] = field(default_factory=dict)        # party index → rupees
     rows: dict[int, int] = field(default_factory=dict)           # party index → rows linked
     each: set[int] = field(default_factory=set)
@@ -760,6 +960,15 @@ class Link:
     expanded_total: int = 0
 
     def add(self, i: int, rupees: int, each: bool, joint: bool):
+        """Credit an amount to a party.
+
+        Args:
+            i (int): the party index.
+            rupees (int): the amount.
+            each (bool), joint (bool): the amount's marks.
+        Returns:
+            None.
+        """
         self.amounts[i] = self.amounts.get(i, 0) + rupees
         self.rows[i] = self.rows.get(i, 0) + 1
         if each:
@@ -769,6 +978,14 @@ class Link:
 
 
 def link_penalties(parties: list[Party], rows: list[ea.SanctionMention]) -> Link:
+    """Give each penalty row to the party it names (table layout: before; prose: after).
+
+    Args:
+        parties (list[Party]): the order's parties.
+        rows (list[extract_actions.SanctionMention]): the counted penalty rows.
+    Returns:
+        Link: amounts per party and how complete the linking was.
+    """
     link = Link(n_rows=len(rows))
     if not parties or not rows:
         return link
@@ -833,7 +1050,15 @@ def link_penalties(parties: list[Party], rows: list[ea.SanctionMention]) -> Link
 
 
 def link_other(parties: list[Party], sanctions: list[ea.SanctionMention]) -> dict[int, set[str]]:
-    """Non-monetary sanctions (and settlement / disgorgement) per party."""
+    """Non-monetary sanctions (and settlement / disgorgement) per party.
+
+    Args:
+        parties (list[Party]): the order's parties.
+        sanctions (list[extract_actions.SanctionMention]): all its sanction mentions.
+    Returns:
+        dict[int, set[str]]: party index → sanction types (DEBARMENT, DISGORGEMENT, WARNING, SETTLEMENT,
+        SUSPENSION, CANCELLATION).
+    """
     names = {ea.DEBARMENT: "DEBARMENT", ea.DISGORGEMENT: "DISGORGEMENT", ea.WARNING: "WARNING",
              ea.SETTLEMENT: "SETTLEMENT"}
     out: dict[int, set[str]] = collections.defaultdict(set)
@@ -861,6 +1086,14 @@ def link_other(parties: list[Party], sanctions: list[ea.SanctionMention]) -> dic
 
 @dataclass
 class Job:
+    """One order to read, with its title and Day 4's sanctions and penalty total.
+
+    Attributes:
+        text_stem (str), order_id (int | None), order_type (str | None), order_date (datetime.date | None),
+        text_path (str | None), text_status (str | None), title (str | None),
+        sanctions (list[dict]): its rows of sanction_mentions; penalty_total (int | None),
+        penalty_total_basis (str | None).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -875,6 +1108,14 @@ class Job:
 
 @dataclass
 class EntityRow:
+    """One (order, party): a row of ``derived/order_entities.parquet`` (columns in CLAUDE.md §8).
+
+    Attributes:
+        party_no (int), noticee_no (int | None), entity_name, entity_name_clean, entity_type (str),
+        pan, din, cin, sebi_reg_no (str | None), entity_role, role_basis (str), is_issuer_guess (bool),
+        source (str), aliases (str, JSON), penalty_amount (int | None), penalty_rows (int),
+        penalty_each (bool), penalty_joint (bool), sanction_types (str, JSON).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -903,6 +1144,13 @@ class EntityRow:
 
 @dataclass
 class RegulationMention:
+    """One provision cited: a row of ``derived/regulation_mentions.parquet``.
+
+    Attributes:
+        text_stem (str), regime (str), regime_year (int | None), provision (str), keyword (str),
+        role (str): violation, penalty, power or cited; how (str); rel_pos (float); citation (str);
+        context (str): 120 characters before it.
+    """
     text_stem: str
     regime: str
     regime_year: int | None
@@ -917,6 +1165,15 @@ class RegulationMention:
 
 @dataclass
 class OrderParties:
+    """One order's parties summary: a row of ``derived/order_parties.parquet`` (CLAUDE.md §8).
+
+    Attributes:
+        matter_raw, matter_source, issuer_guess, issuer_source, parties_source (str | None); n_parties (int);
+        n_parties_by_role (str, JSON); parties_raw (str | None); penalty_link_status (str | None);
+        penalty_rows_n, penalty_rows_linked (int); penalty_unassigned, penalty_total_resolved (int | None);
+        regulations, regimes, regimes_cited, penalty_provisions (str, JSON lists); n_citations,
+        n_citations_unresolved (int); rules_version; error.
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -946,6 +1203,15 @@ class OrderParties:
 
 
 def _identifiers(p: Party, entry: str, din_column: bool) -> None:
+    """Read PAN, CIN, DIN and SEBI registration number from a header entry onto a party.
+
+    Args:
+        p (Party): the party (changed in place).
+        entry (str): its header entry.
+        din_column (bool): the list has a DIN column (a bare 8-digit number is then a DIN).
+    Returns:
+        None.
+    """
     if m := PAN.search(entry):
         p.pan = m.group(0)
     if m := CIN.search(entry):
@@ -963,6 +1229,15 @@ _GROUP = re.compile(r"\s*,?\s*(?:and\s+)?(?:its|their)\s+(?:(?:erstwhile|past|fo
 
 
 def header_parties(flat: str, hend: int) -> tuple[list[Party], str | None, str | None]:
+    """The parties listed in the header, with their identifiers.
+
+    Args:
+        flat (str): the order's text, normalised.
+        hend (int): the header's end.
+    Returns:
+        tuple[list[Party], str | None, str | None]: the parties, how the list was split, and the segment's
+        first 1,500 characters (``parties_raw``).
+    """
     seg = noticee_segment(flat, hend)
     if not seg:
         return [], None, None
@@ -1004,6 +1279,13 @@ def header_parties(flat: str, hend: int) -> tuple[list[Party], str | None, str |
 
 
 def _dedupe(parties: list[Party]) -> list[Party]:
+    """Merge parties with the same cleaned name (their aliases and identifiers combined).
+
+    Args:
+        parties (list[Party]): the parties found.
+    Returns:
+        list[Party]: one per cleaned name, in first-seen order.
+    """
     seen: dict[str, Party] = {}
     out = []
     for p in parties:
@@ -1018,7 +1300,15 @@ def _dedupe(parties: list[Party]) -> list[Party]:
 
 
 def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
-    """Parties, roles, sanctions per party and regulations for one order. Never raises."""
+    """Parties, roles, sanctions per party and regulations for one order. Never raises.
+
+    Args:
+        job (Job): the order.
+        repo_root (pathlib.Path): base for its text path.
+    Returns:
+        tuple[OrderParties, list[EntityRow], list[RegulationMention]]: the order row, its parties and its
+        citations.
+    """
     o = OrderParties(job.text_stem, job.order_id, job.order_type, job.order_date, job.text_status)
     if job.text_status != "OK" or not job.text_path:
         return o, [], []
@@ -1151,6 +1441,14 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT):
 
 
 def _process_many(jobs, repo_root):
+    """Process a batch of orders (one worker task).
+
+    Args:
+        jobs (list[Job]): the batch.
+        repo_root (pathlib.Path): base for text paths.
+    Returns:
+        list[tuple[OrderParties, list[EntityRow], list[RegulationMention]]]: one result per order.
+    """
     return [process(j, repo_root) for j in jobs]
 
 
@@ -1160,6 +1458,16 @@ def _process_many(jobs, repo_root):
 
 def load_jobs(documents: pathlib.Path = TEXT_DOCUMENTS_IN, listings: pathlib.Path = LISTINGS_IN,
               sanctions: pathlib.Path = SANCTIONS_IN, actions: pathlib.Path = ACTIONS_IN) -> list[Job]:
+    """Read the orders with their titles, Day 4 sanctions and penalty totals.
+
+    Args:
+        documents (pathlib.Path): ``derived/text_documents.parquet``.
+        listings (pathlib.Path): ``derived/listings.parquet``.
+        sanctions (pathlib.Path): ``derived/sanction_mentions.parquet`` (optional).
+        actions (pathlib.Path): ``derived/order_actions.parquet`` (optional).
+    Returns:
+        list[Job]: one per order.
+    """
     docs = pq.read_table(documents, columns=["text_stem", "order_id", "order_type", "order_date",
                                              "text_path", "status"]).to_pylist()
     titles = {}
@@ -1179,6 +1487,15 @@ def load_jobs(documents: pathlib.Path = TEXT_DOCUMENTS_IN, listings: pathlib.Pat
 
 
 def select(jobs, *, categories=None, order_ids=None, stems=None, sample=None, limit=None, seed=7):
+    """Restrict the orders (types, ids, stems, a random sample, the first N).
+
+    Args:
+        jobs (list[Job]): all orders.
+        categories, order_ids, stems (list | None): keep only these.
+        sample (int | None), limit (int | None), seed (int).
+    Returns:
+        list[Job]: the selection.
+    """
     out = jobs
     if categories:
         out = [j for j in out if j.order_type in set(categories)]
@@ -1194,6 +1511,14 @@ def select(jobs, *, categories=None, order_ids=None, stems=None, sample=None, li
 
 
 def write_outputs(orders, entities, mentions_out, out_dir: pathlib.Path) -> list[pathlib.Path]:
+    """Write ``order_parties``, ``order_entities`` and ``regulation_mentions``.
+
+    Args:
+        orders (list[OrderParties]), entities (list[EntityRow]), mentions_out (list[RegulationMention]).
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+    Returns:
+        list[pathlib.Path]: the three paths written.
+    """
     assert_safe_output(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     paths = [out_dir / "order_parties.parquet", out_dir / "order_entities.parquet",
@@ -1205,9 +1530,26 @@ def write_outputs(orders, entities, mentions_out, out_dir: pathlib.Path) -> list
 
 
 def run(jobs, *, workers=1, repo_root=REPO_ROOT, chunk=100):
+    """Process every order (in worker processes when workers > 1).
+
+    Args:
+        jobs (list[Job]): the orders.
+        workers (int): processes.
+        repo_root (pathlib.Path): base for text paths.
+        chunk (int): orders per worker task.
+    Returns:
+        tuple[list[OrderParties], list[EntityRow], list[RegulationMention]]: all rows.
+    """
     orders, entities, mentions_out = [], [], []
 
     def collect(res):
+        """Gather one order's result.
+
+        Args:
+            res (tuple[OrderParties, list[EntityRow], list[RegulationMention]]): one order's output.
+        Returns:
+            None.
+        """
         o, e, m = res
         orders.append(o)
         entities.extend(e)
@@ -1229,6 +1571,14 @@ def run(jobs, *, workers=1, repo_root=REPO_ROOT, chunk=100):
 
 
 def summarise(orders: list[OrderParties], entities: list[EntityRow]) -> dict:
+    """Run summary for the log.
+
+    Args:
+        orders (list[OrderParties]): order rows.
+        entities (list[EntityRow]): party rows.
+    Returns:
+        dict: parties found, roles, types, PANs, penalty-link status, regulations and top regimes.
+    """
     with_text = [o for o in orders if o.text_status == "OK"]
     by_type = collections.defaultdict(collections.Counter)
     for o in with_text:
@@ -1259,6 +1609,11 @@ def summarise(orders: list[OrderParties], entities: list[EntityRow]) -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.extract_parties``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.extract_parties",
                                      description="Parties and regulations (runbook Week 2, Day 5)")
     parser.add_argument("--documents", type=pathlib.Path, default=TEXT_DOCUMENTS_IN)
@@ -1279,6 +1634,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 8: parties, roles, penalties per party and violated regulations.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         out_dir, log_file = args.scratch, args.scratch / "extract_parties.log"

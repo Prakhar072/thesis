@@ -49,12 +49,27 @@ CRORE = 1e7
 
 
 def _fy_series(dates) -> pd.Series:
+    """The financial year of each date.
+
+    Args:
+        dates: dates (list, array or Series).
+    Returns:
+        pd.Series: int years (April–March, named by the end year).
+    """
     d = pd.to_datetime(pd.Series(dates))
     return d.dt.year + (d.dt.month >= 4).astype(int)
 
 
 def security_map(universe: pd.DataFrame, nse_isin_rows: pd.DataFrame, symbolchange: dict[str, str]) -> pd.DataFrame:
-    """(exchange, code) → firm_id. NSE symbols: the ISIN beside them first, then today's list and symbol changes."""
+    """(exchange, code) → firm_id. NSE symbols: the ISIN beside them first, then today's list and symbol changes.
+
+    Args:
+        universe (pd.DataFrame): Day 1's securities.
+        nse_isin_rows (pd.DataFrame): (code, isin) pairs seen in NSE price files.
+        symbolchange (dict[str, str]): old NSE symbol → latest symbol.
+    Returns:
+        pd.DataFrame: exchange, code, firm_id, how (universe / isin / symbol_change).
+    """
     bse = universe[universe.exchange == "BSE"][["code", "firm_id"]].assign(exchange="BSE", how="universe")
     by_isin = (nse_isin_rows.dropna(subset=["isin"]).assign(firm_id=lambda d: "INE" + d["isin"].str[3:7])
                .drop_duplicates("code", keep="last")[["code", "firm_id"]].assign(exchange="NSE", how="isin"))
@@ -67,6 +82,15 @@ def security_map(universe: pd.DataFrame, nse_isin_rows: pd.DataFrame, symbolchan
 
 
 def read_prices(prices_dir: pathlib.Path, codes: dict[str, set[str]], years: range) -> pd.DataFrame:
+    """Read the price rows of some codes over some years.
+
+    Args:
+        prices_dir (pathlib.Path): ``derived/prices``.
+        codes (dict[str, set[str]]): exchange → codes to read.
+        years (range): calendar years of files to read.
+    Returns:
+        pd.DataFrame: the matching rows (empty with the main columns if none).
+    """
     frames = []
     for ex, cs in codes.items():
         for y in years:
@@ -79,7 +103,17 @@ def read_prices(prices_dir: pathlib.Path, codes: dict[str, set[str]], years: ran
 
 
 def firm_daily(prices: pd.DataFrame, smap: pd.DataFrame, ca: pd.DataFrame, firm_bse: dict[str, list[str]]):
-    """Adjusted daily rows per firm on its main exchange."""
+    """Adjusted daily rows per firm on its main exchange.
+
+    Args:
+        prices (pd.DataFrame): price rows of the sample's securities.
+        smap (pd.DataFrame): the security map.
+        ca (pd.DataFrame): corporate actions.
+        firm_bse (dict[str, list[str]]): firm_id → its BSE codes (for the actions).
+    Returns:
+        tuple[pd.DataFrame, pd.Series]: adjusted daily rows of each firm's main exchange, and firm_id →
+        main exchange.
+    """
     p = prices.merge(smap[["exchange", "code", "firm_id"]], on=["exchange", "code"], how="inner", validate="many_to_one")
     p = p.sort_values(["firm_id", "exchange", "date", "volume"], ascending=[True, True, True, False]) \
          .drop_duplicates(["firm_id", "exchange", "date"])
@@ -98,6 +132,15 @@ def firm_daily(prices: pd.DataFrame, smap: pd.DataFrame, ca: pd.DataFrame, firm_
 
 
 def market_signals(daily: pd.DataFrame, index: pd.DataFrame) -> pd.DataFrame:
+    """Per firm and financial year: trading, return, risk and liquidity from adjusted daily rows.
+
+    Args:
+        daily (pd.DataFrame): from firm_daily.
+        index (pd.DataFrame): the BSE 500 (date, close).
+    Returns:
+        pd.DataFrame: firm_id, fy, trading_days, close_end, vol, turnover_median, gap_days, zero_volume_share,
+        exchange, code, amihud, ret, index_ret, excess_ret.
+    """
     if daily.empty:
         return pd.DataFrame(columns=["firm_id", "fy"])
     d = daily.assign(fy=_fy_series(daily.date).to_numpy())
@@ -120,6 +163,14 @@ def market_signals(daily: pd.DataFrame, index: pd.DataFrame) -> pd.DataFrame:
 
 
 def ownership(shp: pd.DataFrame) -> pd.DataFrame:
+    """Ownership at each financial year's end (the March quarter).
+
+    Args:
+        shp (pd.DataFrame): ``derived/shareholding.parquet``.
+    Returns:
+        pd.DataFrame: firm_id, fy, promoter_pct, promoter_pct_change, pledged_pct, pledged_shares,
+        total_shares, pledge_answer.
+    """
     s = shp[(shp.status == "ok") & (pd.to_datetime(shp.quarter_end).dt.month == 3)].copy()
     s["fy"] = pd.to_datetime(s.quarter_end).dt.year
     s = s.sort_values(["firm_id", "fy"]).drop_duplicates(["firm_id", "fy"], keep="last")
@@ -129,11 +180,31 @@ def ownership(shp: pd.DataFrame) -> pd.DataFrame:
 
 
 def first_public(events: pd.DataFrame) -> pd.Series:
+    """The financial year of each firm's first public SEBI action (its earliest event).
+
+    Args:
+        events (pd.DataFrame): sample_events.
+    Returns:
+        pd.Series: firm_id → first_public_fy.
+    """
     return events.groupby("firm_id").event_date.min().map(fy).rename("first_public_fy")
 
 
 def build(sample, fraud_years, events, universe, symbolchange, prices_dir, ca, index, shp,
           period=PERIOD_FY) -> pd.DataFrame:
+    """Merge the panel, asserting the row count after every join.
+
+    Args:
+        sample, fraud_years, events (pd.DataFrame): Day 3's frozen tables.
+        universe (pd.DataFrame): Day 1's securities.
+        symbolchange (dict[str, str]): NSE symbol changes.
+        prices_dir (pathlib.Path): ``derived/prices``.
+        ca (pd.DataFrame), index (pd.DataFrame): corporate actions and the BSE 500.
+        shp (pd.DataFrame): shareholding.
+        period (tuple[int, int]): the financial years kept (2010, 2025).
+    Returns:
+        pd.DataFrame: one row per (firm, fy) traded or in a window, with the label, signals and ownership.
+    """
     years = range(period[0] - 1, period[1] + 1)
     firm_bse = universe[universe.exchange == "BSE"].groupby("firm_id").code.agg(list).to_dict()
     nse_isin_rows = []
@@ -171,7 +242,14 @@ def build(sample, fraud_years, events, universe, symbolchange, prices_dir, ca, i
 
 
 def coverage(panel: pd.DataFrame, sample: pd.DataFrame) -> pd.DataFrame:
-    """The paper's coverage table: share of firms (and fraud firm-years) with prices, ownership, both."""
+    """The paper's coverage table: share of firms (and fraud firm-years) with prices, ownership, both.
+
+    Args:
+        panel (pd.DataFrame): the panel.
+        sample (pd.DataFrame): the sample.
+    Returns:
+        pd.DataFrame: unit, n, with_prices, with_ownership, with_both, and their shares.
+    """
     has_p = panel.trading_days.fillna(0) > 0
     has_o = panel.promoter_pct.notna()
     rows = []
@@ -194,6 +272,11 @@ def coverage(panel: pd.DataFrame, sample: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.build_panel``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.build_panel", description="Merge the Week 4 panel")
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR, help="where every input is read")
     parser.add_argument("--scratch", type=pathlib.Path, help="write the panel and coverage under DIR")
@@ -202,6 +285,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the Week 4 merge: write ``panel.parquet`` and ``panel_coverage.csv``.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     outs = {"panel": out_dir / "panel.parquet", "coverage": out_dir / "panel_coverage.csv"}

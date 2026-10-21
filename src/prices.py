@@ -41,7 +41,16 @@ GAP_UP, GAP_DOWN = 1.0, -0.5
 
 
 def load(exchange: str, codes, start: dt.date, end: dt.date, prices_dir: pathlib.Path = DERIVED_DIR / "prices"):
-    """Daily rows for the given codes, one per code and date."""
+    """Daily rows for the given codes, one per code and date.
+
+    Args:
+        exchange (str): "NSE" or "BSE".
+        codes: NSE symbols or BSE scrip codes.
+        start (datetime.date), end (datetime.date): the range.
+        prices_dir (pathlib.Path): ``derived/prices``.
+    Returns:
+        pd.DataFrame: one row per (code, date); the rolling series preferred when a symbol has two.
+    """
     codes = [str(c) for c in codes]
     frames = []
     for y in range(start.year, end.year + 1):
@@ -58,14 +67,28 @@ def load(exchange: str, codes, start: dt.date, end: dt.date, prices_dir: pathlib
 
 
 def factors(ca: pd.DataFrame, bse_codes) -> pd.DataFrame:
-    """Splits and bonuses with a factor, and consolidations (no factor), for the given BSE scrips."""
+    """Splits and bonuses with a factor, and consolidations (no factor), for the given BSE scrips.
+
+    Args:
+        ca (pd.DataFrame): corporate_actions.
+        bse_codes: the firm's BSE scrip codes.
+    Returns:
+        pd.DataFrame: ex_date, kind, factor (NaN for consolidations), purpose — sorted by ex_date.
+    """
     c = ca[ca.scrip_code.isin([str(x) for x in bse_codes]) & ca.kind.isin(["split", "bonus", "consolidation"])]
     return (c.sort_values("ex_date").drop_duplicates(["ex_date", "kind", "factor"])
              [["ex_date", "kind", "factor", "purpose"]].reset_index(drop=True))
 
 
 def adjust(series: pd.DataFrame, fac: pd.DataFrame) -> pd.DataFrame:
-    """One security's rows (date, close, …) → with factor, ret, adj_close, gap, action_unadjusted."""
+    """One security's rows (date, close, …) → with factor, ret, adj_close, gap, action_unadjusted.
+
+    Args:
+        series (pd.DataFrame): one security's daily rows (date, close, …).
+        fac (pd.DataFrame): its actions (from factors()).
+    Returns:
+        pd.DataFrame: the rows sorted by date, plus factor, ret, adj_close, gap, action_unadjusted.
+    """
     d = series.sort_values("date").reset_index(drop=True).copy()
     f = np.ones(len(d))
     unadjusted = np.zeros(len(d), dtype=bool)
@@ -88,7 +111,16 @@ def adjust(series: pd.DataFrame, fac: pd.DataFrame) -> pd.DataFrame:
 
 
 def check_plot(d: pd.DataFrame, fac: pd.DataFrame, title: str, out: pathlib.Path) -> pathlib.Path:
-    """Unadjusted close above, adjusted close below; ex-dates marked. One series per panel."""
+    """Unadjusted close above, adjusted close below; ex-dates marked. One series per panel.
+
+    Args:
+        d (pd.DataFrame): adjusted rows (from adjust()).
+        fac (pd.DataFrame): the actions, marked on the plot.
+        title (str): the figure's title.
+        out (pathlib.Path): the PNG to write.
+    Returns:
+        pathlib.Path: the path written.
+    """
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.dates as mdates
@@ -136,7 +168,15 @@ def check_plot(d: pd.DataFrame, fac: pd.DataFrame, title: str, out: pathlib.Path
 
 
 def bse_codes_for(code: str, exchange: str, universe: pd.DataFrame) -> list[str]:
-    """The BSE scrips of the firm a code belongs to (for its corporate actions)."""
+    """The BSE scrips of the firm a code belongs to (for its corporate actions).
+
+    Args:
+        code (str): an NSE symbol or a BSE scrip code.
+        exchange (str): which of the two it is.
+        universe (pd.DataFrame): Day 1's securities.
+    Returns:
+        list[str]: the firm's BSE scrip codes (the code itself for an unknown BSE code).
+    """
     fid = universe[(universe.exchange == exchange) & (universe.code == code)].firm_id
     if fid.empty:
         return [code] if exchange == "BSE" else []
@@ -144,6 +184,13 @@ def bse_codes_for(code: str, exchange: str, universe: pd.DataFrame) -> list[str]
 
 
 def main(argv: list[str] | None = None) -> int:
+    """The sanity check: adjust one security's prices, plot raw and adjusted, log the biggest moves.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0, or 1 if there are no prices for the security in the range.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.prices", description="Adjusted prices: the sanity check")
     parser.add_argument("--check", required=True, help="an NSE symbol or a BSE scrip code")
     parser.add_argument("--exchange", choices=("NSE", "BSE"), default="NSE")

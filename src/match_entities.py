@@ -87,30 +87,66 @@ REVIEW_COLUMNS = ["query", "query_norm", "n_orders", "n_parties", "best_score", 
 # --- names → firms ---------------------------------------------------------------------------------------------
 
 def alias_index(aliases: pd.DataFrame) -> tuple[list[str], list[list[str]]]:
-    """Distinct normalised aliases and the firms each belongs to."""
+    """Distinct normalised aliases and the firms each belongs to.
+
+    Args:
+        aliases (pd.DataFrame): name_aliases (alias_norm, firm_id).
+    Returns:
+        tuple[list[str], list[list[str]]]: the distinct normalised aliases, and the firm ids of each.
+    """
     g = aliases.groupby("alias_norm").firm_id.agg(lambda s: sorted(set(s)))
     return g.index.tolist(), g.tolist()
 
 
 def generic_words(keys: list[str], min_df: int = GENERIC_DF) -> frozenset[str]:
+    """Words common enough in listed names to say nothing about which company it is.
+
+    Args:
+        keys (list[str]): the distinct normalised aliases.
+        min_df (int): a word in at least this many names is generic.
+    Returns:
+        frozenset[str]: the generic words (single letters never are).
+    """
     df = Counter(t for k in keys for t in set(k.split()))
     return frozenset(t for t, c in df.items() if c >= min_df and len(t) > 1)
 
 
 def core(name: str, generic: frozenset[str]) -> str:
-    """The distinctive words of a normalised name (all of it if every word is generic)."""
+    """The distinctive words of a normalised name (all of it if every word is generic).
+
+    Args:
+        name (str): a normalised name.
+        generic (frozenset[str]): the generic words.
+    Returns:
+        str: the distinctive words.
+    """
     kept = [t for t in name.split() if t not in generic]
     return " ".join(kept) if kept else name
 
 
 def _prefer_isin(firms: list[str]) -> list[str]:
-    """Among firms sharing a name, those identified by an ISIN (a no-ISIN row is often the same company)."""
+    """Among firms sharing a name, those identified by an ISIN (a no-ISIN row is often the same company).
+
+    Args:
+        firms (list[str]): firm ids that share a name.
+    Returns:
+        list[str]: those with an ISIN-based id, or all of them if none has one.
+    """
     with_isin = [f for f in firms if ":" not in f]
     return with_isin or firms
 
 
 def match_names(queries: list[str], aliases: pd.DataFrame, chunk: int = 2000) -> pd.DataFrame:
-    """Best firm for each distinct normalised name: score, band and the runner-up firms."""
+    """Best firm for each distinct normalised name: score, band and the runner-up firms.
+
+    Args:
+        queries (list[str]): distinct normalised names to match.
+        aliases (pd.DataFrame): name_aliases.
+        chunk (int): queries scored per batch (memory).
+    Returns:
+        pd.DataFrame: one row per query: query_norm, firm_id, score, alias, band (auto / review / reject),
+        reason, candidates (JSON top 3).
+    """
     keys, firms_of = alias_index(aliases)
     exact = dict(zip(keys, firms_of))
     generic = generic_words(keys)
@@ -126,7 +162,13 @@ def match_names(queries: list[str], aliases: pd.DataFrame, chunk: int = 2000) ->
 
 
 def query_names(name) -> list[str]:
-    """Normalised names to try for an issuer: as written, then without a leading descriptor."""
+    """Normalised names to try for an issuer: as written, then without a leading descriptor.
+
+    Args:
+        name (str | None): an issuer_guess.
+    Returns:
+        list[str]: normalised names to try.
+    """
     out = names(name)
     if isinstance(name, str) and DESCRIPTOR.match(name):
         out += [n for n in names(DESCRIPTOR.sub("", name, count=1)) if n not in out]
@@ -135,6 +177,17 @@ def query_names(name) -> list[str]:
 
 def _best(q: str, row: np.ndarray, keys: list[str], firms_of: list[list[str]], exact: dict,
           cores: list[str] | None = None, q_core: str | None = None) -> dict:
+    """Choose the best firm for one query from its scores against every alias, and its band.
+
+    Args:
+        q (str): the normalised query.
+        row (np.ndarray): token-sort scores against every alias (uint8, 0 = below the cutoff).
+        keys (list[str]): the aliases; firms_of (list[list[str]]): their firm ids.
+        exact (dict[str, list[str]]): alias → firm ids, for exact matches.
+        cores (list[str] | None): each alias's distinctive words; q_core (str | None): the query's.
+    Returns:
+        dict: query_norm, candidates (JSON), firm_id, score, alias, band, reason.
+    """
     top = np.argsort(row)[::-1][:50]
     q_core = q_core or q
     by_firm: dict[str, tuple[int, str, str]] = {}   # firm → (score, alias, its distinctive words)
@@ -185,18 +238,40 @@ def _best(q: str, row: np.ndarray, keys: list[str], firms_of: list[list[str]], e
 # --- codes in the text -----------------------------------------------------------------------------------------
 
 def codes_in_text(text: str) -> tuple[list[str], list[str]]:
+    """ISINs and BSE scrip codes an order prints.
+
+    Args:
+        text (str): the order's text.
+    Returns:
+        tuple[list[str], list[str]]: (ISINs, scrip codes), each sorted and unique.
+    """
     isins = sorted(set(ISIN_IN_TEXT.findall(text)))
     scrips = sorted({a or b for a, b in SCRIP_IN_TEXT.findall(text)})
     return isins, scrips
 
 
 def code_lookup(universe: pd.DataFrame) -> tuple[set[str], dict[str, str]]:
+    """Lookups for code_firms, built once per run.
+
+    Args:
+        universe (pd.DataFrame): the securities.
+    Returns:
+        tuple[set[str], dict[str, str]]: (every firm_id, BSE scrip code → firm_id).
+    """
     b = universe[universe.exchange == "BSE"]
     return set(universe.firm_id), dict(zip(b.code, b.firm_id))
 
 
 def code_firms(isins: list[str], scrips: list[str], lookup: tuple[set[str], dict[str, str]]) -> list[str]:
-    """Firms identified by the codes an order prints (ISIN issuer prefix, BSE scrip code)."""
+    """Firms identified by the codes an order prints (ISIN issuer prefix, BSE scrip code).
+
+    Args:
+        isins (list[str]): ISINs found.
+        scrips (list[str]): scrip codes found.
+        lookup (tuple[set[str], dict[str, str]]): from code_lookup.
+    Returns:
+        list[str]: the firm ids they identify, unique, in order.
+    """
     known, bse = lookup
     out = []
     for i in isins:
@@ -213,13 +288,27 @@ def code_firms(isins: list[str], scrips: list[str], lookup: tuple[set[str], dict
 # --- review sheet ----------------------------------------------------------------------------------------------
 
 def read_review(path: pathlib.Path) -> pd.DataFrame:
+    """Read ``hand/match_review.csv`` (all strings), or an empty sheet.
+
+    Args:
+        path (pathlib.Path): the review sheet.
+    Returns:
+        pd.DataFrame: REVIEW_COLUMNS.
+    """
     if not path.exists():
         return pd.DataFrame(columns=REVIEW_COLUMNS)
     return pd.read_csv(path, dtype=str, keep_default_na=False)
 
 
 def decisions(review: pd.DataFrame, matches: pd.DataFrame) -> dict[str, str | None]:
-    """query_norm → firm_id (or None for reject), from filled review rows."""
+    """query_norm → firm_id (or None for reject), from filled review rows.
+
+    Args:
+        review (pd.DataFrame): the review sheet.
+        matches (pd.DataFrame): name_matches (for "accept" = the first candidate).
+    Returns:
+        dict[str, str | None]: query_norm → firm_id, or None for "reject".
+    """
     cands = dict(zip(matches.query_norm, matches.candidates))
     out = {}
     for r in review.itertuples():
@@ -238,7 +327,16 @@ def decisions(review: pd.DataFrame, matches: pd.DataFrame) -> dict[str, str | No
 
 def new_review_rows(matches: pd.DataFrame, usage: pd.DataFrame, review: pd.DataFrame,
                     firm_names: dict[str, str], firm_status: dict[str, str]) -> pd.DataFrame:
-    """Review-band names not yet on the sheet, most used first."""
+    """Review-band names not yet on the sheet, most used first.
+
+    Args:
+        matches (pd.DataFrame): name_matches.
+        usage (pd.DataFrame): per name: n_orders, n_parties, an example query and title.
+        review (pd.DataFrame): the existing sheet.
+        firm_names (dict[str, str]), firm_status (dict[str, str]): for the candidates' labels.
+    Returns:
+        pd.DataFrame: rows to append (REVIEW_COLUMNS), decision empty.
+    """
     todo = matches[(matches.band == "review") & ~matches.query_norm.isin(set(review.query_norm))]
     todo = todo.merge(usage, on="query_norm", how="left").sort_values(["n_orders", "n_parties"], ascending=False)
     rows = []
@@ -254,7 +352,16 @@ def new_review_rows(matches: pd.DataFrame, usage: pd.DataFrame, review: pd.DataF
 # --- applying matches ------------------------------------------------------------------------------------------
 
 def resolve(query_names: list[str], by_norm: dict, hand: dict) -> dict:
-    """The best match over a name and its bracketed former names."""
+    """The best match over a name and its bracketed former names.
+
+    Args:
+        query_names (list[str]): normalised names to try.
+        by_norm (dict): query_norm → its name_matches row.
+        hand (dict): hand decisions (from decisions()).
+    Returns:
+        dict: firm_id, score, method (exact / auto / review_pending / hand / hand_reject / none), alias,
+        query_norm, candidate_firm_id.
+    """
     best = {"firm_id": None, "score": 0, "method": "none", "alias": None, "query_norm": None}
     for q in query_names:
         if q in hand:
@@ -275,7 +382,13 @@ def resolve(query_names: list[str], by_norm: dict, hand: dict) -> dict:
 
 
 def firm_codes(universe: pd.DataFrame) -> pd.DataFrame:
-    """Per firm: the ISIN, NSE symbol and BSE code to carry (live listings first)."""
+    """Per firm: the ISIN, NSE symbol and BSE code to carry (live listings first).
+
+    Args:
+        universe (pd.DataFrame): the securities.
+    Returns:
+        pd.DataFrame: indexed by firm_id: isin, ticker, nse_symbol, bse_code, bse_status.
+    """
     rank = universe.status.map({"Active": 0, "Suspended": 1, "Delisted": 2}).fillna(3)
     u = universe.assign(_rank=rank).sort_values(["firm_id", "_rank", "code"])
     nse = u[u.exchange == "NSE"].groupby("firm_id").agg(nse_symbol=("code", "first"), nse_isin=("isin", "first"))
@@ -289,6 +402,18 @@ def firm_codes(universe: pd.DataFrame) -> pd.DataFrame:
 
 def match_orders(orders: pd.DataFrame, entities: pd.DataFrame, universe: pd.DataFrame, aliases: pd.DataFrame,
                  review: pd.DataFrame, text_dir_root: pathlib.Path = REPO_ROOT):
+    """Match every order's issuer and every company party.
+
+    Args:
+        orders (pd.DataFrame): text_stem, issuer_guess, title, text_path.
+        entities (pd.DataFrame): order_entities.
+        universe (pd.DataFrame), aliases (pd.DataFrame): Day 1's tables.
+        review (pd.DataFrame): the hand review sheet.
+        text_dir_root (pathlib.Path): base for text paths (codes are read from the texts).
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]: (order_issuers, entity_matches,
+        name_matches, usage).
+    """
     issuers = orders[["text_stem", "issuer_guess", "title", "text_path"]].copy()
     companies = entities[entities.entity_type == "company"][["text_stem", "party_no", "entity_name",
                                                              "entity_name_clean", "entity_role"]].copy()
@@ -351,6 +476,14 @@ def match_orders(orders: pd.DataFrame, entities: pd.DataFrame, universe: pd.Data
 
 
 def _usage(issuers: pd.DataFrame, companies: pd.DataFrame) -> pd.DataFrame:
+    """How often each distinct name is used, and an example of it, for the review sheet.
+
+    Args:
+        issuers (pd.DataFrame): orders with their query names (qnames).
+        companies (pd.DataFrame): company parties with their query names.
+    Returns:
+        pd.DataFrame: query_norm, n_orders, n_parties, query, example_title.
+    """
     i = issuers.explode("qnames").dropna(subset=["qnames"])
     c = companies.explode("qnames").dropna(subset=["qnames"])
     n_o = i.groupby("qnames").text_stem.nunique().rename("n_orders")
@@ -363,6 +496,11 @@ def _usage(issuers: pd.DataFrame, companies: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.match_entities``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.match_entities",
                                      description="Match order issuers and company parties to the listed universe")
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR,
@@ -373,6 +511,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run Week 4 Day 2: match, write the three tables, append new names to the review sheet.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     review_path = (args.scratch / "match_review.csv") if args.scratch else REVIEW

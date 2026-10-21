@@ -97,7 +97,13 @@ LABELS = {"SEBI_ACT": "SEBI Act", "SCRA": "SCRA", "SCRR": "SCRR", "DEPOSITORIES_
 
 
 def regime_of(name: str) -> str | None:
-    """Regime code for the words inside a title's parentheses or an abbreviation."""
+    """Regime code for the words inside a title's parentheses or an abbreviation.
+
+    Args:
+        name (str): words from a title's parentheses or an abbreviation, e.g. "Prohibition of Insider Trading".
+    Returns:
+        str | None: the regime code (PFUTP, PIT, SAST …), or None.
+    """
     name = " ".join(name.split())
     for code, rx in _REGIME_RES:
         if rx.search(name):
@@ -106,6 +112,13 @@ def regime_of(name: str) -> str | None:
 
 
 def label(regime: str) -> str:
+    """How a regime code is written in the ``regulations`` list.
+
+    Args:
+        regime (str): a regime code, e.g. "SEBI_ACT".
+    Returns:
+        str: its label, e.g. "SEBI Act" (other codes are used as they are).
+    """
     return LABELS.get(regime, regime)
 
 
@@ -154,18 +167,39 @@ _GENERIC = re.compile(r"(?:the\s+)?(?:said\s+|aforesaid\s+|above\s+|above[\s-]me
 
 @dataclass(frozen=True)
 class Instrument:
+    """An instrument a citation refers to.
+
+    Attributes:
+        regime (str): its code; year (int | None): where stated;
+        how (str): how it was named — title, act, abbrev, alias, generic or default.
+    """
     regime: str
     year: int | None
     how: str  # title / act / abbrev / alias / generic / default
 
 
 def _year(m: re.Match) -> int | None:
+    """The ``year`` group of a match, as an int.
+
+    Args:
+        m (re.Match): a match with an optional ``year`` group.
+    Returns:
+        int | None: the year, or None.
+    """
     y = m.groupdict().get("year")
     return int(y) if y else None
 
 
 def match_instrument(text: str, pos: int, aliases: dict[str, Instrument]) -> tuple[Instrument, int] | None:
-    """The instrument named at ``text[pos:]`` and where its name ends."""
+    """The instrument named at ``text[pos:]`` and where its name ends.
+
+    Args:
+        text (str): the sentence.
+        pos (int): where the instrument's name should start (after "of").
+        aliases (dict[str, Instrument]): the order's own aliases (find_aliases).
+    Returns:
+        tuple[Instrument, int] | None: the instrument and the offset where its name ends, or None.
+    """
     m = _TITLE.match(text, pos)
     if m and (code := regime_of(m.group("name"))):
         return Instrument(code, _year(m), "title"), m.end()
@@ -205,6 +239,13 @@ _NOT_ALIAS = re.compile(r"^(?:SEBI|Board|Company|Noticee|Noticees|AO|IP|Investig
 
 
 def _akey(s: str) -> str:
+    """An alias's lookup key: lower case, no leading “the”, no trailing year.
+
+    Args:
+        s (str): an alias as written.
+    Returns:
+        str: the key.
+    """
     s = re.sub(r"^\s*the\s+", "", s.strip(), flags=_I)
     s = re.sub(r"\s*,?\s*(?:19|20)\d\d\s*$", "", s)
     return " ".join(s.lower().split())
@@ -212,7 +253,13 @@ def _akey(s: str) -> str:
 
 def find_aliases(flat: str) -> dict[str, Instrument]:
     """Aliases defined right after an instrument's title:
-    "... Regulations, 2003 (hereinafter referred to as 'PFUTP Regulations' / 'the Regulations')"."""
+    "... Regulations, 2003 (hereinafter referred to as 'PFUTP Regulations' / 'the Regulations')".
+
+    Args:
+        flat (str): the order's text (normalised).
+    Returns:
+        dict[str, Instrument]: alias key → the instrument it stands for.
+    """
     out: dict[str, Instrument] = {}
     starts = [m.start() for m in re.finditer(r"Securities\s+and\s+Exchange|SEBI|Securities\s+Contracts?|"
                                              r"Depositories\s+Act|Companies\s+Act|Listing\s+Agreement", flat, _I)]
@@ -299,17 +346,37 @@ _CHAIN = re.compile(r"^(?:[\s,;]|\band\b|&|\bor\b|read\s+with|r/w|r\.w\.|as\s+we
 
 
 def _family(kw: str) -> str:
+    """The keyword family of a citation word.
+
+    Args:
+        kw (str): "Regulations", "Sec.", "sub-clause", "u/s" ….
+    Returns:
+        str: regulation, section, clause, rule, para, article or other.
+    """
     k = re.sub(r"^sub[\s-]*", "", kw.lower()).rstrip(".")
     k = k[:-1] if k.endswith("s") else k
     return _KW_FAMILY.get(k, "other")
 
 
 def _norm_top(top: str) -> str:
+    """A top-level provision number normalised: spaces and hyphens dropped, upper case.
+
+    Args:
+        top (str): e.g. "15 ha".
+    Returns:
+        str: e.g. "15HA".
+    """
     return re.sub(r"[\s-]", "", top).upper()
 
 
 def expand(list_text: str) -> list[str]:
-    """"3(a), (b), 4(1) and 4(2)(a), (e)" → ["3(a)", "3(b)", "4(1)", "4(2)(a)", "4(2)(e)"]."""
+    """"3(a), (b), 4(1) and 4(2)(a), (e)" → ["3(a)", "3(b)", "4(1)", "4(2)(a)", "4(2)(e)"].
+
+    Args:
+        list_text (str): a provision list as written.
+    Returns:
+        list[str]: each provision spelled in full, unique, in order.
+    """
     out: list[str] = []
     top, subs = None, []
     for m in _ITEM_RE.finditer(list_text):
@@ -329,11 +396,25 @@ def expand(list_text: str) -> list[str]:
 
 
 def top_of(provision: str) -> str:
+    """A provision's top level.
+
+    Args:
+        provision (str): e.g. "4(2)(a)".
+    Returns:
+        str: e.g. "4".
+    """
     return provision.split("(", 1)[0]
 
 
 @dataclass
 class Citation:
+    """One provision cited in a sentence.
+
+    Attributes:
+        regime (str), year (int | None), provision (str), keyword (str), role (str): violation, penalty,
+        power or cited; how (str): how the instrument was named; start (int): offset in the sentence;
+        text (str): the citation as written.
+    """
     regime: str
     year: int | None
     provision: str       # "3(a)", "12A", "4(2)(e)"
@@ -345,6 +426,15 @@ class Citation:
 
 
 def role_for(regime: str, provision: str, year: int | None = None) -> str | None:
+    """The role a provision has by its nature alone (penalty or power sections), if any.
+
+    Args:
+        regime (str): the instrument's code.
+        provision (str): the provision.
+        year (int | None): the instrument's year (SAST 1997 and 2011 differ).
+    Returns:
+        str | None: "power" or "penalty", or None (decided from the text around it).
+    """
     top = top_of(provision)
     if regime in PROCEDURAL:
         return "power"
@@ -360,7 +450,14 @@ def role_for(regime: str, provision: str, year: int | None = None) -> str | None
 
 
 def find_citations(sentence: str, aliases: dict[str, Instrument]) -> tuple[list[Citation], int]:
-    """Every resolved citation in one sentence, and the number of provisions left unresolved."""
+    """Every resolved citation in one sentence, and the number of provisions left unresolved.
+
+    Args:
+        sentence (str): one sentence.
+        aliases (dict[str, Instrument]): the order's aliases.
+    Returns:
+        tuple[list[Citation], int]: the resolved citations, and how many provisions had no instrument.
+    """
     out: list[Citation] = []
     unresolved = 0
     masked = sentence       # unresolved citations blanked, so they do not break a chain
@@ -413,9 +510,24 @@ def find_citations(sentence: str, aliases: dict[str, Instrument]) -> tuple[list[
 
 
 def as_list(citations: list[Citation], roles=("violation",)) -> list[str]:
-    """``["PFUTP 3(a)", "SEBI Act 12A"]`` — unique, in order of first mention."""
+    """``["PFUTP 3(a)", "SEBI Act 12A"]`` — unique, in order of first mention.
+
+    Args:
+        citations (list[Citation]): an order's citations.
+        roles (tuple[str, ...]): which roles to keep (default: violations).
+    Returns:
+        list[str]: e.g. ["PFUTP 3(a)", "SEBI Act 12A"].
+    """
     return list(dict.fromkeys(f"{label(c.regime)} {c.provision}" for c in citations if c.role in roles))
 
 
 def regimes(citations: list[Citation], roles=("violation",)) -> list[str]:
+    """The instruments cited in the given roles, unique, in order.
+
+    Args:
+        citations (list[Citation]): an order's citations.
+        roles (tuple[str, ...]): which roles to keep.
+    Returns:
+        list[str]: labels such as "PFUTP", "SEBI Act".
+    """
     return list(dict.fromkeys(label(c.regime) for c in citations if c.role in roles))

@@ -56,6 +56,11 @@ _BROWSER_UA = (
 
 
 def user_agent() -> str:
+    """The User-Agent sent with every request: a browser string, plus SEBI_CONTACT when set.
+
+    Returns:
+        str: the header value, e.g. "Mozilla/5.0 … (academic research, contact: you@…)".
+    """
     contact = os.environ.get("SEBI_CONTACT", "").strip()
     if contact:
         return f"{_BROWSER_UA} (academic research, contact: {contact})"
@@ -84,11 +89,23 @@ class BlockedResponse(FetchError):
 
 
 def set_offline(value: bool) -> None:
+    """Switch the whole module to cache-only mode (what ``--offline`` does).
+
+    Args:
+        value (bool): True makes every cache miss raise CacheMiss instead of fetching.
+    Returns:
+        None. Sets the module-level ``OFFLINE`` flag.
+    """
     global OFFLINE
     OFFLINE = bool(value)
 
 
 def reset_stats() -> None:
+    """Zero the network-call counter (``NETWORK_CALLS``) before a run.
+
+    Returns:
+        None.
+    """
     global NETWORK_CALLS
     NETWORK_CALLS = 0
 
@@ -98,6 +115,11 @@ def _canonical_payload(payload: Mapping[str, Any] | Iterable[tuple[str, Any]] | 
 
     Sorted and percent-encoded, so that neither key order nor a value
     containing ``&`` or ``=`` can make two different requests collide.
+
+    Args:
+        payload (Mapping[str, Any] | Iterable[tuple[str, Any]] | None): query params or a form body.
+    Returns:
+        str: the sorted, percent-encoded pairs ("" when there is no payload).
     """
     if not payload:
         return ""
@@ -114,7 +136,17 @@ def cache_key(
     data: Mapping[str, Any] | None = None,
     extra: str | None = None,
 ) -> str:
-    """Hex digest identifying a request. See module docstring for what is in it."""
+    """Hex digest identifying a request. See module docstring for what is in it.
+
+    Args:
+        url (str): the request URL.
+        method (str): HTTP method, "GET" or "POST".
+        params (Mapping[str, Any] | None): query-string parameters.
+        data (Mapping[str, Any] | None): form body.
+        extra (str | None): an extra key part, e.g. "retry-1" to store a second copy of a request.
+    Returns:
+        str: a 64-character SHA-256 hex digest — the cache file's name.
+    """
     parts = [
         method.upper(),
         url.strip(),
@@ -126,14 +158,37 @@ def cache_key(
 
 
 def cache_path(url: str, **kwargs: Any) -> pathlib.Path:
+    """Where a request's response is (or would be) stored.
+
+    Args:
+        url (str): the request URL.
+        **kwargs: method, params, data, extra — as for cache_key.
+    Returns:
+        pathlib.Path: ``raw/cache/<sha256>``.
+    """
     return CACHE / cache_key(url, **kwargs)
 
 
 def is_cached(url: str, **kwargs: Any) -> bool:
+    """Whether a request's response is already on disk.
+
+    Args:
+        url (str): the request URL.
+        **kwargs: method, params, data, extra — as for cache_key.
+    Returns:
+        bool: True if the cache file exists.
+    """
     return cache_path(url, **kwargs).exists()
 
 
 def _looks_blocked(content: bytes) -> bool:
+    """Whether a body is SEBI's firewall page ("Unauthorized Request Blocked").
+
+    Args:
+        content (bytes): a response body.
+    Returns:
+        bool: True for a firewall interstitial.
+    """
     head = content[:4096].lower()
     return (
         b"unauthorized request blocked" in head
@@ -146,12 +201,24 @@ def default_validator(content: bytes) -> bool:
 
     A blocked page returns a perfectly well-formed 200-or-530 body; caching it
     would silently corrupt the corpus with pages that contain no orders.
+
+    Args:
+        content (bytes): a response body.
+    Returns:
+        bool: True if the body may be cached (it is not a firewall page).
     """
     return not _looks_blocked(content)
 
 
 def _write_atomic(path: pathlib.Path, content: bytes) -> None:
-    """Write via a temp file so an interrupted run cannot leave a truncated entry."""
+    """Write via a temp file so an interrupted run cannot leave a truncated entry.
+
+    Args:
+        path (pathlib.Path): destination file.
+        content (bytes): what to write.
+    Returns:
+        None. Writes ``path`` through a temporary file and a rename.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / f"{path.name}.tmp-{os.urandom(6).hex()}"
     try:
@@ -179,15 +246,26 @@ def fetch(
     """Return the response body for a request, from disk when possible.
 
     Args:
-        method: ``GET`` or ``POST`` (anything httpx accepts).
-        params: query string parameters; part of the cache key.
-        data: form body; part of the cache key.
-        headers: sent, but deliberately *not* part of the cache key.
-        force: re-fetch and overwrite the cached entry.
-        retries: attempts beyond the first for transient failures.
-        validate: ``bytes -> bool``; a False result is treated as a transient
+        url (str): the request URL.
+        method (str): ``GET`` or ``POST`` (anything httpx accepts).
+        params (Mapping[str, Any] | None): query string parameters; part of the cache key.
+        data (Mapping[str, Any] | None): form body; part of the cache key.
+        headers (Mapping[str, str] | None): sent, but deliberately *not* part of the cache key.
+        force (bool): re-fetch and overwrite the cached entry.
+        timeout (float): seconds per attempt.
+        retries (int): attempts beyond the first for transient failures.
+        validate (Callable[[bytes], bool] | None): a False result is treated as a transient
             failure and the body is not cached. Defaults to rejecting WAF pages.
-        offline: raise :class:`CacheMiss` rather than hit the network.
+        cache_key_extra (str | None): an extra cache-key part, to store a second copy of a request
+            ("retry-1") without overwriting the first (raw/ is append-only).
+        offline (bool | None): raise :class:`CacheMiss` rather than hit the network (None = the
+            module-wide ``OFFLINE`` flag).
+
+    Returns:
+        bytes: the response body, from the cache or freshly fetched (then cached).
+    Raises:
+        CacheMiss: offline and not cached.
+        FetchError: a non-retryable HTTP error (most 4xx, 3xx redirects) or retries exhausted.
     """
     global NETWORK_CALLS
 
@@ -250,12 +328,29 @@ def get(
     """Cached GET. Also the unified entry point: pass ``method="POST", data=...``.
 
     ``cache.get(url)`` keeps working exactly as before.
+
+    Args:
+        url (str): the request URL.
+        params (Mapping[str, Any] | None): query-string parameters (part of the cache key).
+        force (bool): re-fetch and overwrite the cached entry (never used on raw data: raw/ is append-only).
+        **kwargs: anything fetch() takes (headers, method, data, retries, timeout, offline, cache_key_extra …).
+    Returns:
+        bytes: the response body.
     """
     kwargs.setdefault("method", "GET")
     return fetch(url, params=params, force=force, **kwargs)
 
 
 def post(url: str, data: Mapping[str, Any], force: bool = False, **kwargs: Any) -> bytes:
-    """Cached form-encoded POST — e.g. one SEBI listing page per call."""
+    """Cached form-encoded POST — e.g. one SEBI listing page per call.
+
+    Args:
+        url (str): the request URL.
+        data (Mapping[str, Any]): form body (part of the cache key).
+        force (bool): re-fetch and overwrite the cached entry.
+        **kwargs: anything fetch() takes.
+    Returns:
+        bytes: the response body.
+    """
     kwargs.pop("method", None)
     return fetch(url, method="POST", data=data, force=force, **kwargs)

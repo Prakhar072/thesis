@@ -66,11 +66,25 @@ FUND_RE = re.compile(r"\bMF\b|MUTUAL FUND|\bFTF\b|\bETF\b|\bPLAN\b|\bSCHEME\b|\b
 
 
 def bse_params(status: str) -> dict:
+    """Query parameters for BSE's list of scrips of one status.
+
+    Args:
+        status (str): "Active", "Delisted" or "Suspended".
+    Returns:
+        dict: the query string (segment Equity).
+    """
     return {"Group": "", "Scripcode": "", "industry": "", "segment": "Equity", "status": status}
 
 
 def firm_id(isin, fallback: str) -> str:
-    """The issuer part of an ISIN (IN9 → INE), else the fallback id."""
+    """The issuer part of an ISIN (IN9 → INE), else the fallback id.
+
+    Args:
+        isin (str | None): an ISIN (any case, may be "NA").
+        fallback (str): the id to use without a valid ISIN, e.g. "BSE:526811".
+    Returns:
+        str: "INE" + characters 4–7 of the ISIN (e.g. "INE117A"), else the fallback.
+    """
     if isinstance(isin, str) and ISIN_RE.match(isin.strip().upper()):
         isin = isin.strip().upper()
         return "INE" + isin[3:7]
@@ -78,6 +92,13 @@ def firm_id(isin, fallback: str) -> str:
 
 
 def clean_isin(isin) -> str | None:
+    """A valid equity ISIN, upper case, or None.
+
+    Args:
+        isin: a cell from a list.
+    Returns:
+        str | None: the ISIN (IN + E/9 + 9 characters + check digit), or None.
+    """
     if not isinstance(isin, str):
         return None
     isin = isin.strip().upper()
@@ -85,13 +106,26 @@ def clean_isin(isin) -> str | None:
 
 
 def _dates(s: pd.Series) -> pd.Series:
-    """NSE writes 06-OCT-2008 in one file and 12-Oct-26 in another."""
+    """NSE writes 06-OCT-2008 in one file and 12-Oct-26 in another.
+
+    Args:
+        s (pd.Series): date strings.
+    Returns:
+        pd.Series: datetime.date values (None where unreadable).
+    """
     s = s.astype(str).str.strip()
     out = pd.to_datetime(s, format="%d-%b-%Y", errors="coerce")
     return out.fillna(pd.to_datetime(s, format="%d-%b-%y", errors="coerce")).dt.date
 
 
 def _csv(content: bytes) -> pd.DataFrame:
+    """Read one of NSE's CSV lists: all strings, column names upper case with underscores, cells stripped.
+
+    Args:
+        content (bytes): the file.
+    Returns:
+        pd.DataFrame: the list.
+    """
     df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False)
     df.columns = [re.sub(r"[\s_]+", "_", c.strip().upper()) for c in df.columns]
     df = df.loc[:, [c for c in df.columns if c]]
@@ -101,6 +135,14 @@ def _csv(content: bytes) -> pd.DataFrame:
 # --- parsing --------------------------------------------------------------------------------------------------
 
 def parse_bse(lists: dict[str, bytes]) -> pd.DataFrame:
+    """BSE's three lists → universe rows (fund units dropped).
+
+    Args:
+        lists (dict[str, bytes]): status → the JSON response.
+    Returns:
+        pd.DataFrame: one row per scrip: exchange "BSE", code, symbol, isin, firm_id, name, short_name, status,
+        group, series, face_value, listing_date, source.
+    """
     rows = []
     for status, content in lists.items():
         for r in json.loads(content):
@@ -119,6 +161,14 @@ def parse_bse(lists: dict[str, bytes]) -> pd.DataFrame:
 
 
 def parse_nse(content: bytes, source: str) -> pd.DataFrame:
+    """One of NSE's lists → universe rows.
+
+    Args:
+        content (bytes): EQUITY_L.csv or SME_EQUITY_L.csv.
+        source (str): "nse_equity" or "nse_sme".
+    Returns:
+        pd.DataFrame: one row per symbol, the same columns as parse_bse (status "Active").
+    """
     d = _csv(content)
     return pd.DataFrame({
         "exchange": "NSE", "code": d.SYMBOL, "symbol": d.SYMBOL, "isin": d.ISIN_NUMBER.map(clean_isin),
@@ -129,7 +179,13 @@ def parse_nse(content: bytes, source: str) -> pd.DataFrame:
 
 
 def symbol_chain(symbolchange: pd.DataFrame) -> dict[str, str]:
-    """Old NSE symbol → its latest symbol, following chains (A → B → C)."""
+    """Old NSE symbol → its latest symbol, following chains (A → B → C).
+
+    Args:
+        symbolchange (pd.DataFrame): NSE's symbol changes (OLD_SYMBOL, NEW_SYMBOL).
+    Returns:
+        dict[str, str]: old symbol → its latest symbol.
+    """
     step = dict(zip(symbolchange.OLD_SYMBOL, symbolchange.NEW_SYMBOL))
     out = {}
     for old in step:
@@ -147,7 +203,16 @@ def name_changes(namechange: pd.DataFrame, symbolchange: pd.DataFrame, universe:
 
     The symbol is resolved to today's NSE list (directly or through symbol
     changes); failing that, the new or old name must equal (normalised) a name
-    already in the universe, and only one firm's."""
+    already in the universe, and only one firm's.
+
+    Args:
+        namechange (pd.DataFrame): NSE's name changes.
+        symbolchange (pd.DataFrame): NSE's symbol changes.
+        universe (pd.DataFrame): the securities.
+        aliases (pd.DataFrame): the current names (alias_norm, firm_id).
+    Returns:
+        pd.DataFrame: firm_id (None if unplaced), symbol, old_name, new_name, effective, resolved_by.
+    """
     nse_firm = dict(zip(universe[universe.exchange == "NSE"].symbol, universe[universe.exchange == "NSE"].firm_id))
     chain = symbol_chain(symbolchange)
     by_name = aliases.groupby("alias_norm").firm_id.agg(lambda s: set(s))
@@ -174,6 +239,15 @@ def name_changes(namechange: pd.DataFrame, symbolchange: pd.DataFrame, universe:
 # --- building -------------------------------------------------------------------------------------------------
 
 def build(bse_lists: dict[str, bytes], nse: bytes, sme: bytes, namechange: bytes, symbolchange: bytes):
+    """Build the universe, the firm table, the aliases and the placed name changes from the raw snapshots.
+
+    Args:
+        bse_lists (dict[str, bytes]): BSE's lists by status.
+        nse (bytes), sme (bytes): NSE's equity and SME lists.
+        namechange (bytes), symbolchange (bytes): NSE's change files.
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]: (universe, firms, name_aliases, changes).
+    """
     universe = pd.concat([parse_bse(bse_lists), parse_nse(nse, "nse_equity"), parse_nse(sme, "nse_sme")],
                          ignore_index=True)
     universe["name_norm"] = universe["name"].map(norm)
@@ -202,7 +276,14 @@ def build(bse_lists: dict[str, bytes], nse: bytes, sme: bytes, namechange: bytes
 
 
 def firms(universe: pd.DataFrame) -> pd.DataFrame:
-    """One row per firm: its best name (NSE's if listed there, else BSE's full name) and its listings."""
+    """One row per firm: its best name (NSE's if listed there, else BSE's full name) and its listings.
+
+    Args:
+        universe (pd.DataFrame): the securities.
+    Returns:
+        pd.DataFrame: one row per firm_id: name, name_norm, status, isins / bse_codes / nse_symbols (JSON),
+        on_bse, on_nse, bse_status, nse_listing_date.
+    """
     rows = []
     for fid, g in universe.groupby("firm_id", sort=True):
         nse, bse = g[g.exchange == "NSE"], g[g.exchange == "BSE"]
@@ -219,7 +300,13 @@ def firms(universe: pd.DataFrame) -> pd.DataFrame:
 
 
 def fetch_all(offline: bool = False) -> dict:
-    """The six snapshots, from the cache (or the network the first time: six requests)."""
+    """The six snapshots, from the cache (or the network the first time: six requests).
+
+    Args:
+        offline (bool): cache only.
+    Returns:
+        dict: bse_lists (dict[str, bytes]), nse, sme, namechange, symbolchange (bytes) — build()'s arguments.
+    """
     get = lambda url, **kw: cache.get(url, offline=offline, retries=2, **kw)  # noqa: E731
     return {
         "bse_lists": {s: get(BSE_LIST, params=bse_params(s), headers=BSE_HEADERS) for s in BSE_STATUSES},
@@ -229,7 +316,11 @@ def fetch_all(offline: bool = False) -> dict:
 
 
 def snapshot_dates() -> dict:
-    """When each source was fetched (its cache file's mtime)."""
+    """When each source was fetched (its cache file's mtime).
+
+    Returns:
+        dict: source name → "YYYY-MM-DD" (None if not cached yet).
+    """
     out = {f"bse_{s.lower()}": cache.cache_path(BSE_LIST, params=bse_params(s)) for s in BSE_STATUSES}
     out |= {"nse_equity": cache.cache_path(NSE_EQUITY), "nse_sme": cache.cache_path(NSE_SME),
             "nse_namechange": cache.cache_path(NSE_NAMECHANGE), "nse_symbolchange": cache.cache_path(NSE_SYMBOLCHANGE)}
@@ -238,6 +329,11 @@ def snapshot_dates() -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.universe``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.universe",
                                      description="Build the listed universe and name aliases (Week 4 Day 1)")
     parser.add_argument("--offline", action="store_true", help="cache only: fail rather than fetch")
@@ -247,6 +343,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run Week 4 Day 1: fetch (or read cached) lists and write universe, firms and name_aliases.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     outs = {k: out_dir / f"{k}.parquet" for k in ("universe", "firms", "name_aliases")}

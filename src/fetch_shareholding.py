@@ -60,11 +60,25 @@ MONTHS = {m: i for i, m in enumerate(["January", "February", "March", "April", "
 
 
 def qtrid(quarter_end: dt.date) -> str:
-    """BSE's quarter id: 60 for December 2008, one more per quarter."""
+    """BSE's quarter id: 60 for December 2008, one more per quarter.
+
+    Args:
+        quarter_end (datetime.date): a quarter's last day.
+    Returns:
+        str: BSE's id, e.g. "120.00" for 31 December 2023.
+    """
     return f"{60 + 4 * (quarter_end.year - 2008) + quarter_end.month // 3 - 4}.00"
 
 
 def quarter_ends(start: dt.date, end: dt.date, quarterly: bool) -> list[dt.date]:
+    """Quarter-end dates in a range: March only, or all four.
+
+    Args:
+        start (datetime.date), end (datetime.date): the range.
+        quarterly (bool): every quarter instead of March only.
+    Returns:
+        list[datetime.date]: the quarter ends.
+    """
     out = []
     for y in range(start.year, end.year + 1):
         for m, last in ((3, 31), (6, 30), (9, 30), (12, 31)):
@@ -75,6 +89,13 @@ def quarter_ends(start: dt.date, end: dt.date, quarterly: bool) -> list[dt.date]
 
 
 def _num(text: str) -> float | None:
+    """A number from a table cell (Indian grouping commas removed).
+
+    Args:
+        text (str): the cell.
+    Returns:
+        float | None: the number, or None for "-", "--" or blank.
+    """
     t = (text or "").replace(",", "").strip()
     try:
         return float(t)
@@ -83,6 +104,13 @@ def _num(text: str) -> float | None:
 
 
 def _expanded_header(row) -> list[str]:
+    """A header row with each cell repeated by its colspan, aligned with the data cells.
+
+    Args:
+        row (bs4.Tag): the header ``<tr>``.
+    Returns:
+        list[str]: the header texts.
+    """
     out = []
     for cell in row.find_all(["td", "th"], recursive=False):
         out += [cell.get_text(" ", strip=True)] * int(cell.get("colspan") or 1)
@@ -90,6 +118,14 @@ def _expanded_header(row) -> list[str]:
 
 
 def _col(header: list[str], *words: str) -> int | None:
+    """The first header containing all the given words.
+
+    Args:
+        header (list[str]): the expanded header.
+        *words (str): lower-case words.
+    Returns:
+        int | None: its index, or None.
+    """
     for i, h in enumerate(header):
         low = h.lower()
         if all(w in low for w in words):
@@ -98,7 +134,14 @@ def _col(header: list[str], *words: str) -> int | None:
 
 
 def parse_summary(content: bytes) -> dict:
-    """One summary → promoter holding, pledges, total shares; ``status`` empty when the quarter has no table."""
+    """One summary → promoter holding, pledges, total shares; ``status`` empty when the quarter has no table.
+
+    Args:
+        content (bytes): BSE's JSON response.
+    Returns:
+        dict: quarter_label, status (ok / empty / unparsed), promoter_pct, promoter_shares, total_shares,
+        pledged_shares, pledged_pct, pledge_answer, promoter_holders.
+    """
     data = json.loads(content).get("Data") or ""
     soup = BeautifulSoup(data, "lxml")
     text = soup.get_text(" ", strip=True)
@@ -140,7 +183,13 @@ def parse_summary(content: bytes) -> dict:
 
 
 def firm_codes(sample: pd.DataFrame) -> pd.DataFrame:
-    """(firm_id, role, status, bse_code) for sample firms listed on BSE; the issuer's own code first."""
+    """(firm_id, role, status, bse_code) for sample firms listed on BSE; the issuer's own code first.
+
+    Args:
+        sample (pd.DataFrame): the frozen sample.
+    Returns:
+        pd.DataFrame: firm_id, role, status, bse_code (None for firms not on BSE).
+    """
     rows = []
     for r in sample.itertuples():
         codes = json.loads(r.bse_codes) if isinstance(r.bse_codes, str) else []
@@ -151,7 +200,14 @@ def firm_codes(sample: pd.DataFrame) -> pd.DataFrame:
 
 
 def trading_spans(prices_dir: pathlib.Path, since: int) -> dict[str, tuple[dt.date, dt.date]]:
-    """BSE scrip code → (first, last) trading day in the price files from ``since`` on."""
+    """BSE scrip code → (first, last) trading day in the price files from ``since`` on.
+
+    Args:
+        prices_dir (pathlib.Path): ``derived/prices``.
+        since (int): first year of price files to read.
+    Returns:
+        dict[str, tuple[datetime.date, datetime.date]]: BSE code → (first, last) trading day.
+    """
     spans: dict[str, list[dt.date]] = {}
     for p in sorted(prices_dir.glob("BSE_*.parquet")):
         if int(p.stem.split("_")[1]) < since:
@@ -164,6 +220,14 @@ def trading_spans(prices_dir: pathlib.Path, since: int) -> dict[str, tuple[dt.da
 
 
 def in_span(quarters: list[dt.date], span: tuple[dt.date, dt.date] | None) -> list[dt.date]:
+    """The quarters within a firm's trading span, with a quarter's margin either side.
+
+    Args:
+        quarters (list[datetime.date]): candidate quarter ends.
+        span (tuple[datetime.date, datetime.date] | None): its first and last trading day.
+    Returns:
+        list[datetime.date]: the quarters to ask for ([] when the firm has no span).
+    """
     if span is None:
         return []
     lo, hi = span
@@ -171,6 +235,15 @@ def in_span(quarters: list[dt.date], span: tuple[dt.date, dt.date] | None) -> li
 
 
 def fetch_firm(firm: dict, quarters: list[dt.date], offline: bool) -> list[dict]:
+    """Ask BSE for one firm's summaries, quarter by quarter; a delisted firm stops after two empties.
+
+    Args:
+        firm (dict): firm_id, bse_code, status.
+        quarters (list[datetime.date]): the quarters to ask for.
+        offline (bool): cache only.
+    Returns:
+        list[dict]: one row per quarter asked (parse_summary's fields plus firm_id, bse_code, quarter_end, qtrid).
+    """
     out, seen_data, empties_after = [], False, 0
     for q in quarters:
         row = {"firm_id": firm["firm_id"], "bse_code": firm["bse_code"], "quarter_end": q, "qtrid": qtrid(q)}
@@ -193,6 +266,11 @@ def fetch_firm(firm: dict, quarters: list[dt.date], offline: bool) -> list[dict]
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.fetch_shareholding``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.fetch_shareholding",
                                      description="Promoter holding and pledging from BSE shareholding patterns")
     parser.add_argument("--sample", type=pathlib.Path, default=DERIVED_DIR / "sample.parquet")
@@ -210,6 +288,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run Week 4 Day 5: fetch and parse the sample firms' shareholding summaries, checkpointing.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_path = (args.scratch or DERIVED_DIR) / "shareholding.parquet"
     assert_safe_output(out_path)

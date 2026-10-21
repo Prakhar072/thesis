@@ -1,10 +1,11 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-10-14 (Week 4 built: universe, matching, sample, prices, ownership, panel — scratch-verified;
-the long fetches and the hand review are the user's. Week 3 hand coding deferred by the user). Read this before
-touching code or data.
-Companion docs: `timeline.md` (the thesis runbook: weekly plan, 8 rules, target
-schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
+Last updated: 2026-10-21 (every function documented with typed Args/Returns; `CODE_GUIDE.md` and `TASKS.md` added;
+Week 4 built and scratch-verified, its runs and the Week 3 hand coding are the user's). Read this before touching
+code or data.
+Companion docs: `TASKS.md` (**the user's remaining tasks, in order, with instructions**), `CODE_GUIDE.md` (every file:
+what it does, inputs/outputs, key functions, what to check), `timeline.md` (the thesis runbook: weekly plan, 8 rules,
+target schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
 `results_log.md` (every published figure with provenance), `hand/recon_notes.md`
 (verified SEBI protocol notes and how orders state the window), `hand/coding_protocol.md`
 (the coding rules for window, fraud category, issuer, detection channel), `audit/`
@@ -51,6 +52,10 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   examination period.
 
 ## 2. Status (Week 4 built; Week 3 hand coding deferred)
+
+`TASKS.md` is the user's step-by-step list (recommended order: start the price download, draw the blind sample,
+match and review, freeze, code the 150, score, ownership download, panel; decisions D1–D5; code review; writing).
+Keep it in step with the tables below when a task is done or added.
 
 **Pending on the user (Week 4; nothing here has been run into `derived/`), in order:**
 
@@ -265,6 +270,10 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
     re-coding the affected orders; never edit a rule silently.
+11. **Every function and class documents its inputs and output with types** (user request, 2026-10-21): a docstring
+    with `Args:` (each parameter, with its type) and `Returns:` (or `Yields:`; `Raises:` where it raises), and
+    `Attributes:` for dataclasses. Keep this for new and changed code, and keep `CODE_GUIDE.md` in step when a module
+    changes.
 
 ## 4. Environment
 

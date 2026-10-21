@@ -142,6 +142,13 @@ EDGE_LINES = 5
 
 
 def _line_key(line: str) -> str:
+    """A line's identity for header/footer detection: lower case, whitespace collapsed, digits as #.
+
+    Args:
+        line (str): one text line.
+    Returns:
+        str: the key ("Page 3 of 11" and "Page 4 of 11" share one).
+    """
     return _DIGITS.sub("#", _WS.sub(" ", line).strip().lower())
 
 
@@ -153,6 +160,13 @@ def strip_repeated_lines(text: str, *, min_pages: int = 3, share: float = 0.5) -
     or bottom of at least ``share`` of the pages (and of ``min_pages`` pages).
     Removed lines are overwritten with spaces, so offsets into the stripped
     text are offsets into the original file.
+
+    Args:
+        text (str): an order's text, pages separated by form feed.
+        min_pages (int): a line must repeat on at least this many pages.
+        share (float): … and on at least this share of the pages.
+    Returns:
+        str: the text with header/footer lines replaced by spaces (same length, same offsets).
     """
     pages = text.split(PAGE_SEPARATOR)
     if len(pages) < min_pages:
@@ -199,6 +213,13 @@ _DOTTED = re.compile(r"(?:[a-z]\.)*[a-z]")
 
 
 def _is_abbreviation(before: str) -> bool:
+    """Whether the token before a full stop is an abbreviation or initial (no sentence break).
+
+    Args:
+        before (str): the text up to the full stop.
+    Returns:
+        bool: True for "Ltd", "No", "S.E.B.I" and the like.
+    """
     m = _LAST_TOKEN.search(before)
     if not m:
         return False
@@ -207,6 +228,14 @@ def _is_abbreviation(before: str) -> bool:
 
 
 def _trim(text: str, start: int, end: int) -> tuple[int, int]:
+    """Move a span's ends inward past whitespace.
+
+    Args:
+        text (str): the text.
+        start (int), end (int): the span.
+    Returns:
+        tuple[int, int]: the trimmed span.
+    """
     while start < end and text[start].isspace():
         start += 1
     while end > start and text[end - 1].isspace():
@@ -215,7 +244,14 @@ def _trim(text: str, start: int, end: int) -> tuple[int, int]:
 
 
 def _resplit_long(text: str, start: int, end: int) -> list[tuple[int, int]]:
-    """Break an over-long "sentence" at blank lines, then single line breaks."""
+    """Break an over-long "sentence" at blank lines, then single line breaks.
+
+    Args:
+        text (str): the text.
+        start (int), end (int): an over-long sentence's span.
+    Returns:
+        list[tuple[int, int]]: spans of at most about MAX_SENTENCE characters.
+    """
     pieces = [(start, end)]
     for pattern in (re.compile(r"\n[ \t]*\n"), re.compile(r"\n")):
         out = []
@@ -247,6 +283,12 @@ def split_sentences(text: str, groups: bool = False) -> list[tuple[int, int]] | 
     one over-long sentence by ``_resplit_long`` share a group, so a stage that
     must read a clause with the table after it ("I hereby impose the following
     penalty … – [table]") can put them back together.
+
+    Args:
+        text (str): an order's text (headers stripped).
+        groups (bool): also return each span's group id.
+    Returns:
+        list[tuple[int, int]] | list[tuple[int, int, int]]: (start, end) offsets, or (start, end, group).
     """
     if groups:
         return _split_sentences(text)
@@ -254,6 +296,13 @@ def split_sentences(text: str, groups: bool = False) -> list[tuple[int, int]] | 
 
 
 def _split_sentences(text: str) -> list[tuple[int, int, int]]:
+    """Sentence spans with group ids (the implementation of split_sentences).
+
+    Args:
+        text (str): the text.
+    Returns:
+        list[tuple[int, int, int]]: (start, end, group) per sentence piece.
+    """
     spans = []
     start = 0
     for m in _BOUNDARY.finditer(text):
@@ -275,6 +324,13 @@ def _split_sentences(text: str) -> list[tuple[int, int, int]]:
 
 
 def normalise_sentence(text: str) -> str:
+    """A sentence as stored: form feeds and runs of whitespace become single spaces.
+
+    Args:
+        text (str): raw sentence text.
+    Returns:
+        str: the normalised sentence (``violation_raw`` and candidate sentences use this form).
+    """
     return _WS.sub(" ", text.replace(PAGE_SEPARATOR, " ")).strip()
 
 
@@ -337,20 +393,46 @@ FY_RANGE = re.compile(
 
 @dataclass(frozen=True)
 class ParsedDate:
+    """A date as read from the text, with its precision.
+
+    Attributes:
+        year (int | None): None for a partial date ("February 28" at a range start).
+        month (int): 1–12.
+        day (int | None): None = month precision.
+    """
     year: int | None
     month: int
     day: int | None  # None: month precision
 
     @property
     def precision(self) -> str:
+        """How precise the date is.
+
+        Returns:
+            str: "day" or "month".
+        """
         return "day" if self.day is not None else "month"
 
 
 def _month(token: str) -> int | None:
+    """A month name or abbreviation as a number.
+
+    Args:
+        token (str): e.g. "Sept." or "march".
+    Returns:
+        int | None: 1–12, or None if not a month.
+    """
     return MONTHS.get(token.lower().rstrip("."))
 
 
 def _year(text: str) -> int:
+    """A year token as a four-digit year (two digits: 80–99 → 1900s, else 2000s).
+
+    Args:
+        text (str): "2014" or "14".
+    Returns:
+        int: the year.
+    """
     y = int(text)
     if len(text) == 2:
         y += 1900 if y >= 80 else 2000
@@ -370,7 +452,13 @@ _P_M = re.compile(rf"({_MON})", re.I)
 
 
 def _read_date(t: str) -> tuple[int | None, int | None, int | None] | None:
-    """``(year, month, day)`` from a token, day-first for numeric dates."""
+    """``(year, month, day)`` from a token, day-first for numeric dates.
+
+    Args:
+        t (str): a normalised date token.
+    Returns:
+        tuple[int | None, int | None, int | None] | None: (year, month, day), or None if no form fits.
+    """
     if m := _P_DMYH.fullmatch(t):
         return _year(m.group(3)), _month(m.group(2)), int(m.group(1))
     if m := _P_DMY.fullmatch(t):
@@ -399,6 +487,11 @@ def parse_date(token: str) -> ParsedDate | None:
 
     Numeric dates are day-first. Returns None for anything that is not a real
     calendar date in ``MIN_YEAR..MAX_YEAR`` (a partial date has year None).
+
+    Args:
+        token (str): a date token.
+    Returns:
+        ParsedDate | None: the date, or None if it is not a valid calendar date in range.
     """
     read = _read_date(normalise_sentence(token))
     if read is None:
@@ -417,15 +510,38 @@ def parse_date(token: str) -> ParsedDate | None:
 
 
 def as_start(p: ParsedDate) -> dt.date:
+    """A parsed date as the start of a window (month precision → the 1st).
+
+    Args:
+        p (ParsedDate): a date with a year.
+    Returns:
+        datetime.date: the start date.
+    """
     return dt.date(p.year, p.month, p.day or 1)
 
 
 def as_end(p: ParsedDate) -> dt.date:
+    """A parsed date as the end of a window (month precision → the month's last day).
+
+    Args:
+        p (ParsedDate): a date with a year.
+    Returns:
+        datetime.date: the end date.
+    """
     return dt.date(p.year, p.month, p.day or calendar.monthrange(p.year, p.month)[1])
 
 
 @dataclass
 class Window:
+    """A date range read from a sentence.
+
+    Attributes:
+        start (datetime.date), end (datetime.date): the window.
+        start_precision (str), end_precision (str): "day", "month" or "fy".
+        rule (str): range, range_year_inferred, fy, fy_range, patches_union, range_till_inspection, range_fy_list.
+        text (str): the matched text, verbatim.
+        span (tuple[int, int]): its offsets in the sentence.
+    """
     start: dt.date
     end: dt.date
     start_precision: str
@@ -436,7 +552,13 @@ class Window:
 
 
 def parse_range(m: re.Match) -> Window | None:
-    """Turn a ``RANGE`` match into a window, or None if it is not one."""
+    """Turn a ``RANGE`` match into a window, or None if it is not one.
+
+    Args:
+        m (re.Match): a match of RANGE.
+    Returns:
+        Window | None: the range, or None (two dates listed with "and", unparseable ends, start after end).
+    """
     pre = (m.group("pre") or "").lower()
     if m.group("conn").lower() == "and" and not pre.startswith(("between", "period")):
         # "letters dated X and Y" lists two dates; "between X and Y" and "for
@@ -466,8 +588,23 @@ def parse_range(m: re.Match) -> Window | None:
 
 
 def parse_fy(m: re.Match) -> Window | None:
-    """``FY 2011-12`` -> 1 Apr 2011..31 Mar 2012; ``FY 2011-12 to 2013-14`` spans both."""
+    """``FY 2011-12`` -> 1 Apr 2011..31 Mar 2012; ``FY 2011-12 to 2013-14`` spans both.
+
+    Args:
+        m (re.Match): a match of FY_RANGE.
+    Returns:
+        Window | None: 1 April of the first year to 31 March after the last, or None if the years are not
+        consecutive.
+    """
     def fy(first: str, second: str) -> int | None:
+        """The first year of a financial year written as two years.
+
+        Args:
+            first (str): "2011".
+            second (str): "12" or "2012".
+        Returns:
+            int | None: 2011, or None if the second year does not follow the first.
+        """
         y1 = int(first)
         y2 = int(second) if len(second) == 4 else (y1 // 100) * 100 + int(second)
         if len(second) == 2 and y2 < y1:  # 1999-00
@@ -534,6 +671,12 @@ def inspection_visit(sentence: str, window: Window) -> bool:
     the inspection during …" with no "for/covering" before the dates. Either
     way, nothing between "inspection" and the dates may make them the activity
     ("in the scrip", "observed that … traded").
+
+    Args:
+        sentence (str): the normalised sentence.
+        window (Window): a range found in it.
+    Returns:
+        bool: True if the range is the inspection visit itself (never the window).
     """
     s, e = window.span
     before = sentence[max(0, s - VISIT_LOOKBACK):s]
@@ -558,7 +701,14 @@ def inspection_visit(sentence: str, window: Window) -> bool:
 
 def till_inspection(sentence: str, visits: list[Window]) -> list[Window]:
     """ "for the period 01.04.2012 till the date of inspection", with the visit
-    dates elsewhere in the sentence: the covered period ends when the visit does."""
+    dates elsewhere in the sentence: the covered period ends when the visit does.
+
+    Args:
+        sentence (str): the normalised sentence.
+        visits (list[Window]): the inspection-visit ranges found in it.
+    Returns:
+        list[Window]: covered periods that end with the visit (rule range_till_inspection).
+    """
     if not visits:
         return []
     last = max(visits, key=lambda w: w.end)
@@ -581,7 +731,14 @@ _FY_LIST_FILLER = re.compile(r"^[\s,&\-–]*(?:(?:and|from|of|the)\b[\s,&\-–]*
 def extend_with_fy_list(sentence: str, window: Window) -> Window:
     """ "the period 2000-2001, 2001-2002 and from April 2002 till the date of
     inspection i.e. 24.05.2002": the range read is only the last part; the
-    financial years listed after "period" move its start back."""
+    financial years listed after "period" move its start back.
+
+    Args:
+        sentence (str): the normalised sentence.
+        window (Window): the range read.
+    Returns:
+        Window: the range with its start moved back to the first listed financial year, or unchanged.
+    """
     s = window.span[0]
     before = sentence[max(0, s - 80):s]
     at = before.lower().rfind("period")
@@ -605,7 +762,13 @@ _FILLER_YEARS = re.compile(r"(?<!\d)(?:19|20)\d{2}(?!\d)")
 
 
 def find_windows(sentence: str) -> list[Window]:
-    """Every date range and financial-year span in a sentence, in order."""
+    """Every date range and financial-year span in a sentence, in order.
+
+    Args:
+        sentence (str): a normalised sentence.
+    Returns:
+        list[Window]: the ranges and financial-year spans, by position.
+    """
     found = [w for m in RANGE.finditer(sentence) if (w := parse_range(m))]
     taken = [w.span for w in found]
     for m in FY_RANGE.finditer(sentence):
@@ -661,6 +824,14 @@ _PREFILTER = re.compile(r"period|investigat|examin|inspect|surveillance|\bIP\b|F
 
 @dataclass
 class Candidate:
+    """One candidate sentence: a row of ``derived/window_candidates.parquet`` (columns in CLAUDE.md §8).
+
+    Attributes:
+        text_stem (str), cand_rank (int, 1 = best), score (int), sent_index (int), char_start (int),
+        char_end (int), page_no (int), rel_pos (float), sentence (str), label_kind (str), label_text (str),
+        n_dates (int), n_ranges (int), negative (str | None), and what regex v1 read from it:
+        range_text, parsed_start, parsed_end, start_precision, end_precision, parse_rule, confidence.
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -688,6 +859,13 @@ class Candidate:
 
 
 def _labels(sentence: str) -> list[tuple[str, re.Match]]:
+    """Every period label in a sentence, with its kind.
+
+    Args:
+        sentence (str): a normalised sentence.
+    Returns:
+        list[tuple[str, re.Match]]: (kind, match) for each label found (kinds: defined … generic).
+    """
     out = []
     for kind, pattern in LABELS:
         for m in pattern.finditer(sentence):
@@ -696,6 +874,13 @@ def _labels(sentence: str) -> list[tuple[str, re.Match]]:
 
 
 def _best_kind(labels: list[tuple[str, re.Match]]) -> tuple[str, re.Match] | None:
+    """The strongest label (earliest on a tie).
+
+    Args:
+        labels (list[tuple[str, re.Match]]): from _labels.
+    Returns:
+        tuple[str, re.Match] | None: the best label, or None if there is none.
+    """
     order = list(LABEL_WEIGHT)
     return min(labels, key=lambda km: (order.index(km[0]), km[1].start()), default=None)
 
@@ -708,7 +893,14 @@ _PATCHES = re.compile(r"\bpatch|\b(?:first|second|third)\s+period\b|\bperiod[- ]
 
 
 def period_introduced(sentence: str, window: Window) -> bool:
-    """Is the range introduced by "period" ("for the period April 2000 to …")?"""
+    """Is the range introduced by "period" ("for the period April 2000 to …")?
+
+    Args:
+        sentence (str): the normalised sentence.
+        window (Window): a range in it.
+    Returns:
+        bool: True if "period" introduces the range.
+    """
     return window.text.lower().startswith("period") or bool(
         _PERIOD_BEFORE.search(sentence[:window.span[0]]))
 
@@ -724,6 +916,13 @@ def pick_window(windows: list[Window], label: re.Match | None,
     among those, the one nearest the label (on a tie, the one before it, as in
     "from X to Y (hereinafter 'IP')"). Patches are merged into one span. The
     choice is clear when one range is left after preferring "period" ones.
+
+    Args:
+        windows (list[Window]): the sentence's ranges (inspection visits already removed).
+        label (re.Match | None): the best label (None for a generic one).
+        sentence (str): the normalised sentence.
+    Returns:
+        tuple[Window | None, bool]: the chosen range (patches merged), and whether the choice was clear.
     """
     if not windows:
         return None, False
@@ -739,6 +938,13 @@ def pick_window(windows: list[Window], label: re.Match | None,
         return pool[0], len(pool) == 1
 
     def distance(w: Window) -> tuple[int, int]:
+        """How far a range is from the label (and on which side).
+
+        Args:
+            w (Window): a range.
+        Returns:
+            tuple[int, int]: (characters between them, 0 if before the label else 1).
+        """
         s, e = w.span
         if e <= label.start():
             return label.start() - e, 0
@@ -759,6 +965,14 @@ def confidence_for(kind: str, window: Window | None, sentence: str,
     and a financial year only under an explicit label. A choice among several
     ranges that are all introduced by "period" (a table, or two periods in one
     sentence) is never ``high``.
+
+    Args:
+        kind (str): the label kind.
+        window (Window | None): the chosen range.
+        sentence (str): the normalised sentence.
+        clear (bool): whether pick_window's choice was unambiguous.
+    Returns:
+        str | None: "high", "medium", or None (not a window without a reader or the model).
     """
     if window is None or kind == GENERIC:
         return None
@@ -774,6 +988,13 @@ def score_sentence(sentence: str, rel_pos: float) -> dict | None:
 
     A candidate has at least one date and either a period keyword or an
     investigation-type word next to a date range.
+
+    Args:
+        sentence (str): a normalised sentence.
+        rel_pos (float): its position in the order, 0–1.
+    Returns:
+        dict | None: score, label_kind, label_text, n_dates, n_ranges, negative, window (Window | None),
+        confidence (str | None); None when the sentence is not a candidate.
     """
     if not _PREFILTER.search(sentence):
         return None
@@ -817,6 +1038,12 @@ def score_sentence(sentence: str, rel_pos: float) -> dict | None:
 
 @dataclass
 class Job:
+    """One order to scan: the fields stage 4 needs from ``text_documents``.
+
+    Attributes:
+        text_stem (str), order_id (int | None), order_type (str | None), order_date (datetime.date | None),
+        text_path (str | None), text_status (str).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -827,6 +1054,14 @@ class Job:
 
 @dataclass
 class OrderWindow:
+    """One order's regex v1 result: a row of ``derived/windows.parquet`` (columns in CLAUDE.md §8).
+
+    Attributes:
+        window_status (str): PARSED, UNCONFIRMED_RANGE, UNPARSED, NO_CANDIDATES or NO_TEXT;
+        violation_start / violation_end (datetime.date | None) with their precisions;
+        violation_raw (str | None): the source sentence; violation_confidence (str | None);
+        violation_method ("regex" | None), violation_rule, cand_rank, char_start, rules_version, error.
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -850,6 +1085,15 @@ class OrderWindow:
 
 
 def extract_candidates(job: Job, text: str, top_k: int = TOP_K) -> tuple[OrderWindow, list[Candidate]]:
+    """Score every sentence of one order, keep the top k, and choose the window.
+
+    Args:
+        job (Job): the order.
+        text (str): its text.
+        top_k (int): candidates to keep.
+    Returns:
+        tuple[OrderWindow, list[Candidate]]: the order's window row and its top candidates.
+    """
     stripped = strip_repeated_lines(text)
     spans = split_sentences(stripped)
     n = max(len(text), 1)
@@ -903,7 +1147,15 @@ def extract_candidates(job: Job, text: str, top_k: int = TOP_K) -> tuple[OrderWi
 
 def process(job: Job, repo_root: pathlib.Path = REPO_ROOT,
             top_k: int = TOP_K) -> tuple[OrderWindow, list[Candidate]]:
-    """Read one order's text and extract its candidates. Never raises."""
+    """Read one order's text and extract its candidates. Never raises.
+
+    Args:
+        job (Job): the order.
+        repo_root (pathlib.Path): base for job.text_path.
+        top_k (int): candidates to keep.
+    Returns:
+        tuple[OrderWindow, list[Candidate]]: as extract_candidates (NO_TEXT without text).
+    """
     if job.text_status != "OK" or not job.text_path:
         return OrderWindow(job.text_stem, job.order_id, job.order_type, job.order_date,
                            job.text_status, window_status=NO_TEXT), []
@@ -917,6 +1169,15 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT,
 
 
 def _process_many(jobs: list[Job], repo_root: pathlib.Path, top_k: int):
+    """Process a batch of orders (one worker task).
+
+    Args:
+        jobs (list[Job]): the batch.
+        repo_root (pathlib.Path): base for text paths.
+        top_k (int): candidates to keep.
+    Returns:
+        list[tuple[OrderWindow, list[Candidate]]]: one result per order.
+    """
     return [process(job, repo_root, top_k) for job in jobs]
 
 
@@ -925,6 +1186,13 @@ def _process_many(jobs: list[Job], repo_root: pathlib.Path, top_k: int):
 # --------------------------------------------------------------------------
 
 def load_jobs(path: pathlib.Path = TEXT_DOCUMENTS_IN) -> list[Job]:
+    """Read the stage 3 table into the fields this stage needs.
+
+    Args:
+        path (pathlib.Path): ``derived/text_documents.parquet``.
+    Returns:
+        list[Job]: one per order.
+    """
     rows = pq.read_table(path, columns=["text_stem", "order_id", "order_type", "order_date",
                                         "text_path", "status"]).to_pylist()
     return [Job(r["text_stem"], r["order_id"], r["order_type"], r["order_date"],
@@ -934,7 +1202,18 @@ def load_jobs(path: pathlib.Path = TEXT_DOCUMENTS_IN) -> list[Job]:
 def select(jobs: list[Job], *, categories: list[str] | None = None,
            order_ids: list[int] | None = None, limit: int | None = None,
            sample: int | None = None, seed: int = 7) -> list[Job]:
-    """Filter jobs. ``sample`` draws a year-stratified random sample."""
+    """Filter jobs. ``sample`` draws a year-stratified random sample.
+
+    Args:
+        jobs (list[Job]): all orders.
+        categories (list[str] | None): order types to keep.
+        order_ids (list[int] | None): ids to keep.
+        limit (int | None): keep the first N.
+        sample (int | None): draw about N orders spread evenly over years.
+        seed (int): the sample's random seed.
+    Returns:
+        list[Job]: the selected orders.
+    """
     out = jobs
     if categories:
         out = [j for j in out if j.order_type in set(categories)]
@@ -1005,6 +1284,14 @@ WINDOWS_SCHEMA = pa.schema([
 
 
 def _table(rows: list, schema: pa.Schema) -> pa.Table:
+    """Dataclass rows → an Arrow table with a fixed schema.
+
+    Args:
+        rows (list): OrderWindow or Candidate rows.
+        schema (pyarrow.Schema): WINDOWS_SCHEMA or CANDIDATES_SCHEMA.
+    Returns:
+        pyarrow.Table: the table.
+    """
     columns = {name: [] for name in schema.names}
     for row in rows:
         payload = asdict(row)
@@ -1015,6 +1302,15 @@ def _table(rows: list, schema: pa.Schema) -> pa.Table:
 
 def write_outputs(windows: list[OrderWindow], candidates: list[Candidate],
                   out_dir: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
+    """Write ``windows.parquet`` and ``window_candidates.parquet`` atomically.
+
+    Args:
+        windows (list[OrderWindow]): order rows.
+        candidates (list[Candidate]): candidate rows.
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+    Returns:
+        tuple[pathlib.Path, pathlib.Path]: the two paths written.
+    """
     assert_safe_output(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     windows = sorted(windows, key=lambda w: w.text_stem)
@@ -1035,7 +1331,17 @@ def write_outputs(windows: list[OrderWindow], candidates: list[Candidate],
 
 def run(jobs: list[Job], *, workers: int = 1, repo_root: pathlib.Path = REPO_ROOT,
         top_k: int = TOP_K, chunk: int = 200) -> tuple[list[OrderWindow], list[Candidate]]:
-    """Extract every job. ``workers <= 1`` runs in-process (used by tests)."""
+    """Extract every job. ``workers <= 1`` runs in-process (used by tests).
+
+    Args:
+        jobs (list[Job]): orders to scan.
+        workers (int): processes.
+        repo_root (pathlib.Path): base for text paths.
+        top_k (int): candidates to keep per order.
+        chunk (int): orders per worker task.
+    Returns:
+        tuple[list[OrderWindow], list[Candidate]]: every order row and candidate.
+    """
     windows: list[OrderWindow] = []
     candidates: list[Candidate] = []
     if workers <= 1:
@@ -1057,6 +1363,14 @@ def run(jobs: list[Job], *, workers: int = 1, repo_root: pathlib.Path = REPO_ROO
 
 
 def summarise(windows: list[OrderWindow], candidates: list[Candidate]) -> dict:
+    """Run summary for the log.
+
+    Args:
+        windows (list[OrderWindow]): order rows.
+        candidates (list[Candidate]): candidate rows.
+    Returns:
+        dict: counts by window_status, confidence, rule, precision; regex share overall and by type.
+    """
     with_text = [w for w in windows if w.window_status != NO_TEXT]
     parsed = [w for w in with_text if w.window_status == PARSED]
     by_type = collections.defaultdict(lambda: [0, 0])
@@ -1079,6 +1393,11 @@ def summarise(windows: list[OrderWindow], candidates: list[Candidate]) -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.extract_windows``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.extract_windows",
         description="Violation-window candidate sentences and regex v1 (runbook Week 2, Day 1)",
@@ -1098,6 +1417,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 4: scan every selected order and write the two tables.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         out_dir, log_file = args.scratch, args.scratch / "extract_windows.log"

@@ -22,7 +22,13 @@ _ALIAS = re.compile(r"[({\[]\s*(?:formerly|now|earlier|erstwhile|previously)(?:\
 
 
 def norm(name: str) -> str:
-    """Upper case, punctuation to spaces, & → AND, legal-form and filler words dropped."""
+    """Upper case, punctuation to spaces, & → AND, legal-form and filler words dropped.
+
+    Args:
+        name (str): a company name in any form.
+    Returns:
+        str: the normalised name, e.g. "M/s. Kavveri Telecom Products Pvt. Ltd." → "KAVVERI TELECOM PRODUCTS".
+    """
     s = name.upper()
     s = re.sub(r"[^A-Z0-9& ]", " ", s)
     s = s.replace("&", " AND ")
@@ -32,7 +38,13 @@ def norm(name: str) -> str:
 
 
 def names(value) -> list[str]:
-    """A name and any former or later name it gives in brackets, each normalised."""
+    """A name and any former or later name it gives in brackets, each normalised.
+
+    Args:
+        value (str | None): a name, possibly with "(formerly …)" / "{earlier known as …}".
+    Returns:
+        list[str]: the normalised main name, then each bracketed name; [] for an empty value.
+    """
     if not isinstance(value, str) or not value.strip():
         return []
     raw = [_ALIAS.sub(" ", value), *_ALIAS.findall(value)]

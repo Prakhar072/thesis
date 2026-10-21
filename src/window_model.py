@@ -147,6 +147,13 @@ SCHEMA = {
 
 
 def build_user(sentences: list[str]) -> str:
+    """The user prompt: the order's candidate sentences, numbered, long ones clipped.
+
+    Args:
+        sentences (list[str]): the candidate sentences, best first.
+    Returns:
+        str: "Sentences from the order:" followed by "[1] …", "[2] …".
+    """
     lines = ["Sentences from the order:"]
     for i, s in enumerate(sentences, start=1):
         clipped = s if len(s) <= MAX_SENTENCE_CHARS else s[:MAX_SENTENCE_CHARS] + " …"
@@ -163,18 +170,38 @@ _LEADING_ZEROS = re.compile(r"(?<![0-9])0+(?=[0-9])")
 
 def _alnum(text: str) -> str:
     """Letters and digits only, leading zeros dropped: "April 01, 2018" and
-    "April 1 ,2018" compare equal."""
+    "April 1 ,2018" compare equal.
+
+    Args:
+        text (str): any text.
+    Returns:
+        str: lower-case letters and digits only, leading zeros dropped.
+    """
     return re.sub(r"[^0-9a-z]", "", _LEADING_ZEROS.sub("", text.lower()))
 
 
 def quoted_in(quote: str, sentence: str) -> bool:
-    """Does the quote occur in the sentence, ignoring spacing and punctuation?"""
+    """Does the quote occur in the sentence, ignoring spacing and punctuation?
+
+    Args:
+        quote (str): the model's quoted date.
+        sentence (str): the sentence it claims to quote.
+    Returns:
+        bool: True if the quote occurs in it.
+    """
     q = _alnum(quote)
     return bool(q) and q in _alnum(sentence)
 
 
 @dataclass(frozen=True)
 class Resolved:
+    """A quoted date read into a span.
+
+    Attributes:
+        start (datetime.date | None), end (datetime.date | None): the span it covers; None without a year.
+        precision (str): day, month, year or fy.
+        month (int | None), day (int | None): kept for a partial date that takes the end's year later.
+    """
     start: dt.date | None  # None when the year is missing (partial)
     end: dt.date | None
     precision: str         # day | month | year | fy
@@ -189,6 +216,13 @@ _JUNK = re.compile(r"[|()\[\]{}\"“”‘’`*_]")
 
 
 def _fy(m: re.Match) -> Resolved | None:
+    """A financial-year match as a span (1 April – 31 March).
+
+    Args:
+        m (re.Match): a match of _FY.
+    Returns:
+        Resolved | None: the span, or None if the years are not consecutive.
+    """
     y1, second = int(m.group(1)), m.group(2)
     y2 = int(second) if len(second) == 4 else (y1 // 100) * 100 + int(second)
     if len(second) == 2 and y2 < y1:
@@ -210,6 +244,13 @@ _YEAR_WORDS = re.compile(r"\b(?:the|calendar|financial|years?|and|to|from|till|u
 
 
 def _day_span(t: str) -> Resolved | None:
+    """A day range written as one date, e.g. “January 21-25, 2008”.
+
+    Args:
+        t (str): the cleaned quote.
+    Returns:
+        Resolved | None: the span, or None if the quote is not one.
+    """
     m = _DAY_SPAN.fullmatch(t)
     if not m:
         return None
@@ -224,6 +265,13 @@ def _day_span(t: str) -> Resolved | None:
 
 
 def _year_span(t: str) -> Resolved | None:
+    """A span of years written as one token, e.g. “2003-05” (not a financial year).
+
+    Args:
+        t (str): the cleaned quote.
+    Returns:
+        Resolved | None: 1 January of the first year to 31 December of the last.
+    """
     m = _YEAR_SPAN.fullmatch(t)
     if not m:
         return None
@@ -246,6 +294,12 @@ def resolve_date(text: str, which: str = "start") -> Resolved | None:
     is read as bare years only when it holds nothing else ("the year 1992",
     "2003 to 2014"); a malformed date ("31/04/2003", "Match 30, 2000") is
     unreadable rather than silently widened to its whole year.
+
+    Args:
+        text (str): the model's quote.
+        which (str): "start" or "end" — which end of a multi-date quote to take.
+    Returns:
+        Resolved | None: the date span, or None if the quote is unreadable.
     """
     t = ew.normalise_sentence(_JUNK.sub(" ", text)).strip(" ,.;:-")
     whole = ew.parse_date(t)
@@ -266,6 +320,13 @@ def resolve_date(text: str, which: str = "start") -> Resolved | None:
                 taken.append(w.span)
 
         def free(a: int, b: int) -> bool:
+            """Whether a span of the quote is not yet taken by an earlier match.
+
+            Args:
+                a (int), b (int): the span.
+            Returns:
+                bool: True if no taken span overlaps it.
+            """
             return not any(s0 < b and a < e0 for s0, e0 in taken)
         for m in ew.DATE.finditer(t):
             if free(*m.span()) and (p := ew.parse_date(m.group(0))) is not None and p.year is not None:
@@ -295,6 +356,14 @@ _OPEN_ENDED = re.compile(r"\s*(?:till|until|upto|up\s+to|by|before|after|since|a
 
 
 def _with_year(r: Resolved, year: int) -> Resolved | None:
+    """Give a partial date (no year) a year.
+
+    Args:
+        r (Resolved): a partial date (month and maybe day).
+        year (int): the year to use.
+    Returns:
+        Resolved | None: the dated span, or None if invalid (29 February in a non-leap year).
+    """
     p = ew.ParsedDate(year, r.month, r.day)
     try:
         return Resolved(ew.as_start(p), ew.as_end(p), r.precision, r.month, r.day)
@@ -312,7 +381,14 @@ _CLOCK = re.compile(r"\s*\d{1,2}:\d{2}(?::\d{2})?\b")
 
 
 def _locate(sentence: str, quote: str) -> int | None:
-    """Character offset of ``quote`` in ``sentence`` (spacing-insensitive)."""
+    """Character offset of ``quote`` in ``sentence`` (spacing-insensitive).
+
+    Args:
+        sentence (str): the sentence.
+        quote (str): a quoted date.
+    Returns:
+        int | None: the offset where it starts, or None.
+    """
     flat = re.escape(ew.normalise_sentence(quote)).replace(r"\ ", r"\s*")
     m = re.search(flat, sentence, re.I)
     return m.start() if m else None
@@ -331,6 +407,14 @@ def false_window_reason(sentence: str, start_text: str, end_text: str,
       *not* caught;
     * "Bank account statement … for the period January 01, 2016 to …" —
       the period of a document that was requested or analysed.
+
+    Args:
+        sentence (str): the sentence the quotes came from.
+        start_text (str), end_text (str): the model's quotes.
+        start (datetime.date), end (datetime.date): the dates read from them.
+    Returns:
+        str | None: why this is not the window (correspondence, inspection visit, statement period, trade-log
+        row), or None if it may be.
     """
     at = _locate(sentence, start_text)
     if at is None:
@@ -353,6 +437,15 @@ def false_window_reason(sentence: str, start_text: str, end_text: str,
 
 @dataclass
 class Reading:
+    """The model's answer after the checks.
+
+    Attributes:
+        status (str): MODEL_WINDOW, MODEL_NONE, MODEL_UNVERIFIED, MODEL_REJECTED or MODEL_ERROR.
+        kind (str | None): the model's own word (investigation / violation / none).
+        sentence_no (int | None), start_text (str | None), end_text (str | None): what it quoted.
+        start, end (datetime.date | None), start_precision, end_precision (str | None): the dates read.
+        note (str | None): why it was not accepted.
+    """
     status: str
     kind: str | None = None
     sentence_no: int | None = None
@@ -366,7 +459,14 @@ class Reading:
 
 
 def read_answer(content: str, sentences: list[str]) -> Reading:
-    """Check the model's JSON against the sentences and turn it into dates."""
+    """Check the model's JSON against the sentences and turn it into dates.
+
+    Args:
+        content (str): the model's JSON answer.
+        sentences (list[str]): the sentences it was shown.
+    Returns:
+        Reading: the checked reading (status says whether a window was accepted).
+    """
     try:
         ans = json.loads(content)
         kind = ans["kind"]
@@ -428,6 +528,14 @@ def read_answer(content: str, sentences: list[str]) -> Reading:
 
 @dataclass
 class ModelRow:
+    """One order sent to the model: a row of ``derived/window_model.parquet`` (columns in CLAUDE.md §8).
+
+    Attributes:
+        text_stem (str), regex_status (str), n_sentences_sent (int), model, model_digest, prompt_version (str),
+        think (bool), cache_key (str | None), raw_response (str | None), model_status (str),
+        window_kind (str | None): stated_period or conduct_dates, the checked dates and quotes,
+        violation_raw (str | None), note (str | None), seconds (float | None), from_cache (bool | None).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -457,6 +565,12 @@ class ModelRow:
 
 @dataclass
 class Order:
+    """An order to send: its identity and candidate sentences.
+
+    Attributes:
+        text_stem (str), order_id (int | None), order_type (str | None), order_date (datetime.date | None),
+        regex_status (str): UNCONFIRMED_RANGE or UNPARSED, sentences (list[str]).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -466,7 +580,15 @@ class Order:
 
 
 def ask(order: Order, spec: llm.ModelSpec, root: pathlib.Path | None = None) -> ModelRow:
-    """Ask the model about one order. Never raises."""
+    """Ask the model about one order. Never raises.
+
+    Args:
+        order (Order): the order and its sentences.
+        spec (llm.ModelSpec): the model.
+        root (pathlib.Path | None): the model cache root (scratch runs).
+    Returns:
+        ModelRow: the answer, checked; errors become MODEL_ERROR rows.
+    """
     row = ModelRow(order.text_stem, order.order_id, order.order_type, order.order_date,
                    order.regex_status, len(order.sentences), spec.name, spec.digest,
                    PROMPT_VERSION, spec.think)
@@ -494,7 +616,15 @@ def ask(order: Order, spec: llm.ModelSpec, root: pathlib.Path | None = None) -> 
 
 def load_orders(windows_path: pathlib.Path, candidates_path: pathlib.Path, *,
                 statuses: tuple[str, ...] = MODEL_STATUSES) -> tuple[list[dict], list[Order]]:
-    """All regex rows, plus the orders to send to the model with their sentences."""
+    """All regex rows, plus the orders to send to the model with their sentences.
+
+    Args:
+        windows_path (pathlib.Path): ``derived/windows.parquet``.
+        candidates_path (pathlib.Path): ``derived/window_candidates.parquet``.
+        statuses (tuple[str, ...]): which regex statuses go to the model.
+    Returns:
+        tuple[list[dict], list[Order]]: every regex row (dicts), and the orders to send.
+    """
     windows = pq.read_table(windows_path).to_pylist()
     cands = pq.read_table(candidates_path, columns=["text_stem", "cand_rank", "sentence"]).to_pylist()
     by_stem: dict[str, list[tuple[int, str]]] = collections.defaultdict(list)
@@ -511,6 +641,17 @@ def load_orders(windows_path: pathlib.Path, candidates_path: pathlib.Path, *,
 def select(orders: list[Order], *, order_ids: list[int] | None = None,
            stems: list[str] | None = None, sample: int | None = None,
            limit: int | None = None, seed: int = 7) -> list[Order]:
+    """Restrict the orders to send (ids, stems, a random sample, the first N).
+
+    Args:
+        orders (list[Order]): all orders to send.
+        order_ids (list[int] | None), stems (list[str] | None): keep only these.
+        sample (int | None): a random sample of this size.
+        limit (int | None): the first N.
+        seed (int): the sample's random seed.
+    Returns:
+        list[Order]: the selection.
+    """
     out = orders
     if order_ids:
         out = [o for o in out if o.order_id in set(order_ids)]
@@ -525,7 +666,14 @@ def select(orders: list[Order], *, order_ids: list[int] | None = None,
 
 def combine(windows: list[dict], model_rows: list[ModelRow]) -> list[dict]:
     """One row per order: the regex window if regex found one, else the
-    verified model window. Regex windows are all ``stated_period``."""
+    verified model window. Regex windows are all ``stated_period``.
+
+    Args:
+        windows (list[dict]): every regex row (from load_orders).
+        model_rows (list[ModelRow]): the model's answers.
+    Returns:
+        list[dict]: one row per order with COMBINED_SCHEMA's columns (``violation_windows``).
+    """
     by_stem = {m.text_stem: m for m in model_rows}
     out = []
     for w in windows:
@@ -597,6 +745,14 @@ COMBINED_SCHEMA = pa.schema([
 
 
 def _write(table: pa.Table, path: pathlib.Path) -> None:
+    """Write a Parquet table atomically (temporary file + rename).
+
+    Args:
+        table (pyarrow.Table): the table.
+        path (pathlib.Path): the destination.
+    Returns:
+        None.
+    """
     tmp = path.parent / f"{path.name}.tmp-{os.urandom(6).hex()}"
     pq.write_table(table, tmp, compression="snappy")
     tmp.replace(path)  # atomic
@@ -604,6 +760,16 @@ def _write(table: pa.Table, path: pathlib.Path) -> None:
 
 def write_outputs(windows: list[dict], model_rows: list[ModelRow], out_dir: pathlib.Path,
                   *, combined: bool = True) -> list[pathlib.Path]:
+    """Write ``window_model.parquet`` and, for a full run, ``violation_windows.parquet``.
+
+    Args:
+        windows (list[dict]): every regex row.
+        model_rows (list[ModelRow]): the model's answers.
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+        combined (bool): also write the combined table.
+    Returns:
+        list[pathlib.Path]: the paths written.
+    """
     assert_safe_output(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     rows = sorted(model_rows, key=lambda r: r.text_stem)
@@ -626,11 +792,28 @@ def write_outputs(windows: list[dict], model_rows: list[ModelRow], out_dir: path
 def run(orders: list[Order], spec: llm.ModelSpec, *, workers: int = 1,
         root: pathlib.Path | None = None, progress_every: int = 100) -> list[ModelRow]:
     """Ask about every order. Threads, not processes: the work is waiting on
-    the model server, which queues requests beyond its own parallelism."""
+    the model server, which queues requests beyond its own parallelism.
+
+    Args:
+        orders (list[Order]): orders to ask about.
+        spec (llm.ModelSpec): the model.
+        workers (int): concurrent requests (the local server answers one at a time).
+        root (pathlib.Path | None): model cache root.
+        progress_every (int): log every N orders.
+    Returns:
+        list[ModelRow]: one row per order (completion order).
+    """
     rows: list[ModelRow] = []
     started = time.monotonic()
 
     def collect(row: ModelRow) -> None:
+        """Gather one answer and log progress.
+
+        Args:
+            row (ModelRow): one order's answer.
+        Returns:
+            None.
+        """
         rows.append(row)
         n = len(rows)
         if progress_every and (n % progress_every == 0 or n == len(orders)):
@@ -649,6 +832,14 @@ def run(orders: list[Order], spec: llm.ModelSpec, *, workers: int = 1,
 
 
 def summarise(rows: list[ModelRow], windows: list[dict]) -> dict:
+    """Run summary for the log.
+
+    Args:
+        rows (list[ModelRow]): the model's answers.
+        windows (list[dict]): every regex row.
+    Returns:
+        dict: counts by model status, kind, rejection reasons; windows by method; the combined window share.
+    """
     ok = [r for r in rows if r.model_status == MODEL_WINDOW]
     with_text = [w for w in windows if w["window_status"] != ew.NO_TEXT]
     regex = sum(w["window_status"] == ew.PARSED for w in with_text)
@@ -670,6 +861,11 @@ def summarise(rows: list[ModelRow], windows: list[dict]) -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.window_model``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.window_model",
         description="Model fallback for violation windows regex v1 could not settle (runbook Week 2, Day 2)",
@@ -697,6 +893,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 5: ask the model about the orders regex could not settle, and combine.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         # A dry run keeps its model answers under DIR too, like extract_text's
@@ -744,6 +947,16 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _cached_digest(name: str, root: pathlib.Path) -> str:
+    """The model's weights digest taken from a cached answer (offline runs cannot ask the server).
+
+    Args:
+        name (str): the model name.
+        root (pathlib.Path): the model cache root.
+    Returns:
+        str: the digest.
+    Raises:
+        llm.CacheMiss: no cached answer for this model.
+    """
     for path in sorted(root.glob("*/*.json")):
         record = json.loads(path.read_text(encoding="utf-8"))
         if record.get("request", {}).get("model") == name:

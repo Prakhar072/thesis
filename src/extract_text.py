@@ -174,6 +174,11 @@ def text_quality(text: str) -> tuple[int, float]:
 
     Control, surrogate, private-use and unassigned code points and U+FFFD count
     against quality. Empty text scores 1.0 — absence is not corruption.
+
+    Args:
+        text (str): a page's native text.
+    Returns:
+        tuple[int, float]: (non-space characters, share of them that are real text, 0–1).
     """
     chars = [c for c in text if not c.isspace()]
     if not chars:
@@ -184,6 +189,16 @@ def text_quality(text: str) -> tuple[int, float]:
 
 def classify_page(native_chars: int, quality: float, image_cover: float,
                   drawings: int = 0) -> str:
+    """Decide how a page's text must be obtained (see the module docstring's table).
+
+    Args:
+        native_chars (int): non-space characters in the text layer.
+        quality (float): share of them that are real text (text_quality).
+        image_cover (float): share of the page covered by images, 0–1.
+        drawings (int): vector paths on the page (counted only for would-be sparse pages).
+    Returns:
+        str: NATIVE, BROKEN_LAYER, SCANNED, VECTOR_TEXT or SPARSE.
+    """
     if native_chars >= MIN_BROKEN_CHARS and quality < MIN_QUALITY:
         return BROKEN_LAYER
     if native_chars >= MIN_CHARS:
@@ -197,7 +212,13 @@ def classify_page(native_chars: int, quality: float, image_cover: float,
 
 def stopword_ratio(text: str) -> float | None:
     """Share of word tokens that are English function words. Prose sits around
-    0.3–0.45; garbled text near 0. A diagnostic, never a gate."""
+    0.3–0.45; garbled text near 0. A diagnostic, never a gate.
+
+    Args:
+        text (str): an order's text.
+    Returns:
+        float | None: share of words that are English function words; None under 50 words.
+    """
     words = _WORD.findall(text.lower())
     if len(words) < 50:
         return None
@@ -205,6 +226,13 @@ def stopword_ratio(text: str) -> float | None:
 
 
 def image_cover(page: pymupdf.Page) -> float:
+    """Share of the page area covered by images (overlaps counted twice, capped at 1).
+
+    Args:
+        page (pymupdf.Page): an open PDF page.
+    Returns:
+        float: 0–1.
+    """
     area = page.rect.width * page.rect.height
     if area <= 0:
         return 0.0
@@ -227,7 +255,13 @@ _SPACES = {0x00A0: " ", 0x2007: " ", 0x202F: " ", 0x2028: "\n", 0x2029: "\n"}
 
 def clean_page_text(text: str) -> str:
     """Normalise invisible and space-like characters; reserve form feed as the
-    page separator. Nothing that carries meaning is changed."""
+    page separator. Nothing that carries meaning is changed.
+
+    Args:
+        text (str): raw page text.
+    Returns:
+        str: the text with invisible characters removed, space-like ones made plain, form feeds made newlines.
+    """
     return text.translate(_DROP).translate(_SPACES).replace(PAGE_SEPARATOR, "\n")
 
 
@@ -242,17 +276,39 @@ _INLINE_HEADER = re.compile(
 
 
 def clean_inline_text(text: str) -> str:
+    """Clean an inline-HTML order's text and drop the detail page's caption.
+
+    Args:
+        text (str): text from ``section.main_section``.
+    Returns:
+        str: the order's text.
+    """
     text = re.sub(r"[ \t]+", " ", clean_page_text(text)).strip()
     return _INLINE_HEADER.sub("", text, count=1)
 
 
 def text_stem(order_id: int | None, source_url: str) -> str:
-    """Same naming as the PDF archive: ``<order_id>`` or ``noid_<hash>``."""
+    """Same naming as the PDF archive: ``<order_id>`` or ``noid_<hash>``.
+
+    Args:
+        order_id (int | None): SEBI's id.
+        source_url (str): the listing URL (names id-less orders).
+    Returns:
+        str: ``"<order_id>"`` or ``"noid_<12 hex>"`` — the key every derived table joins on.
+    """
     return archive_name(order_id, source_url).removesuffix(".pdf")
 
 
 def assert_safe_output(path: pathlib.Path) -> None:
-    """Refuse to write anywhere under raw/pdfs or raw/cache."""
+    """Refuse to write anywhere under raw/pdfs or raw/cache.
+
+    Args:
+        path (pathlib.Path): a path about to be written.
+    Returns:
+        None.
+    Raises:
+        ValueError: the path is inside raw/pdfs or raw/cache.
+    """
     resolved = path.resolve()
     for protected in PROTECTED_DIRS:
         prot = protected.resolve()
@@ -261,6 +317,14 @@ def assert_safe_output(path: pathlib.Path) -> None:
 
 
 def write_atomic(path: pathlib.Path, data: bytes) -> None:
+    """Write bytes through a temporary file and a rename (refuses raw/pdfs and raw/cache).
+
+    Args:
+        path (pathlib.Path): destination.
+        data (bytes): content.
+    Returns:
+        None.
+    """
     assert_safe_output(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.parent / f"{path.name}.tmp-{os.urandom(6).hex()}"
@@ -277,15 +341,34 @@ def write_atomic(path: pathlib.Path, data: bytes) -> None:
 # --------------------------------------------------------------------------
 
 class OcrError(RuntimeError):
+    """Tesseract failed or timed out on a page.
+
+    Raised by:
+        TesseractEngine.ocr_png.
+    """
     pass
 
 
 class OcrEngine(Protocol):
+    """What an OCR engine must provide (TesseractEngine; tests pass a fake).
+
+    Attributes:
+        signature (str): engine + version + settings; part of the OCR cache key.
+        dpi (int): the default render resolution.
+    """
     #: Identifies engine + version + settings; part of the OCR cache key.
     signature: str
     dpi: int
 
-    def ocr_png(self, png: bytes, dpi: int | None = None) -> tuple[str, float | None]: ...
+    def ocr_png(self, png: bytes, dpi: int | None = None) -> tuple[str, float | None]:
+        """OCR one rendered page.
+
+        Args:
+            png (bytes): the page rendered as a PNG.
+            dpi (int | None): the resolution it was rendered at (None = the engine's dpi).
+        Returns:
+            tuple[str, float | None]: (text, mean word confidence 0–100, or None).
+        """
 
 
 def parse_tesseract_tsv(tsv: str) -> tuple[str, float | None]:
@@ -293,6 +376,11 @@ def parse_tesseract_tsv(tsv: str) -> tuple[str, float | None]:
 
     Lines are grouped by (block, paragraph, line); a blank line separates
     paragraphs. Confidence is the mean over words with conf >= 0.
+
+    Args:
+        tsv (str): tesseract's TSV output.
+    Returns:
+        tuple[str, float | None]: (the page text, mean word confidence 0–100 or None).
     """
     lines: dict[tuple[int, int, int], list[str]] = {}
     order: list[tuple[int, int, int]] = []
@@ -329,6 +417,13 @@ def parse_tesseract_tsv(tsv: str) -> tuple[str, float | None]:
 
 
 def tesseract_version(binary: str = "tesseract") -> str | None:
+    """The installed tesseract's version line.
+
+    Args:
+        binary (str): the executable's name.
+    Returns:
+        str | None: e.g. "tesseract 5.5.0", or None if it is not installed.
+    """
     path = shutil.which(binary)
     if path is None:
         return None
@@ -342,6 +437,12 @@ def tesseract_version(binary: str = "tesseract") -> str | None:
 
 @dataclass(frozen=True)
 class TesseractEngine:
+    """The tesseract command-line OCR engine and its settings.
+
+    Attributes:
+        version (str): from tesseract_version(); lang (str), dpi (int), psm (int): OCR settings;
+        binary (str): the executable; timeout (int): seconds per page.
+    """
     version: str
     lang: str = "eng"
     dpi: int = 300
@@ -351,10 +452,24 @@ class TesseractEngine:
 
     @property
     def signature(self) -> str:
+        """The engine's identity for the OCR cache key.
+
+        Returns:
+            str: "<version>|lang=…|psm=…|dpi=…".
+        """
         return f"{self.version}|lang={self.lang}|psm={self.psm}|dpi={self.dpi}"
 
     def ocr_png(self, png: bytes, dpi: int | None = None) -> tuple[str, float | None]:
-        """``dpi`` is the resolution the PNG was rendered at (default: ``self.dpi``)."""
+        """``dpi`` is the resolution the PNG was rendered at (default: ``self.dpi``).
+
+        Args:
+            png (bytes): a rendered page.
+            dpi (int | None): the resolution it was rendered at.
+        Returns:
+            tuple[str, float | None]: (text, mean word confidence).
+        Raises:
+            OcrError: tesseract failed or timed out.
+        """
         # One thread per tesseract: we parallelise across documents instead,
         # and OpenMP inside each process would oversubscribe the CPUs.
         env = {**os.environ, "OMP_THREAD_LIMIT": "1"}
@@ -372,17 +487,45 @@ class TesseractEngine:
 
 def ocr_cache_path(ocr_dir: pathlib.Path, pdf_sha256: str, page_no: int,
                    engine: OcrEngine, tag: str = "") -> pathlib.Path:
+    """Where a page's OCR result is cached: ``raw/ocr/<sha[:2]>/<sha>/p0001-<config>.json``.
+
+    Args:
+        ocr_dir (pathlib.Path): the OCR cache root.
+        pdf_sha256 (str): the PDF's content hash.
+        page_no (int): 1-based page.
+        engine (OcrEngine): the engine (its signature is part of the key).
+        tag (str): "" for the first pass, OCR_RETRY_TAG for the rotation/dpi retry.
+    Returns:
+        pathlib.Path: the JSON file's path.
+    """
     key = engine.signature + (f"|{tag}" if tag else "")
     config = hashlib.sha256(key.encode("utf-8")).hexdigest()[:12]
     return ocr_dir / pdf_sha256[:2] / pdf_sha256 / f"p{page_no:04d}-{config}.json"
 
 
 def _render(page: pymupdf.Page, dpi: int, rotation: int = 0) -> bytes:
+    """Render a page to a grayscale PNG.
+
+    Args:
+        page (pymupdf.Page): the page.
+        dpi (int): resolution.
+        rotation (int): degrees, 0/90/180/270.
+    Returns:
+        bytes: the PNG.
+    """
     matrix = pymupdf.Matrix(dpi / 72, dpi / 72).prerotate(rotation)
     return page.get_pixmap(matrix=matrix, colorspace=pymupdf.csGRAY).tobytes("png")
 
 
 def _cached_ocr(path: pathlib.Path, compute) -> dict:
+    """Read an OCR result from its cache file, or compute and write it.
+
+    Args:
+        path (pathlib.Path): the cache file.
+        compute (Callable[[], dict]): produces the result on a miss.
+    Returns:
+        dict: text, conf, variant, engine, page, pdf_sha256 (and tag for retries).
+    """
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))
     payload = compute()
@@ -391,6 +534,13 @@ def _cached_ocr(path: pathlib.Path, compute) -> dict:
 
 
 def _conf(value: float | None) -> float:
+    """A confidence for comparisons: None counts as -1.
+
+    Args:
+        value (float | None): a confidence.
+    Returns:
+        float: the value, or -1.0.
+    """
     return -1.0 if value is None else value
 
 
@@ -407,10 +557,24 @@ def ocr_page(page: pymupdf.Page, page_no: int, pdf_sha256: str, engine: OcrEngin
     rotation is tried at every ``OCR_RETRY_DPIS`` resolution and the most
     confident reading wins. Both passes are cached separately, so a retry never
     invalidates first-pass results.
+
+    Args:
+        page (pymupdf.Page): the page.
+        page_no (int): 1-based page number.
+        pdf_sha256 (str): the PDF's content hash (cache key).
+        engine (OcrEngine): the OCR engine.
+        ocr_dir (pathlib.Path): the OCR cache root.
+    Returns:
+        tuple[str, float | None, str]: (text, mean word confidence, winning variant such as "r90_200").
     """
     base_variant = f"r0_{engine.dpi}"
 
     def first_pass() -> dict:
+        """Upright OCR at the engine's dpi.
+
+        Returns:
+            dict: the cache record for the first pass.
+        """
         text, conf = engine.ocr_png(_render(page, engine.dpi), engine.dpi)
         return {"text": text, "conf": conf, "variant": base_variant,
                 "engine": engine.signature, "page": page_no, "pdf_sha256": pdf_sha256}
@@ -421,6 +585,11 @@ def ocr_page(page: pymupdf.Page, page_no: int, pdf_sha256: str, engine: OcrEngin
         return base["text"], base["conf"], base["variant"]
 
     def retry_pass() -> dict:
+        """Every rotation at every retry dpi; keeps the most confident reading.
+
+        Returns:
+            dict: the cache record for the best retry variant.
+        """
         best = {"text": "", "conf": None, "variant": None}
         for dpi in OCR_RETRY_DPIS:
             for rotation in OCR_RETRY_ROTATIONS:
@@ -445,6 +614,13 @@ def ocr_page(page: pymupdf.Page, page_no: int, pdf_sha256: str, engine: OcrEngin
 
 @dataclass
 class Job:
+    """One order to extract: the fields stage 3 needs from ``order_documents``.
+
+    Attributes:
+        order_id (int | None), order_type (str), order_date (datetime.date | None), source_url (str),
+        fetch_status (str): stage 2's status (OK, OK_INLINE …), doc_shape (str),
+        pdf_path (str | None): repo-relative path of the archived PDF.
+    """
     order_id: int | None
     order_type: str
     order_date: dt.date | None
@@ -456,6 +632,13 @@ class Job:
 
 @dataclass
 class PageResult:
+    """One PDF page: a row of ``derived/text_pages.parquet``.
+
+    Attributes:
+        order_id (int | None), text_stem (str), page_no (int), page_class (str), method (str): native, ocr,
+        ocr_pending, ocr_failed; native_chars (int), quality (float), image_cover (float),
+        ocr_conf (float | None), out_chars (int), drawings (int | None), ocr_variant (str | None).
+    """
     order_id: int | None
     text_stem: str
     page_no: int
@@ -472,6 +655,15 @@ class PageResult:
 
 @dataclass
 class DocResult:
+    """One order: a row of ``derived/text_documents.parquet`` (see CLAUDE.md §8 for every column).
+
+    Attributes:
+        text_stem (str): the join key; source (str): PDF, INLINE_HTML or NONE;
+        n_pages and the per-class page counts (int); has_text_layer (bool | None);
+        mean_ocr_conf (float | None); text_path (str | None), text_chars (int | None),
+        text_sha256 (str | None), stopword_ratio (float | None);
+        status (str): OK, NEEDS_OCR, NO_SOURCE or FAILED; error (str | None); extracted_at (datetime).
+    """
     order_id: int | None
     order_type: str
     order_date: dt.date | None
@@ -503,6 +695,13 @@ class DocResult:
 
 @dataclass(frozen=True)
 class Settings:
+    """Where a run writes, and with which OCR engine.
+
+    Attributes:
+        text_dir (pathlib.Path): the .txt files; ocr_dir (pathlib.Path): the OCR cache;
+        engine (TesseractEngine | None): None leaves OCR pages pending;
+        repo_root (pathlib.Path): base for repo-relative paths.
+    """
     text_dir: pathlib.Path
     ocr_dir: pathlib.Path
     engine: TesseractEngine | None = None
@@ -510,6 +709,14 @@ class Settings:
 
 
 def _relative(path: pathlib.Path, root: pathlib.Path) -> str:
+    """A path relative to the repo when possible (for the tables), else absolute.
+
+    Args:
+        path (pathlib.Path): any path.
+        root (pathlib.Path): the repo root.
+    Returns:
+        str: the relative (or absolute) path.
+    """
     try:
         return str(path.relative_to(root))
     except ValueError:
@@ -517,6 +724,15 @@ def _relative(path: pathlib.Path, root: pathlib.Path) -> str:
 
 
 def _write_text(settings: Settings, stem: str, text: str) -> tuple[str, int, str]:
+    """Write an order's text file atomically.
+
+    Args:
+        settings (Settings): where to write.
+        stem (str): the text stem (file name).
+        text (str): the full text, pages joined by form feed.
+    Returns:
+        tuple[str, int, str]: (repo-relative path, characters, SHA-256 of the UTF-8 bytes).
+    """
     path = settings.text_dir / f"{stem}.txt"
     data = text.encode("utf-8")
     write_atomic(path, data)
@@ -524,6 +740,15 @@ def _write_text(settings: Settings, stem: str, text: str) -> tuple[str, int, str
 
 
 def extract_pdf(job: Job, settings: Settings) -> tuple[DocResult, list[PageResult]]:
+    """Extract one PDF order page by page: classify, OCR where needed, write the text.
+
+    Args:
+        job (Job): the order (job.pdf_path must be set).
+        settings (Settings): output locations and the OCR engine.
+    Returns:
+        tuple[DocResult, list[PageResult]]: the order row and one row per page. No text file is written
+        when any page is still pending or failed.
+    """
     stem = text_stem(job.order_id, job.source_url)
     result = DocResult(
         order_id=job.order_id, order_type=job.order_type, order_date=job.order_date,
@@ -626,6 +851,14 @@ def extract_pdf(job: Job, settings: Settings) -> tuple[DocResult, list[PageResul
 
 
 def extract_inline(job: Job, settings: Settings) -> tuple[DocResult, list[PageResult]]:
+    """Extract an inline-HTML order from its cached detail page (offline).
+
+    Args:
+        job (Job): the order (fetch_status OK_INLINE).
+        settings (Settings): output locations.
+    Returns:
+        tuple[DocResult, list[PageResult]]: the order row, and no page rows.
+    """
     stem = text_stem(job.order_id, job.source_url)
     result = DocResult(
         order_id=job.order_id, order_type=job.order_type, order_date=job.order_date,
@@ -648,7 +881,14 @@ def extract_inline(job: Job, settings: Settings) -> tuple[DocResult, list[PageRe
 
 
 def extract_job(job: Job, settings: Settings) -> tuple[DocResult, list[PageResult]]:
-    """Dispatch on what the fetch stage found. Never raises."""
+    """Dispatch on what the fetch stage found. Never raises.
+
+    Args:
+        job (Job): one order.
+        settings (Settings): output locations and the OCR engine.
+    Returns:
+        tuple[DocResult, list[PageResult]]: the order row and its page rows (failures become rows).
+    """
     try:
         if job.pdf_path:
             return extract_pdf(job, settings)
@@ -680,6 +920,14 @@ def load_jobs(path: pathlib.Path = DOCUMENTS_IN, *, retries: int = 5) -> list[Jo
 
     While the fetcher is still running it rewrites this file at checkpoints,
     so a read can catch it half-written; retry rather than fail.
+
+    Args:
+        path (pathlib.Path): ``derived/order_documents.parquet``.
+        retries (int): attempts while the file may be half-written.
+    Returns:
+        list[Job]: one per order.
+    Raises:
+        RuntimeError: the file could not be read after the retries.
     """
     last: Exception | None = None
     for attempt in range(retries):
@@ -702,7 +950,18 @@ def load_jobs(path: pathlib.Path = DOCUMENTS_IN, *, retries: int = 5) -> list[Jo
 def select(jobs: list[Job], *, categories: list[str] | None = None,
            order_ids: list[int] | None = None, limit: int | None = None,
            sample: int | None = None, seed: int = 7) -> list[Job]:
-    """Filter jobs. ``sample`` draws a year-stratified random sample."""
+    """Filter jobs. ``sample`` draws a year-stratified random sample.
+
+    Args:
+        jobs (list[Job]): all orders.
+        categories (list[str] | None): order types to keep.
+        order_ids (list[int] | None): ids to keep.
+        limit (int | None): keep the first N.
+        sample (int | None): draw about N orders, spread evenly over years.
+        seed (int): the sample's random seed.
+    Returns:
+        list[Job]: the selected orders.
+    """
     out = jobs
     if categories:
         wanted = set(categories)
@@ -778,6 +1037,14 @@ PAGES_SCHEMA = pa.schema([
 
 
 def _table(rows: list, schema: pa.Schema) -> pa.Table:
+    """Dataclass rows → an Arrow table with a fixed schema.
+
+    Args:
+        rows (list): DocResult or PageResult rows.
+        schema (pyarrow.Schema): DOCS_SCHEMA or PAGES_SCHEMA.
+    Returns:
+        pyarrow.Table: the table.
+    """
     columns = {name: [] for name in schema.names}
     for row in rows:
         payload = asdict(row)
@@ -788,6 +1055,15 @@ def _table(rows: list, schema: pa.Schema) -> pa.Table:
 
 def write_outputs(docs: list[DocResult], pages: list[PageResult],
                   out_dir: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
+    """Write ``text_documents.parquet`` and ``text_pages.parquet`` atomically (also at checkpoints).
+
+    Args:
+        docs (list[DocResult]): order rows.
+        pages (list[PageResult]): page rows.
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+    Returns:
+        tuple[pathlib.Path, pathlib.Path]: the two paths written.
+    """
     assert_safe_output(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     docs = sorted(docs, key=lambda r: (
@@ -809,6 +1085,13 @@ def write_outputs(docs: list[DocResult], pages: list[PageResult],
 # --------------------------------------------------------------------------
 
 def _worker_init(niceness: int) -> None:
+    """Per-process setup: lower the priority and silence MuPDF's error printing.
+
+    Args:
+        niceness (int): added to the process's nice value (0 = unchanged).
+    Returns:
+        None.
+    """
     if niceness:
         try:
             os.nice(niceness)
@@ -821,12 +1104,31 @@ def run(jobs: list[Job], settings: Settings, *, workers: int = 1, niceness: int 
         progress_every: int = 500,
         checkpoint: callable | None = None,
         checkpoint_every: int = 0) -> tuple[list[DocResult], list[PageResult]]:
-    """Extract every job. ``workers <= 1`` runs in-process (used by tests)."""
+    """Extract every job. ``workers <= 1`` runs in-process (used by tests).
+
+    Args:
+        jobs (list[Job]): orders to extract.
+        settings (Settings): output locations and the OCR engine.
+        workers (int): processes (needs ``if __name__ == "__main__"``: Python 3.14 uses forkserver).
+        niceness (int): worker priority.
+        progress_every (int): log every N orders.
+        checkpoint (Callable | None): called with (docs, pages) every checkpoint_every orders.
+        checkpoint_every (int): 0 disables checkpoints.
+    Returns:
+        tuple[list[DocResult], list[PageResult]]: every order and page row (completion order).
+    """
     docs: list[DocResult] = []
     pages: list[PageResult] = []
     started = time.monotonic()
 
     def collect(result: tuple[DocResult, list[PageResult]]) -> None:
+        """Gather one order's result, log progress, checkpoint.
+
+        Args:
+            result (tuple[DocResult, list[PageResult]]): one order's output.
+        Returns:
+            None.
+        """
         doc, doc_pages = result
         docs.append(doc)
         pages.extend(doc_pages)
@@ -853,10 +1155,25 @@ def run(jobs: list[Job], settings: Settings, *, workers: int = 1, niceness: int 
 
 
 def _ocr_pages(d: DocResult) -> int:
+    """Pages of an order that need OCR.
+
+    Args:
+        d (DocResult): an order row.
+    Returns:
+        int: scanned + broken-layer + vector-text pages.
+    """
     return d.n_scanned + d.n_broken + d.n_vector
 
 
 def summarise(docs: list[DocResult], pages: list[PageResult]) -> dict:
+    """Run summary for the log (OCR shares feed the runbook's Day 5 verdict).
+
+    Args:
+        docs (list[DocResult]): order rows.
+        pages (list[PageResult]): page rows.
+    Returns:
+        dict: documents, by_source, by_status, pdf_pages, page_classes, OCR counts and shares.
+    """
     pdf_docs = [d for d in docs if d.source == SRC_PDF and d.n_pages is not None]
     needing = [d for d in pdf_docs if _ocr_pages(d) > 0]
     ocr_pages = sum(_ocr_pages(d) for d in pdf_docs)
@@ -879,6 +1196,14 @@ def summarise(docs: list[DocResult], pages: list[PageResult]) -> dict:
 
 
 def setup_logging(level: str, log_file: pathlib.Path | None) -> None:
+    """Log to stdout and, unless a dry run, to a file; used by most stages.
+
+    Args:
+        level (str): logging level name.
+        log_file (pathlib.Path | None): also log here (refused under raw/pdfs and raw/cache).
+    Returns:
+        None.
+    """
     handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
     if log_file is not None:
         assert_safe_output(log_file)
@@ -890,6 +1215,11 @@ def setup_logging(level: str, log_file: pathlib.Path | None) -> None:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.extract_text``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.extract_text",
         description="Extract order text from PDFs (text layer, OCR fallback) into derived/text/",
@@ -918,6 +1248,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 3: extract every selected order and write the two tables.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     if args.scratch:
         root = args.scratch

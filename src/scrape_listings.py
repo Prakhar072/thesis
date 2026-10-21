@@ -86,6 +86,19 @@ CATEGORIES: dict[str, Category] = {
 
 @dataclass
 class ListingRow:
+    """One order as SEBI's listing page shows it — one row of ``derived/listings.parquet``.
+
+    Attributes:
+        order_id (int | None): SEBI's id from the ``_<id>.html`` URL tail; None for 76 direct-PDF / odd rows.
+        order_date (datetime.date | None): the listing date; order_date_raw (str) is the text it came from.
+        title (str): the cleaned title; source_url (str): the detail page (or the PDF itself).
+        order_type (str): WTM, SETTLEMENT, AO or ED_CGM — from the category, never the title.
+        listing_category (str), listing_page (int), listing_url (str), smid (int): where the row was found.
+        doc_kind (str): HTML_DETAIL, DIRECT_PDF or OTHER.
+        corrigendum_url (str | None), sat_appeals (str | None): supplements SEBI attaches to the row.
+        needs_review (bool), review_reason (str | None): missing id, date or title.
+        scraped_at (datetime.datetime | None): the cache file's mtime (when the page was fetched).
+    """
     order_id: int | None
     order_date: dt.date | None
     order_date_raw: str
@@ -108,6 +121,12 @@ class ListingRow:
 
 @dataclass
 class PageLog:
+    """One listing page fetched: a row of ``reports/listing_pages.csv``.
+
+    Attributes:
+        order_type (str), page (int), total_pages (int | None), n_rows (int),
+        status (str): ok, failed or empty; from_cache (bool); error (str | None).
+    """
     order_type: str
     page: int
     total_pages: int | None
@@ -119,6 +138,14 @@ class PageLog:
 
 @dataclass
 class CategoryResult:
+    """Everything one category's walk produced.
+
+    Attributes:
+        category (Category): the category walked.
+        total_pages (int | None): from the hidden ``totalpage`` field.
+        rows (list[ListingRow]): every row parsed, before de-duplication.
+        pages (list[PageLog]): one entry per page fetched.
+    """
     category: Category
     total_pages: int | None = None
     rows: list[ListingRow] = field(default_factory=list)
@@ -126,6 +153,11 @@ class CategoryResult:
 
     @property
     def failed_pages(self) -> list[PageLog]:
+        """Pages whose fetch failed (to retry by re-running).
+
+        Returns:
+            list[PageLog]: the pages with status "failed".
+        """
         return [p for p in self.pages if p.status == "failed"]
 
 
@@ -134,7 +166,16 @@ class CategoryResult:
 # --------------------------------------------------------------------------
 
 def build_form(category: Category, page: int) -> dict[str, str]:
-    """Form body for one listing page (1-based ``page``)."""
+    """Form body for one listing page (1-based ``page``).
+
+    Args:
+        category (Category): the listing category.
+        page (int): 1-based page number.
+    Returns:
+        dict[str, str]: the POST form fields (``doDirect = page - 1`` selects the page).
+    Raises:
+        ValueError: page < 1.
+    """
     if page < 1:
         raise ValueError(f"page must be >= 1, got {page}")
     return {
@@ -159,7 +200,13 @@ def build_form(category: Category, page: int) -> dict[str, str]:
 
 
 def build_headers(category: Category) -> dict[str, str]:
-    """Minimal headers the WAF accepts. No cookies, no JSESSIONID, no analytics."""
+    """Minimal headers the WAF accepts. No cookies, no JSESSIONID, no analytics.
+
+    Args:
+        category (Category): the listing category (its smid goes into the Referer).
+    Returns:
+        dict[str, str]: Accept, Content-type, Origin and Referer headers.
+    """
     referer = (
         f"{LISTING_REFERER}?doListing=yes&sid={SID}&ssid={SSID}&smid={category.smid}"
     )
@@ -172,7 +219,17 @@ def build_headers(category: Category) -> dict[str, str]:
 
 
 def fetch_listing_page(category: Category, page: int, *, force: bool = False) -> bytes:
-    """Fetch one listing page through the cache. The only network call here."""
+    """Fetch one listing page through the cache. The only network call here.
+
+    Args:
+        category (Category): the listing category.
+        page (int): 1-based page number.
+        force (bool): re-fetch even if cached.
+    Returns:
+        bytes: the page's HTML.
+    Raises:
+        cache.FetchError: the request failed after retries.
+    """
     return cache.get(
         LISTING_URL,
         method="POST",
@@ -183,10 +240,26 @@ def fetch_listing_page(category: Category, page: int, *, force: bool = False) ->
 
 
 def listing_is_cached(category: Category, page: int) -> bool:
+    """Whether a listing page is already in the cache (for the log's cached/network note).
+
+    Args:
+        category (Category): the listing category.
+        page (int): 1-based page number.
+    Returns:
+        bool: True if cached.
+    """
     return cache.is_cached(LISTING_URL, method="POST", data=build_form(category, page))
 
 
 def listing_cached_at(category: Category, page: int) -> dt.datetime | None:
+    """When a listing page was fetched: its cache file's mtime (becomes ``scraped_at``).
+
+    Args:
+        category (Category): the listing category.
+        page (int): 1-based page number.
+    Returns:
+        datetime.datetime | None: the UTC mtime, or None if not cached.
+    """
     path = cache.cache_path(LISTING_URL, method="POST", data=build_form(category, page))
     if not path.exists():
         return None
@@ -203,6 +276,13 @@ _DATE_FORMATS = ("%b %d, %Y", "%B %d, %Y", "%d %b %Y", "%d %B %Y", "%d-%m-%Y", "
 
 
 def _soup(html: str | bytes) -> BeautifulSoup:
+    """Parse HTML (bytes are decoded as UTF-8, bad bytes replaced) with lxml.
+
+    Args:
+        html (str | bytes): the page.
+    Returns:
+        BeautifulSoup: the parsed document.
+    """
     if isinstance(html, bytes):
         html = html.decode("utf-8", errors="replace")
     return BeautifulSoup(html, "lxml")
@@ -213,6 +293,11 @@ def parse_total_pages(html: str | bytes) -> int | None:
 
     SEBI emits the value unquoted (``value=257 />``), so a stray ``/`` can end
     up inside the attribute; take the leading digits rather than trusting it.
+
+    Args:
+        html (str | bytes): a listing response.
+    Returns:
+        int | None: the page count, or None if the field is missing or unreadable.
     """
     node = _soup(html).find("input", attrs={"name": "totalpage"})
     if node is None:
@@ -222,7 +307,13 @@ def parse_total_pages(html: str | bytes) -> int | None:
 
 
 def parse_hidden_fields(html: str | bytes) -> dict[str, str]:
-    """All hidden inputs (``totalpage``, ``nextDel``, ``nextValue``) for diagnostics."""
+    """All hidden inputs (``totalpage``, ``nextDel``, ``nextValue``) for diagnostics.
+
+    Args:
+        html (str | bytes): a listing response.
+    Returns:
+        dict[str, str]: hidden input name → value.
+    """
     out: dict[str, str] = {}
     for node in _soup(html).find_all("input", attrs={"type": "hidden"}):
         name = node.get("name")
@@ -236,6 +327,11 @@ def extract_order_id(url: str | None) -> int | None:
 
     Returns None rather than guessing when the link is a direct PDF or any
     other shape — those rows are flagged for review instead.
+
+    Args:
+        url (str | None): a detail-page URL.
+    Returns:
+        int | None: the id, or None for a PDF link or any other shape.
     """
     if not url:
         return None
@@ -245,7 +341,13 @@ def extract_order_id(url: str | None) -> int | None:
 
 
 def parse_order_date(text: str | None) -> dt.date | None:
-    """Parse SEBI's listing date (``Feb 23, 2026``). None if unparseable."""
+    """Parse SEBI's listing date (``Feb 23, 2026``). None if unparseable.
+
+    Args:
+        text (str | None): the listing's date text.
+    Returns:
+        datetime.date | None: the date, or None if no known format fits.
+    """
     if not text:
         return None
     cleaned = re.sub(r"\s+", " ", text).strip().rstrip(".")
@@ -258,6 +360,13 @@ def parse_order_date(text: str | None) -> dt.date | None:
 
 
 def _normalise(text: str | None) -> str:
+    """Collapse runs of whitespace and strip.
+
+    Args:
+        text (str | None): any text.
+    Returns:
+        str: the cleaned text ("" for None).
+    """
     return re.sub(r"\s+", " ", (text or "")).strip()
 
 
@@ -274,6 +383,11 @@ def clean_title_attr(attr: str | None) -> tuple[str, str | None, list[str]]:
     their text, so an appeal annotation stays readable in the title.
 
     Returns ``(clean title, corrigendum url, SAT appeal numbers)``.
+
+    Args:
+        attr (str | None): the anchor's raw ``title`` attribute (may contain HTML).
+    Returns:
+        tuple[str, str | None, list[str]]: (clean title, corrigendum URL or None, SAT appeal numbers).
     """
     attr = attr or ""
     if not _TAG_RE.search(attr):
@@ -301,6 +415,11 @@ def _select_rows_table(soup: BeautifulSoup):
     carries the seven static "Order-11B-<year>.xlsx" summary spreadsheets and
     is repeated on every WTM page — those are not orders and must not enter
     the corpus.
+
+    Args:
+        soup (BeautifulSoup): a parsed listing response.
+    Returns:
+        bs4.Tag | None: the orders table, or None if there is none.
     """
     table = soup.find("table", id="sample_1")
     if table is not None:
@@ -319,7 +438,16 @@ def parse_rows(
     *,
     scraped_at: dt.datetime | None = None,
 ) -> list[ListingRow]:
-    """Extract order rows from one listing response. Never raises on bad HTML."""
+    """Extract order rows from one listing response. Never raises on bad HTML.
+
+    Args:
+        html (str | bytes): one listing response.
+        category (Category): the category it belongs to (sets order_type).
+        page (int): its page number.
+        scraped_at (datetime.datetime | None): when the page was fetched.
+    Returns:
+        list[ListingRow]: one row per order on the page (supplement links are not rows).
+    """
     table = _select_rows_table(_soup(html))
     if table is None:
         return []
@@ -409,6 +537,14 @@ def scrape_category(
 
     A failing page is logged and skipped; it never aborts the run. Because
     successful pages stay cached, re-running resumes at no network cost.
+
+    Args:
+        category (Category): the category to walk.
+        start_page (int): first page (1-based).
+        end_page (int | None): last page, inclusive; None = up to ``totalpage``.
+        force (bool): re-fetch cached pages.
+    Returns:
+        CategoryResult: rows, page logs and the page count.
     """
     result = CategoryResult(category=category)
     page = max(1, start_page)
@@ -477,7 +613,13 @@ _CONFLICT_FIELDS = ("order_date", "title", "source_url", "order_type")
 
 
 def _dedupe_key(row: ListingRow) -> tuple[str, str]:
-    """order_id where present; otherwise the URL, so PDF-only rows still dedupe."""
+    """order_id where present; otherwise the URL, so PDF-only rows still dedupe.
+
+    Args:
+        row (ListingRow): a parsed row.
+    Returns:
+        tuple[str, str]: ("order_id", id) or ("source_url", url).
+    """
     if row.order_id is not None:
         return ("order_id", str(row.order_id))
     return ("source_url", row.source_url)
@@ -488,6 +630,12 @@ def deduplicate(rows: list[ListingRow]) -> tuple[list[ListingRow], list[dict]]:
 
     Duplicates are never silently dropped: any duplicate whose metadata
     disagrees with the row we keep is emitted as a conflict record.
+
+    Args:
+        rows (list[ListingRow]): rows from every page and category.
+    Returns:
+        tuple[list[ListingRow], list[dict]]: the canonical rows, and one conflict record per duplicate
+        whose date, title, URL or type disagrees with the kept row.
     """
     canonical: dict[tuple[str, str], ListingRow] = {}
     conflicts: list[dict] = []
@@ -528,7 +676,13 @@ def deduplicate(rows: list[ListingRow]) -> tuple[list[ListingRow], list[dict]]:
 
 
 def sort_rows(rows: list[ListingRow]) -> list[ListingRow]:
-    """Deterministic order: order_type asc, order_date desc (undated last), order_id asc."""
+    """Deterministic order: order_type asc, order_date desc (undated last), order_id asc.
+
+    Args:
+        rows (list[ListingRow]): rows to sort.
+    Returns:
+        list[ListingRow]: sorted by type, date (newest first, undated last), then id.
+    """
     return sorted(
         rows,
         key=lambda r: (
@@ -568,6 +722,13 @@ PARQUET_SCHEMA = pa.schema(
 
 
 def rows_to_table(rows: list[ListingRow]) -> pa.Table:
+    """Rows → an Arrow table with the fixed ``PARQUET_SCHEMA``.
+
+    Args:
+        rows (list[ListingRow]): the rows.
+    Returns:
+        pyarrow.Table: one row per listing row.
+    """
     columns = {name: [] for name in PARQUET_SCHEMA.names}
     for row in rows:
         payload = asdict(row)
@@ -577,12 +738,28 @@ def rows_to_table(rows: list[ListingRow]) -> pa.Table:
 
 
 def write_parquet(rows: list[ListingRow], path: pathlib.Path = DEFAULT_OUT) -> pathlib.Path:
+    """Write the listing table (snappy-compressed Parquet).
+
+    Args:
+        rows (list[ListingRow]): the rows.
+        path (pathlib.Path): output file, default ``derived/listings.parquet``.
+    Returns:
+        pathlib.Path: the path written.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(rows_to_table(rows), path, compression="snappy")
     return path
 
 
 def _write_csv(path: pathlib.Path, records: list[dict]) -> None:
+    """Write dicts as a CSV (an empty file when there are none).
+
+    Args:
+        path (pathlib.Path): output file.
+        records (list[dict]): rows; the first one's keys are the header.
+    Returns:
+        None.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     if not records:
         path.write_text("")
@@ -594,6 +771,14 @@ def _write_csv(path: pathlib.Path, records: list[dict]) -> None:
 
 
 def setup_logging(level: str = "INFO", log_file: pathlib.Path | None = None) -> None:
+    """Log to stdout (and a file); silence httpx's per-request lines.
+
+    Args:
+        level (str): logging level name, e.g. "INFO".
+        log_file (pathlib.Path | None): also log here.
+    Returns:
+        None.
+    """
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
     if log_file is not None:
@@ -613,6 +798,11 @@ def setup_logging(level: str = "INFO", log_file: pathlib.Path | None = None) -> 
 # --------------------------------------------------------------------------
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.scrape_listings``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(
         prog="python -m src.scrape_listings",
         description="Scrape SEBI enforcement-order listings into derived/listings.parquet",
@@ -638,6 +828,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 1: scrape the categories, de-duplicate, write the table and the three reports.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: exit code — 0, or 1 if any page failed (re-run to retry it).
+    """
     args = build_arg_parser().parse_args(argv)
     setup_logging(args.log_level, LOGS_DIR / "scrape_listings.log")
 

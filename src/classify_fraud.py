@@ -94,6 +94,13 @@ INTERMEDIARY_REGIMES = {"STOCK_BROKERS", "INTERMEDIARIES", "MERCHANT_BANKERS", "
 
 
 def _rank(category: str) -> int:
+    """A category's place in the protocol's precedence order (0 = first).
+
+    Args:
+        category (str): one of PRECEDENCE.
+    Returns:
+        int: its index.
+    """
     return PRECEDENCE.index(category)
 
 
@@ -102,7 +109,15 @@ def _rank(category: str) -> int:
 # --------------------------------------------------------------------------
 
 def category_of(regime: str, provision: str) -> tuple[str, str] | None:
-    """(category or NARRATIVE / ISSUE, rule) for one violated provision, or None."""
+    """(category or NARRATIVE / ISSUE, rule) for one violated provision, or None.
+
+    Args:
+        regime (str): the instrument's label as in ``regulations`` ("PIT", "SEBI Act", "LODR" …).
+        provision (str): the provision, e.g. "3(1)" or "12A(d)" ("" for a regime-only lookup).
+    Returns:
+        tuple[str, str] | None: (category, or NARRATIVE / ISSUE to be decided from the text; the rule name),
+        or None if the provision says nothing about the category (definitions, powers).
+    """
     top = provision.split("(")[0]
     if top == "2":
         # Reg./Sec. 2 is the definitions ("insider", "connected person", "related
@@ -263,7 +278,13 @@ MIN_SCORE = {INSIDER_TRADING: 3, FUND_DIVERSION: 2, RPT_TUNNELLING: 3, ACCOUNTIN
 
 
 def narrative_scores(text: str) -> tuple[dict[str, int], dict[str, list[str]]]:
-    """Capped phrase counts per category, and the phrases that matched."""
+    """Capped phrase counts per category, and the phrases that matched.
+
+    Args:
+        text (str): the order's text, normalised.
+    Returns:
+        tuple[dict[str, int], dict[str, list[str]]]: score per category, and the phrases counted (with ×n).
+    """
     scores, hits = {}, {}
     for cat, patterns in PHRASES.items():
         total, found = 0, []
@@ -290,6 +311,15 @@ def narrative_scores(text: str) -> tuple[dict[str, int], dict[str, list[str]]]:
 
 
 def _move(scores: dict, hits: dict, src: str, dst: str, why: str) -> None:
+    """Move one category's score and evidence to another (diversion re-routed by whose money it was).
+
+    Args:
+        scores (dict[str, int]), hits (dict[str, list[str]]): changed in place.
+        src (str), dst (str): the categories.
+        why (str): a note added to each moved phrase.
+    Returns:
+        None.
+    """
     scores[dst] += scores[src]
     hits[dst] = hits[dst] + [f"{h} ({why})" for h in hits[src]]
     scores[src], hits[src] = 0, []
@@ -306,6 +336,13 @@ def route_diversion(text: str, scores: dict[str, int], hits: dict[str, list[str]
       RPT_TUNNELLING (tunnelling);
     * anything else (a collective scheme's collections, a broker's own money) is
       no diversion category.
+
+    Args:
+        text (str): the order's text.
+        scores (dict[str, int]): narrative scores (changed in place).
+        hits (dict[str, list[str]]): the phrases behind them (changed in place).
+    Returns:
+        None.
     """
     if not scores[FUND_DIVERSION] and not scores[ACCOUNTING_MISSTATEMENT]:
         return
@@ -326,7 +363,14 @@ def route_diversion(text: str, scores: dict[str, int], hits: dict[str, list[str]
 
 
 def read_narrative(scores: dict[str, int], among=NARRATIVE_CATEGORIES) -> tuple[str | None, str]:
-    """(category, confidence) the narrative supports, among ``among``."""
+    """(category, confidence) the narrative supports, among ``among``.
+
+    Args:
+        scores (dict[str, int]): narrative scores.
+        among (list[str]): the categories a narrative may decide.
+    Returns:
+        tuple[str | None, str]: (category or None, confidence high / medium / low).
+    """
     ranked = sorted((c for c in among if scores.get(c, 0) >= MIN_SCORE[c]),
                     key=lambda c: (-scores[c], _rank(c)))
     if not ranked:
@@ -387,7 +431,13 @@ _PFUTP_INFORMATION = re.compile(r"^4\(2\)\((?:f|k|r)\)")
 
 def regimes_named(text: str) -> list[str]:
     """Regimes named anywhere by title or abbreviation, even without a provision number
-    ("the Code of Conduct under the SEBI (Stock Brokers and Sub-Brokers) Regulations")."""
+    ("the Code of Conduct under the SEBI (Stock Brokers and Sub-Brokers) Regulations").
+
+    Args:
+        text (str): the order's text.
+    Returns:
+        list[str]: substantive regime labels named anywhere, unique, in order.
+    """
     out = []
     for rx in (rg._TITLE, rg._ABBREV):
         for m in rx.finditer(text):
@@ -403,6 +453,14 @@ def regimes_named(text: str) -> list[str]:
 
 @dataclass
 class Job:
+    """One order to classify, with what earlier stages found.
+
+    Attributes:
+        text_stem (str), order_id (int | None), order_type (str | None), text_path (str | None),
+        text_status (str | None), title (str | None), matter (str | None),
+        regulations (str): JSON list of violated provisions; regimes_cited (str): JSON list;
+        penalty_raw (str | None): the imposing sentences (for the penalty-section fallback).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -417,6 +475,13 @@ class Job:
 
 @dataclass
 class OrderCategory:
+    """One order's fraud category: a row of ``derived/order_categories.parquet`` (CLAUDE.md §8).
+
+    Attributes:
+        fraud_category (str | None), fraud_category_confidence (str | None), fraud_category_rule (str | None),
+        fraud_category_raw (str | None), fraud_categories_all (str, JSON), narrative_scores (str | None, JSON),
+        rules_version (str), error (str | None).
+    """
     text_stem: str
     order_id: int | None
     order_type: str | None
@@ -432,23 +497,51 @@ class OrderCategory:
 
 
 def _split(entry: str) -> tuple[str, str]:
-    """ "PFUTP 3(a)" → ("PFUTP", "3(a)"); "SEBI Act 12A(d)" → ("SEBI Act", "12A(d)")."""
+    """ "PFUTP 3(a)" → ("PFUTP", "3(a)"); "SEBI Act 12A(d)" → ("SEBI Act", "12A(d)").
+
+    Args:
+        entry (str): one entry of the regulations list.
+    Returns:
+        tuple[str, str]: (regime label, provision).
+    """
     regime, _, provision = entry.rpartition(" ")
     return regime, provision
 
 
 def classify(job: Job, text: str) -> OrderCategory:
+    """Decide one order's category (protocol §3): provisions first, then the fallbacks, then precedence.
+
+    Args:
+        job (Job): the order.
+        text (str): its text, headers stripped and normalised.
+    Returns:
+        OrderCategory: the category, its confidence, rule and evidence.
+    """
     o = OrderCategory(job.text_stem, job.order_id, job.order_type, job.text_status)
     scores, hits = narrative_scores(text)
     o.narrative_scores = json.dumps({c: s for c, s in scores.items() if s})
 
     def narrative(among=NARRATIVE_CATEGORIES):
+        """The category the narrative supports, with its confidence and evidence.
+
+        Args:
+            among (list[str]): categories the narrative may decide.
+        Returns:
+            tuple[str | None, str, str]: (category, confidence, evidence phrases).
+        """
         cat, conf = read_narrative(scores, among)
         return cat, conf, "; ".join(hits.get(cat, [])[:6]) if cat else ""
 
     found: dict[str, tuple[str, str, str]] = {}   # category -> (rule, confidence, evidence)
 
     def add(cat: str, rule: str, conf: str, evidence: str):
+        """Record a candidate category, keeping its most confident rule.
+
+        Args:
+            cat (str), rule (str), conf (str), evidence (str).
+        Returns:
+            None.
+        """
         if cat not in found or {"high": 0, "medium": 1, "low": 2}[conf] < {"high": 0, "medium": 1, "low": 2}[found[cat][1]]:
             found[cat] = (rule, conf, evidence)
 
@@ -521,7 +614,14 @@ def classify(job: Job, text: str) -> OrderCategory:
 
 
 def process(job: Job, repo_root: pathlib.Path = REPO_ROOT) -> OrderCategory:
-    """Never raises."""
+    """Never raises.
+
+    Args:
+        job (Job): the order.
+        repo_root (pathlib.Path): base for its text path.
+    Returns:
+        OrderCategory: the row (without text: an empty row; errors recorded in ``error``).
+    """
     if job.text_status != "OK" or not job.text_path:
         return OrderCategory(job.text_stem, job.order_id, job.order_type, job.text_status)
     try:
@@ -534,6 +634,14 @@ def process(job: Job, repo_root: pathlib.Path = REPO_ROOT) -> OrderCategory:
 
 
 def _process_many(jobs, repo_root):
+    """Classify a batch of orders (one worker task).
+
+    Args:
+        jobs (list[Job]): the batch.
+        repo_root (pathlib.Path): base for text paths.
+    Returns:
+        list[OrderCategory]: one per order.
+    """
     return [process(j, repo_root) for j in jobs]
 
 
@@ -542,6 +650,13 @@ def _process_many(jobs, repo_root):
 # --------------------------------------------------------------------------
 
 def load_jobs(derived: pathlib.Path = DERIVED_DIR) -> list[Job]:
+    """Gather each order's provisions, matter, title and imposing sentences from earlier stages.
+
+    Args:
+        derived (pathlib.Path): where order_parties, order_actions, listings and text_documents are.
+    Returns:
+        list[Job]: one per order.
+    """
     parties = {r["text_stem"]: r for r in pq.read_table(
         derived / "order_parties.parquet",
         columns=["text_stem", "matter_raw", "regulations", "regimes_cited"]).to_pylist()}
@@ -561,6 +676,15 @@ def load_jobs(derived: pathlib.Path = DERIVED_DIR) -> list[Job]:
 
 
 def select(jobs, *, categories=None, order_ids=None, stems=None, sample=None, limit=None, seed=7):
+    """Restrict the orders (types, ids, stems, a random sample, the first N).
+
+    Args:
+        jobs (list[Job]): all orders.
+        categories, order_ids, stems (list | None): keep only these.
+        sample (int | None), limit (int | None), seed (int).
+    Returns:
+        list[Job]: the selection.
+    """
     out = jobs
     if categories:
         out = [j for j in out if j.order_type in set(categories)]
@@ -576,6 +700,14 @@ def select(jobs, *, categories=None, order_ids=None, stems=None, sample=None, li
 
 
 def write_outputs(rows: list[OrderCategory], out_dir: pathlib.Path) -> pathlib.Path:
+    """Write ``order_categories.parquet``.
+
+    Args:
+        rows (list[OrderCategory]): the rows.
+        out_dir (pathlib.Path): ``derived/`` or a scratch directory.
+    Returns:
+        pathlib.Path: the path written.
+    """
     assert_safe_output(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "order_categories.parquet"
@@ -584,6 +716,16 @@ def write_outputs(rows: list[OrderCategory], out_dir: pathlib.Path) -> pathlib.P
 
 
 def run(jobs, *, workers=1, repo_root=REPO_ROOT, chunk=200) -> list[OrderCategory]:
+    """Classify every order (in worker processes when workers > 1).
+
+    Args:
+        jobs (list[Job]): the orders.
+        workers (int): processes.
+        repo_root (pathlib.Path): base for text paths.
+        chunk (int): orders per worker task.
+    Returns:
+        list[OrderCategory]: one per order.
+    """
     if workers <= 1:
         return [process(j, repo_root) for j in jobs]
     out: list[OrderCategory] = []
@@ -595,6 +737,13 @@ def run(jobs, *, workers=1, repo_root=REPO_ROOT, chunk=200) -> list[OrderCategor
 
 
 def summarise(rows: list[OrderCategory]) -> dict:
+    """Run summary for the log.
+
+    Args:
+        rows (list[OrderCategory]): the rows.
+    Returns:
+        dict: categories, confidence, basis (provisions / fallback / unresolved), by type, top rules.
+    """
     ok = [r for r in rows if r.text_status == "OK"]
     by_type = collections.defaultdict(collections.Counter)
     for r in ok:
@@ -613,6 +762,11 @@ def summarise(rows: list[OrderCategory]) -> dict:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
+    """The command-line options of ``python -m src.classify_fraud``.
+
+    Returns:
+        argparse.ArgumentParser: the parser.
+    """
     parser = argparse.ArgumentParser(prog="python -m src.classify_fraud",
                                      description="Fraud category from regulations and narrative (runbook Week 3, Day 1)")
     parser.add_argument("--derived", type=pathlib.Path, default=DERIVED_DIR, help="where the inputs are")
@@ -629,6 +783,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run stage 9: the fraud category of every selected order.
+
+    Args:
+        argv (list[str] | None): command-line arguments; None reads ``sys.argv``.
+    Returns:
+        int: 0.
+    """
     args = build_arg_parser().parse_args(argv)
     out_dir = args.scratch or DERIVED_DIR
     log_file = (args.scratch / "classify_fraud.log") if args.scratch else LOGS_DIR / "classify_fraud.log"
