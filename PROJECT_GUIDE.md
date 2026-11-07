@@ -71,7 +71,7 @@ Two findings to carry into the thesis design (details in `results_log.md`):
 | `src/fetch_prices.py`, `src/prices.py` | Week 4 Day 4: NSE/BSE daily prices, corporate actions, BSE 500; split/bonus adjustment and the sanity plot | — | code |
 | `src/fetch_shareholding.py` | Week 4 Day 5: promoter holding and pledging from BSE shareholding patterns (Dec 2015 on) | — | code |
 | `src/build_panel.py` | Week 4 weekend: the firm-year panel and its coverage table | — | code |
-| `tests/` | 807 tests, with real SEBI pages and order sentences as fixtures | — | code |
+| `tests/` | 838 tests, with real SEBI pages and order sentences as fixtures | — | code |
 | `raw/cache/` | every HTTP response ever fetched (opaque hashed names) | 8.7 GB | **no** — needs re-scraping (days) |
 | `raw/pdfs/<order_id>.pdf` | the order PDFs, hard-linked to `raw/cache` | ~0 extra | from the cache |
 | `raw/pdfs/order_files_by_category/` | your 55 hand-downloaded orders | small | your files |
@@ -229,7 +229,7 @@ Full column list: [CLAUDE.md §8](CLAUDE.md#8-data-dictionary).
 ## 4. Re-running the pipeline
 
 ```bash
-python -m pytest tests -q                                   # 807 passed
+python -m pytest tests -q                                   # 838 passed
 python -m src.scrape_listings --offline                     # stage 1 from cache, ~10 s
 python -m src.fetch_pdfs --offline                          # stage 2 from cache, ~3 min
 python -m src.extract_text                                  # stage 3, ~5 min with OCR cached

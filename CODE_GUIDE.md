@@ -805,7 +805,34 @@ can narrow the label without re-drawing.
 
 ---
 
-## Tests (`tests/`, 807 in all)
+## The thesis
+
+### `src/paper_tables.py` — every table and figure in the thesis (1,024 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.paper_tables [--sample DIR]` |
+| **Reads** | orders, order_issuers, firms, universe, name_matches, price_days, `prices/`, validation_key, and `sample*` once frozen (`--sample` reads a dry run instead) |
+| **Writes** | `paper/tables/*.tex` (8 tables), `paper/figures.pdf` (5 pages, used as `\includegraphics[page=n]`), `derived/paper_numbers.json` (the figures the prose quotes), `logs/paper_tables.log` |
+
+**How it works.**
+1. `load_orders` joins the issuers and adds the flags and lags every table shares. ISO means the title or the window
+   sentence names it. Lags are in years of 365.25 days.
+2. `cluster_key` and `clusters` give the crude matter unit: issuer × exact window, all ISO orders as one.
+3. Each `table_*` returns LaTeX in the template's `tabular*` form; each `figure_*` returns a matplotlib figure.
+4. `headline`, `surveillance_figures` and `cohort_figures` compute what the text quotes that no table shows.
+5. `channel_consistency` counts clusters whose orders disagree on the channel; `unread_penalties` counts orders that direct
+   payment of a penalty the reader missed.
+
+**What to check.** ISO is the only accent colour, so charts read in greyscale. Output is aggregates only: nothing prints a
+result for one order, because the blind coding is not scored. Prose numbers in `paper.tex` are typed by hand, so compare
+them with `derived/paper_numbers.json` after a re-run.
+
+**Tests:** `test_paper_tables.py`, 31.
+
+---
+
+## Tests (`tests/`, 838 in all)
 
 Each file tests the module of the same name.
 
@@ -828,6 +855,7 @@ Each file tests the module of the same name.
 | test_regulations | 29 | | test_prices | 7 |
 | test_extract_parties | 60 | | test_fetch_shareholding | 10 |
 | | | | test_build_panel | 3 |
+| | | | test_paper_tables | 31 |
 
 ## Hand files (`hand/`, committed: your decisions and the coding rules)
 
@@ -854,4 +882,4 @@ Each file tests the module of the same name.
 | `timeline.md` | the runbook: week by week to 1 December, the gates |
 | `technical_plan.md` | the thesis design: stages, estimators, hypotheses |
 | `audit/` | the 2026-09-28 audit of stages 1–9 (a snapshot) and its fixes |
-| `paper/` | the LaTeX template the thesis will be written in |
+| `paper/` | the thesis: `paper.tex`, `paper.bib`, and `tables/` and `figures.pdf`, which `src.paper_tables` generates |

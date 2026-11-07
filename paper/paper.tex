@@ -1,6 +1,18 @@
+
+
 \documentclass[letterpaper,11pt,leqno]{article}
 \usepackage{paper}
+\usepackage{array}
+\usepackage{placeins}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,decorations.pathreplacing}
 \bibliographystyle{paper}
+
+% Left-aligned paragraph column for tables with running text:
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+% Number the contents page like the rest of the document:
+\tocloftpagestyle{fancy}
 
 % Enter paper title to populate PDF metadata:
 \hypersetup{pdftitle={Detection, Prediction \& Deterrence}}
@@ -10,6 +22,10 @@
 
 % Enter path to PDF file with figures:
 \newcommand{\pdf}{figures.pdf}
+
+% Tables in tables/ and the pages of figures.pdf are written by `python -m src.paper_tables`.
+% Re-run it after any pipeline change. Prose figures are typed by hand: derived/paper_numbers.json
+% and results_log.md hold their sources, and `grep -n UPDATE paper.tex` lists what will change.
 
 \begin{document}
 
@@ -23,7 +39,7 @@
 \thanks{Prakhar Mittal: BITS Pilani. I thank my professor and mentors for their guidance.}}
 
 % Enter date:
-\date{September, 2026}   
+\date{November, 2026}
 
 % Enter paper URL (can be commented out):
 \paperurl{https://github.com/Prakhar072/thesis}
@@ -32,489 +48,579 @@
 \maketitle
 
 % Enter abstract:
-abstract text here
+% UPDATE: rewrite last, around the three headline estimates, once Stages 1 and 3 exist.
+Indian securities enforcement is often called reactive, but the claim has not been given a magnitude. This thesis divides enforcement into three links (whether a fraud was predictable, how long it stayed unaddressed, and whether the eventual sanction cost anything) and builds the data to measure each. I assemble every order in the four enforcement categories of the Securities and Exchange Board of India: 20,861 orders from December 2000 to September 2026, with text for 20,849. From each order I extract the period of activity SEBI examined, earlier notices and interim orders, sanctions, parties, the provisions violated, the type of misconduct and how the matter reached SEBI. Among the 12,142 orders that state an examined period, the median time from its end to SEBI's first public action is 3.15 years, or 2.59 years when the orders of one matter are grouped, and a further 1.2 to 1.3 years pass before the order. Only 41.3\% of orders say how the matter reached SEBI, and the share attributed to surveillance runs from 25.6\% to 54.9\% depending on the population counted. These figures are descriptive and await hand validation. The thesis fixes, before any estimate has been seen, the duration, prediction and event-study models that will test where the chain fails.
 \end{titlepage}
+
+\setcounter{tocdepth}{2}
+\begingroup\small\singlespacing
+\tableofcontents
+\endgroup
+\clearpage
 
 % Enter main text:
 \section{Introduction}\label{s:introduction}
- 
-\paragraph{Research question} Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\footnote{Excepteur sint, sunt in culpa qui officia deserunt mollit anim id est laborum.}
 
-\paragraph{Answer to the question} Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\footnote{Sunt in culpa qui officia deserunt mollit anim id est laborum. Excepteur sint occaecat cupidatat non proident. Sunt in culpa qui officia deserunt mollit anim id est laborum. Excepteur sint occaecat cupidatat non proident. Sunt in culpa qui officia deserunt mollit anim id est laborum. Excepteur sint occaecat cupidatat non proident.} Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+\paragraph{Research question} Where does India's capital-market fraud enforcement chain fail: at prediction, at detection or at punishment? The usual verdict on Indian securities enforcement is that it arrives after the money has gone. That verdict may be right in direction, but it carries no magnitude, and without a magnitude it cannot guide policy. ``Detect fraud earlier'' is not a reform. A statement that the median fraud stays unaddressed for a known number of years, that a known share of fraud was visible in public data beforehand, and that a sanction costs a firm a known share of its market value would be a reform agenda, because it would say which link deserves the next rupee.
 
-\paragraph{Positioning in the literature} Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum, quia dolor sit amet consectetur adipiscing velit, sed quia non numquam eius modi tempora incidunt, ut labore et dolore magnam aliquam quaerat voluptatem.
+\paragraph{Why delay belongs in the question} In the economics of enforcement that begins with \citet{B68}, an offender weighs the private benefit of an offence against its expected cost: the chance of being caught times the sanction. Delay enters as a discount on that sanction. A penalty that lands a decade after the gain is a smaller penalty, even if the probability of detection and the amount are unchanged. ``Enforcement is slow'' and ``enforcement is weak'' are therefore not two complaints, and the first can be measured as a component of the second. Detection itself is harder to measure, because enforcement records contain only what was caught. For the United States, \citet{DMZ24} estimate that about one-third of corporate fraud is detected, that about 10\% of large listed firms commit securities fraud in a given year, and that fraud destroys about 1.6\% of equity value annually. No comparable estimate exists for India, and this thesis does not attempt one.
 
-\paragraph{A paragraph} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam varius nisi vel ipsum vehicula, at finibus justo ultrices. Morbi vitae leo vitae purus dapibus tempor. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum sed nisi sit amet mi suscipit suscipit non nec tortor. Vivamus non ligula id turpis tempus fermentum ac sit amet leo. Etiam sit amet magna at turpis fringilla vestibulum. Sed non nisl eu velit consectetur malesuada eget eu libero. Sed a nisi sit amet velit facilisis feugiat nec at est. Quisque nec ultrices purus. Maecenas gravida mauris vel nulla eleifend, non dictum enim ullamcorper. Sed sit amet turpis in lectus dictum facilisis. Donec sed eros sed dui consectetur dictum. Sed volutpat tortor nec odio viverra, id sodales enim congue. Maecenas sit amet eros vitae nisl placerat mattis.
+\paragraph{What this thesis does} SEBI's orders usually state the period of business activity it examined. That institutional habit makes the chain measurable: an order that gives the examined period, the date of the earliest notice or interim order, and the sanction places one matter on a time line. I build a structured corpus of every order in SEBI's four enforcement listing categories and extract those fields from the text of each order, keeping the source sentence for every value. The corpus feeds three stages that correspond to the three terms of the deterrence condition. Stage~1 measures the lag from the end of the examined period to SEBI's first public action, its determinants, and the channel through which matters reach SEBI. Stage~2 asks whether fraud was visible in public market and ownership data before anyone acted, at a screening capacity SEBI could actually use. Stage~3 asks whether SEBI's orders impose a cost on the firm that exceeds the monetary penalty.
 
-\paragraph{Another paragraph} Maecenas nec risus nec nibh hendrerit ultricies. Nulla facilisi. Maecenas in magna eget felis dictum tempus. Donec vehicula, dolor nec dictum aliquam, arcu libero commodo metus, nec varius neque magna at nulla. Sed nec arcu sollicitudin, scelerisque tortor nec, viverra arcu. Cras suscipit mi vitae erat varius, nec ullamcorper lectus tristique. Maecenas aliquet lorem vitae velit ullamcorper, eget pellentesque velit rhoncus. Sed at risus at arcu hendrerit facilisis. Sed a massa hendrerit, rutrum orci ac, condimentum enim. Donec eget vestibulum eros. In hac habitasse platea dictumst.
+\paragraph{What the corpus already shows} Four descriptive facts emerge before any model is estimated. First, the delay sits mostly before the first public action. Among 12,142 orders stating an examined period, the median time from its end to the first public action is 3.15 years, and the median time from that action to the order is 1.19 years. Grouping the orders of a matter gives 2.59 and 1.29 years. Second, the unit of analysis is not a detail. One mass matter, Illiquid Stock Options at BSE, accounts for 2,375 orders; it moves the surveillance share of stated detection channels from 25.6\% to 41.9\%, and it explains most of the fall in orders between 2023 and 2024. Third, the record says little about how matters begin: 58.7\% of orders state no trigger, and only 415 orders cite an explicit surveillance alert. Fourth, the conduct at the centre of the Indian debate is rare in the record. Fund diversion, related-party tunnelling and accounting misstatement together make up 720 of 20,849 orders (3.5\%). Each of these facts is conditional on detection, and none has yet been validated by hand.
 
-\paragraph{Yet another paragraph} Curabitur maximus libero id magna bibendum fringilla. Curabitur ultricies dictum justo. Nam efficitur lobortis sapien a tristique. Vivamus vestibulum, sem nec dignissim scelerisque, purus nunc volutpat ligula, vitae aliquam libero orci nec augue. Nullam semper pulvinar turpis eget finibus. Suspendisse potenti. Nunc posuere arcu eget mauris venenatis, id pharetra sapien dapibus. Etiam at dictum urna. Integer gravida, odio sit amet mattis scelerisque, ipsum arcu ullamcorper sem, in vehicula sapien elit in tellus. Cras nec justo eu mauris volutpat dignissim. Curabitur malesuada purus sed tortor sollicitudin, in ullamcorper risus suscipit.
+\paragraph{Positioning in the literature} This thesis draws on four literatures. Work on fraud prediction \citep{B99,DGLS11,BKLYZ20} asks whether misstatement is detectable from accounts and reports classification accuracy, but not how long detection took. \citet{DMZ10} show who blows the whistle on US corporate fraud, and \citet{KKLM17} show how far conclusions depend on the database and on the dates used to measure misconduct. \citet{KLM08} find that for US firms the reputational loss from misconduct far exceeds the legal penalty. Cross-country work disagrees on whether public enforcement matters at all: \citet{LLS06} find little evidence that it does, while \citet{JR09}, measuring enforcement by regulators' resources, find that it does.
 
-\paragraph{A final introduction paragraph} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed auctor tortor non libero suscipit, nec vehicula velit consequat. Integer nec est at lacus venenatis malesuada sed nec tortor. Sed aliquam urna non nunc luctus, eget cursus purus consequat. Vivamus a purus nec purus finibus ultricies. Suspendisse potenti. Sed euismod purus ut lectus pulvinar, sit amet accumsan turpis tincidunt. Vivamus auctor tempor mauris, eu convallis leo dignissim nec. Sed scelerisque justo a felis ullamcorper, at fermentum lorem mattis. Etiam ultricies ligula et metus commodo, eget placerat est tempus. Cras tempus ex eu velit consectetur, id mattis sapien pharetra. Sed lobortis, libero quis sollicitudin congue, odio sapien consequat lacus, sed volutpat nibh nisl sit amet ex. Maecenas sollicitudin velit at nisi scelerisque, non venenatis libero tempor. Sed in vehicula ligula. Sed vulputate libero nec tristique lobortis.
+For India, \citet{BMM02} document tunnelling in business groups, and \citet{DK13} find that corporate governance reforms raised firm value once backed by stiffer sanctions, which is evidence that enforcement credibility is priced. The closest predecessors are recent. \citet{DZ22} assemble the first large dataset of SEBI orders I am aware of \citep{ZD22}: metadata for 8,032 orders from 2011 to 2020, with hand-coded fields for a stratified sample of 818. They report a median of a little over three years from violation to show-cause notice and a year and a half from notice to a penalty order. \citet{AKPPS25} evaluate SEBI's insider-trading orders against rule-of-law standards and report appeal rates of 30--41\%. On market reactions the evidence conflicts: \citet{J22} finds significant price declines after SEBI and Ministry of Corporate Affairs actions, while \citet{GPS26} find no significant reaction to 176 final orders in insider-trading matters.
 
-\section{Generic section}\label{s:section}
+\paragraph{Contribution} Against that background, the thesis makes four contributions. It extends the corpus to every order in the four categories from 2000 to 2026 and extracts the examined period, prior actions and sanctions from all of them, rather than from a coded sample, with a blind validation design and a link to listed firms and daily prices. It separates the delay into a detection lag and a resolution lag and treats right truncation directly, which, as far as I can find, no study of SEBI enforcement has done. It codes the detection channel from the orders under a protocol fixed in advance, which I have not found for India; \citet{DMZ10} is the nearest counterpart. And it places detection, prediction and deterrence in one condition, so that the answer is a diagnosis of the binding link and not three separate findings.
 
-This is a section. This is the section introduction. Below are the subsections. Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa, quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt, explicabo. 
+\paragraph{Status of this draft} % UPDATE: delete this paragraph when the estimates are in.
+This draft reports the corpus, its extraction and the descriptive evidence. The blind validation sample of 150 orders has been drawn but not yet coded, so every extracted figure below is a pipeline figure. The firm sample is not yet frozen, ownership data have not been collected, and Stages 1 to 3 have not been estimated. Section~\ref{s:strategy} therefore fixes the models without reporting results, and section~\ref{s:discussion} confines itself to what description can support.
 
-\subsection{Generic subsection}
+\paragraph{Roadmap} Section~\ref{s:institutions} describes how a SEBI matter proceeds. Section~\ref{s:framework} sets out the framework and the hypotheses. Section~\ref{s:data} describes the data. Section~\ref{s:descriptive} reports the descriptive evidence. Section~\ref{s:strategy} specifies the empirical strategy. Section~\ref{s:discussion} discusses what the evidence does and does not show, section~\ref{s:limitations} sets out the limitations and section~\ref{s:ccl} concludes.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Nullam molestie, libero sit amet luctus vehicula, eros purus ultrices libero, eget fermentum leo sapien a metus. Duis porta massa vel justo posuere, nec placerat neque dictum. Morbi nec velit in turpis fermentum cursus nec ut leo. Integer vitae eros vehicula, fermentum turpis sed, fermentum elit. Suspendisse ac mauris at nisl ultricies commodo id nec justo. 
+\section{Institutional setting}\label{s:institutions}
 
-Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam erat volutpat. Donec tincidunt, quam sed pellentesque fermentum, lorem dolor consequat lectus, at pulvinar arcu ipsum in ligula. Mauris pretium ipsum id sapien posuere vehicula. Vivamus consectetur, turpis vitae pellentesque molestie, libero odio venenatis mauris, id vestibulum nisl nulla sit amet enim.\footnote{A longer footnote illustrating how multiple lines of footnote text affect the bottom of the page and the main text flow. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam erat volutpat. Donec tincidunt, quam sed pellentesque fermentum, lorem dolor consequat lectus, at pulvinar arcu ipsum in ligula. Mauris pretium ipsum id sapien posuere vehicula. Vivamus consectetur, turpis vitae pellentesque molestie, libero odio venenatis mauris, id vestibulum nisl nulla sit amet enim. Cras ultricies consectetur ex, sit amet vestibulum lacus hendrerit vel. Sed lacinia eleifend purus. Vivamus consectetur, turpis vitae pellentesque molestie, libero odio venenatis mauris, id vestibulum nisl nulla sit amet enim. Cras ultricies consectetur ex, sit amet vestibulum lacus hendrerit vel. Sed lacinia eleifend purus.} 
+\subsection{SEBI and its orders}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ullamcorper justo nec sem blandit, ac interdum libero convallis. Nulla facilisi. Etiam euismod, purus eget tempor feugiat, lectus ex vehicula justo, ut feugiat odio nisi sit amet lorem. Vivamus id lobortis justo. Sed varius scelerisque nibh, ut finibus quam vehicula nec. Cras ultricies consectetur ex, sit amet vestibulum lacus hendrerit vel. Sed lacinia eleifend purus. Nunc dignissim eros et sapien lacinia eleifend. Curabitur sit amet velit eu metus suscipit tempus. Maecenas in libero felis. Sed quis eros sapien. Suspendisse potenti. Curabitur porta est sed enim efficitur, a tempor justo fermentum. Vivamus pulvinar enim vitae semper rutrum. Aenean non mauris sed lectus vestibulum feugiat eget et ipsum. Donec semper vitae enim at ultricies. Sed eu arcu justo.
+SEBI became a statutory regulator under the Securities and Exchange Board of India Act, 1992. It publishes its enforcement decisions in eight listing categories \citep{SEBI26b}. Four of these are SEBI's own decisions and make up the corpus. Orders of the Chairperson and whole-time members issue directions, such as market bans and disgorgement, under sections 11 and 11B of the Act. Adjudicating officers impose monetary penalties under section 15-I. Settlement orders record the terms on which a proceeding is closed. Orders of Executive Directors and Chief General Managers come from officers sitting as quasi-judicial authorities. The other four categories (orders of the Securities Appellate Tribunal, courts, special courts, and orders under Regulation 30A of the Intermediaries Regulations) are appellate, judicial or procedural follow-ups, and I do not treat them as primary observations.
 
-\subsection{Subsection with references} 
+The substantive charges come from a small set of instruments. The Prohibition of Fraudulent and Unfair Trade Practices (PFUTP) Regulations, 2003 and section 12A of the Act cover market manipulation and fraud in general. The Insider Trading Regulations of 1992 and 2015 cover trading on unpublished price-sensitive information. The Substantial Acquisition of Shares and Takeovers (SAST) Regulations of 1997 and 2011 impose disclosure and open-offer duties. The Listing Agreement, and from December 2015 the Listing Obligations and Disclosure Requirements (LODR) Regulations, set continuing obligations for listed companies. Separate regulations govern brokers, depository participants, investment advisers and other intermediaries.
 
-References can be appended at the end of a sentence, in parenthesis \citep{MS15}. References can also include page numbers or other bibliographical information \citep[p. 1305]{MS19}.  References can be in text: for instance, \citet{M12} found this and \citet[figure 1]{M14} found that. It's also possible to collate several references to the same author: for instance, \citet{M12,M14} found things. References from the same authors and same year appear as follows: \citet{LMS18a,LMS18b} wrote something. It is also possible to cite the authors of a study by name, or the year of a study: for instance, \citeauthor{EMM21} wrote a paper in \citeyear{EMM21} on this topic.
+\subsection{The path of a matter}\label{s:path}
 
-\subsection{Subsection with paragraphs}
+A matter can come to SEBI's attention through market surveillance, an investor complaint, a routine inspection of an intermediary, a reference from another agency, a press report or the company itself. SEBI then examines or investigates a period of activity. Where it sees a need for urgent action it can pass an \emph{ad interim ex parte} order that restrains the parties before they are heard, and later confirm, modify or lift it. It issues a show-cause notice (SCN) to each noticee, hears them and passes a final order.\footnote{A \emph{noticee} is the party to whom a notice is addressed. A \emph{promoter} is, in Indian usage, the controlling shareholder or founder group of a listed company.} The same conduct can lead to directions from a whole-time member and to a penalty from an adjudicating officer, so one matter often produces several orders. A noticee can apply to settle. The consent mechanism began with a circular in 2007, gained a statutory basis in section 15JB in 2014, and now operates under the Settlement Proceedings Regulations, 2018. Appeals lie to the Securities Appellate Tribunal (SAT) under section 15T and on questions of law to the Supreme Court under section 15Z.
 
-\paragraph{Paragraph heading} Aenean fermentum purus id lacus volutpat, a eleifend mi posuere! Mauris nec nunc commodo, vehicula enim nec; vehicula ex. Nullam euismod lorem at eros efficitur: ut ultricies ante fringilla? Nam sagittis sapien id tortor commodo---a pulvinar velit ultricies\ldots Integer ac magna velorci mollis vestibulum. Fusce id ipsum vel magna placerat vehicula. Curabitur ac lobortis justo. 
+Table~\ref{t:taksheel} follows one matter along this path. Taksheel Solutions listed on 19 October 2011. Its share price fell from an opening of Rs~157.40 to a close of Rs~38.50 on BSE that day.\footnote{Amounts are in rupees. One lakh is 100,000 and one crore is 10 million.} SEBI examined the period from May to December 2011 and restrained the company and others on 28 December 2011, in the last days of that period. The first monetary penalty came on 30 June 2014, two and a half years later: Rs~76 crore across 16 noticees, of which Rs~26 crore fell on the company. SAT set the order aside for several noticees in April 2016 and returned the matter, and fresh penalties followed in August 2021, nearly ten years after listing. Four appeals against that order were filed in 2022.
 
-\paragraph{Another paragraph with some numbers and special characters} Pellentesque habitant 25\% morbi tristique senectus 1837--1905 et netus et malesuada fames ac turpis egestas. Integer semper euismod sapien vel dictum \#1 and \#6. Vivamus nec nunc sed metus interdum suscipit. (Maecenas tristique felis sed eleifend aliquet.) Donec et ipsum 3/4 in mauris ultricies pulvinar 9/2. Nullam quis ``sapien a justo'' vestibulum fermentum. Cras sed odio \& vitae mi placerat mollis: \$23.
+\begin{table}[t]
+\caption{One matter on the time line: Taksheel Solutions}
+\begin{tabular*}{\textwidth}[]{L{2.1cm}@{\extracolsep\fill}L{10.0cm}r}
+\toprule
+Date & Event & SEBI order \\
+\midrule
+19 Oct 2011 & Shares list; price falls from Rs~157.40 to Rs~38.50 on BSE during the day & \\
+May--Dec 2011 & Period of activity SEBI examines & \\
+28 Dec 2011 & \emph{Ad interim ex parte} order restrains the company and others & 21872 \\
+2012--2013 & Confirmatory and further orders against individual parties & five orders \\
+Mar, May 2013 & Show-cause notices & recited \\
+30 Jun 2014 & Adjudication order: Rs~76 crore across 16 noticees & 27221 \\
+15 Apr 2016 & SAT sets the order aside for several noticees and returns the matter & recited \\
+15 Nov 2017 & Whole-time member's order: three-year market restraints & 36599 \\
+10 Aug 2021 & Fresh adjudication order: Rs~6 crore on the company, Rs~16 crore on its managing director, and others & 51767 \\
+1 Nov 2021 & Further whole-time member's order against other noticees & 53692 \\
+2022 & Appeals to SAT against the 2021 adjudication order & annotated \\
+\bottomrule
+\end{tabular*}
+\note{The corpus holds twelve orders in this matter, including two corrigenda (25602, 26106). The five orders of 2012--2013 are 22748, 22749, 23397, 24670 and 25585. Order numbers are the identifiers in SEBI's web addresses. ``Recited'' means the date comes from a later order's text; ``annotated'' means it comes from SEBI's listing.}
+\label{t:taksheel}\end{table}
 
-\subsection{Subsection with URL}
+The example carries four lessons for measurement. The first public action and the first penalty are different events: the interim order came at the end of the examined period, and the first penalty came 2.5 years after it. The end of the examined period can coincide with SEBI's own intervention, so it is not always an independent date. One matter is many orders, only some of which state the period. And a final order may not be final, because remands and appeals continue for years.
 
-It is possible to insert URLs, such as the URL for this paper template's repository: \url{https://github.com/pmichaillat/latex-paper}. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+\subsection{Sanctions}
 
-\section{Section with math}\label{s:math}
+Monetary penalties are set by the penalty sections of the Act. Section 15HA, the penalty for fraudulent and unfair trade practices, provides for a penalty of not less than Rs~5 lakh, extending to Rs~25 crore or three times the profit made, whichever is higher. The adjudicating officer weighs the factors in section 15J, such as gain, loss and repetition. Other sanctions are market restraints (debarment), disgorgement of unlawful gains, suspension or cancellation of an intermediary's registration, and warnings. Section 28A gives SEBI recovery powers. The orders record what was imposed. They do not record what was collected, or what survived appeal.
 
-This section displays a number of mathematical expressions to showcase the math fonts used in the template.
+\subsection{Reforms relevant to the regime tests}
 
-\subsection{Roman letters} 
+Two reforms define the regime indicators used in Stage~1. The LODR Regulations took effect in December 2015 and consolidated listed companies' disclosure duties. The National Financial Reporting Authority Rules took effect on 13 November 2018 and moved oversight of auditors of listed companies to a new body. Both aimed to strengthen disclosure or audit oversight, and both fall close enough to the end of the corpus that truncation makes them hard to evaluate (section~\ref{s:stage1}).
 
-The Roman characters in math are just the same as the characters in the text---but in \textit{italic}. Here are some small letters: 
-\begin{equation*}
-a\{p - r \times l\} + \frac{w(g/z+j)}{i(t)+j(t)+k(t) - e^p - x^j} + \frac{h[f]+x^f}{k[y]-e^y + x^y} = f(j)^{6+y} - i^3_{g,j,p} \approx (p_{ji})^5.
-\end{equation*}
-Here are some capital letters as well: 
-\begin{equation*}
-G[p + P^7-Q] - A_B + L\{j\} = F(X) \to [Y+K]\times Z_f/H - [g_4 - i],\;\text{for any}\;i.
-\end{equation*}
-The punctuation is also the same in math as in text. 
+\section{Conceptual framework: the enforcement chain}\label{s:framework}
 
-\subsection{Digits}
+\subsection{The deterrence condition}
 
-The digits in math are also taken from the text font, just like the Roman characters. So 1, 2, 3, 4, 89, 03 (in text mode) is just the same as $1,\,2,\,3,\,4,\,89,\,03$ (in math mode). The percentage sign is also the same so 27\% (in text mode) is the same as $27\%$ (in math mode).
-
-\subsection{Greek letters}
-
-Here are some small Greek letters in a math display: 
-\begin{equation*}
-\alpha^{\theta} + \gamma^4 + g(a) - \zeta \times \frac{y(\lambda)}{\kappa \cdot k+ \sigma - s} \to \nu_{\eta} = \beta^\epsilon \cdot \delta - \mu + \frac{\xi^4}{\zeta_{ij}} \to m(x) + b^e + \omega .
-\end{equation*}
-Here are some capital Greek letters in another math display: 
+A promoter commits fraud when the private benefit $B$ exceeds the expected cost, which is the probability of being caught times the sanction, discounted by how long the sanction takes to arrive. Fraud is deterred when
 \begin{equation}
-F(\Psi) - G(\Phi) \times \Delta^{10} = \Sigma \cdot \Omega^2 - \frac{\Lambda_i}{\Theta_j} \cdot \frac{\Gamma(x)}{\Pi(t)}.
-\label{e:capitalgreek}\end{equation}
+p(\bm{x}) \cdot S \cdot e^{-r\tau} > B,
+\label{e:deterrence}\end{equation}
+where $p(\bm{x})$ is the probability of detection given observable characteristics $\bm{x}$, $S$ is the sanction, $r$ is the promoter's discount rate and $\tau$ is the delay. Each stage of the thesis informs one term. Stage~1 measures $\tau$. Stage~2 asks how high $p(\bm{x})$ could be at realistic screening capacity. Stage~3 measures the market-value part of $S$. Equation~\eqref{e:deterrence} is what makes the three stages one argument: at a given penalty, a longer delay and a lower detection rate are substitutes, and the condition says how many of one offsets the other.
 
-Some but not all the variants of the standard Greek letters are available. There is a variant for theta ($\vartheta \neq \theta$), for epsilon ($\varepsilon \neq \epsilon$), for pi ($\varpi \neq \pi$), and for phi ($\varphi \neq \phi$). But there is no available variant for sigma ($\varsigma = \sigma$), rho ($\varrho = \rho$), and kappa (\texttt{\textbackslash varkappa} gives an error).
-
-\subsection{Calligraphic letters} 
-
-Calligraphic letters are taken from the same family of fonts as the Greek letters. The calligraphic letters are only available for capital letters. Here are some of the calligraphic letters: 
-\begin{equation*}
-\frac{\mathcal{A}(A)}{\mathcal{H}} - \mathcal{B}(\beta) + \mathcal{Q}(j+3f) \to \mathcal{Y} + \mathcal{M}(\mathcal{N} - 2) = \mathcal{J}(X) \neq \mathcal{X}(J) - \mathcal{F}[\mathcal{D} \times \Delta]^8. 
-\end{equation*}
-
-\subsection{Blackboard-bold letters} 
-
-Here are some blackboard-bold letters, used in some mathematical expressions: $x \in\mathbb{R}^n$ but $y\in \mathbb{Q}$ and $[A_1,A_2] \in \mathbb{Z} \times \mathbb{N}$; so that $\mathbb{E}[X\mid Y] = Y + 3 \cdot \mathbb{P}(X^2) \notin \mathbb{C} \times \mathbb{1}(X \subseteq \mathbb{B})$.
-
-\subsection{Symbols} 
-
-The template comes with a full set of mathematical symbols. Here is a random assortment of some symbols: 
-\begin{equation*}
-\left(\frac{\sum_i \vec{z_i}}{\sum_{j=-\infty}^{+\infty} X_j}\right) \pm Q \subset \mathbb{R} \neq \mathbb{C} \implies \sqrt{\frac{\mathcal{X}}{2}} > \sqrt{\mathcal{Y}} \gg \hat{b}(y_0).
-\end{equation*}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed aliquam magna vel urna ultrices, sed lacinia nulla mattis. Fusce non nunc nec est mollis malesuada. Nullam dignissim nulla sit amet libero facilisis, eget fringilla libero sagittis. Suspendisse potenti. Vivamus fermentum consectetur ante, at rhoncus nisi tristique vel:
-\begin{equation*}
-\sum_i \left[\frac{\hat{x}(i)}{\mathcal{Y}(i)}\right]^2 \leq 2\pi \Rightarrow \prod_j \bar{y}(j)^2 \geq \left\{\iint \frac{g(h)}{\gamma(s) \times \Delta(h)}\,dh\,ds \right\} \mapsto f\circ g(x) \iff \tilde{Q}(x) \propto \frac{\dot{x}}{2}.
-\end{equation*}
-
-\subsection{Bold characters}
-
-In the template it is possible to bold all math characters. Roman characters can be bolded, such as $\bm{a} + \bm{D} = \bm{E}^2 + \bm{j}/\bm{i}$. Greek characters can also be bolded, such as $\bm{\alpha} + \bm{\Delta} = \bm{\epsilon}^2 + \bm{\Lambda}/\bm{\Phi}$. It is also possible to bold digits: $1 + 2 \neq \bm{1} + \bm{2}$. Finally, it is possible to bold calligraphic letters: $\bm{\mathcal{C}} + \bm{\mathcal{E}} - [\bm{\mathcal{X}}+\bm{\mathcal{Y}}]$. Blackboard-bold letters are already ``bold'' so they cannot be bolded further.
-
-\subsection{Operators} 
-
-Operators in mathematical expressions are typeset with the text font. Here are a few examples: 
-\begin{equation*}
-\max_x \pi(x) = \frac{\int \ln(u)du}{\int\exp(v)\,dv} \mapsto \cos(\theta) + \sin(\omega) - \min_z[\tan(z)].
-\end{equation*}
-Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam erat volutpat. Donec tincidunt, quam sed pellentesque fermentum, lorem dolor consequat lectus, at pulvinar arcu ipsum in ligula. Mauris pretium ipsum id sapien posuere vehicula. 
-
-\subsection{Some equations} 
-
-This subsection illustrates how the different math fonts fit together. The equations below combine various characters together.
-
-First, here are equations in text. Lorem ipsum dolor sit amet, consectetur adipiscing elit: $\prod_i\alpha_i(X) \geq 2 \cdot [\partial a_u(Z)/\partial Z] \propto \mathcal{X} \sim 5.2\pi \leadsto +\infty$. Lorem ipsum dolor sit amet, consectetur adipiscing elit: $\sum_{x=1}^4 \xi^x(j)=0, \; \forall j\in \mathbb{R}$. Here are some other expressions: $\mathcal{R}(z) = \max\{T_1,\ldots,T_{n}\} > \hat{z}$, and  $\mathbb{P}(T_n < z) = 1 - S(z) = F(z)$.  Sed vehicula ultrices odio, vitae maximus justo convallis at. Fusce quis consequat arcu: $\alpha^* = S(z^*)$ and $S^*(z^*)=\mathbb{E}[\bm{\alpha}\mid \beta]$. Integer non ante eget purus aliquet consequat. Mauris ut dui nec ligula consectetur commodo.
-
-Here are equations in display mode, without labels:
-\begin{align*}
-\frac{\mathcal{S}(u^*)}{1 - \frac{\partial \ln(\theta)}{\partial \theta} + \left[\gamma^\eta\right] - \mathcal{G}(z^*)} &= \sum_{i=0}^{+\infty}\frac{d F^{i}(x)}{d x} - \Lambda(i) \geq \left\lbrace\sum_{i=0}^{+\infty}G^{i} - \Omega(i)\right\rbrace\\
-\frac{\mathbb{Q}(z^*)}{1 -\mu + \exp(\xi) \times \mathbb{M}(z^*)} &= \prod_{i=0}^{+\infty}F^{i} - \Phi(i) \neq \left(\int_{0}^{+\infty}\frac{G^{i}}{\epsilon(i)} di\right).
-\end{align*}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vehicula ultrices odio, vitae maximus justo convallis at. Fusce quis consequat arcu. Integer non ante eget purus aliquet consequat. Mauris ut dui nec ligula consectetur commodo.
-
-And here is a single equation in display mode without a label:
-\begin{equation*}
-\dot{y}(t) \to \sum_{j=0}^{+\infty}\mathcal{W}^j(z^{\ast}(t)) = \frac{S(z) \mathbb{E}(N(z))}{\mu_1 - \zeta_2} \cdot 2 - \left[\prod_{i=0}^{+\infty}\mathcal{F}^{i}\right]-\iiint\exp(\lambda(t) \mu(s)) \sin(\theta)dt\,ds\,d\theta.
-\end{equation*}
-Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam consequat, ipsum eget tincidunt aliquam, mi est pellentesque lacus, nec ullamcorper leo magna a dui.
-
-\subsection{Theorems, propositions, lemmas, and other results}
-
-Here is a proposition with some more math:   
-\begin{proposition}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit:
-\begin{equation}
-\sum_k\bm{S}_{k_x}(z) \approx \frac{S(z)^x}{k / 23 -\zeta\gamma [45- S(z)] + \ln(y) - j^2+x(l)}.
-\label{e:type1}\end{equation}
-Ut enim ad minim veniam, sunt in culpa qui officia deserunt mollit anim id est laborum. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-\label{p:type1}\end{proposition}
-\begin{proof} 
-Here is the proof to the proposition. Donec commodo justo a eros malesuada, eget vulputate tortor accumsan. Sed ac pulvinar nulla. Etiam quis felis dapibus, vulputate metus eu, finibus nunc. Sed vel sodales dui. Nam venenatis dolor non orci tempus fermentum. Vivamus sodales justo a ligula cursus aliquet. Sed fringilla nunc vitae justo finibus, id placerat lectus sodales.
-\end{proof} 
-
-Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Sed ac eros vel felis vehicula vehicula. Phasellus interdum justo a felis congue, vel dapibus est tristique. Now here is a lemma---note that all types of results have their own counter:
-\begin{lemma} 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat:
-\begin{equation}
-z^* = \int_{0}^{\infty} \alpha(i) \cdot \frac{1-\beta}{1-\alpha(i)\beta}\,di.
-\label{e:cv}\end{equation}
-\label{p:cv}\end{lemma}
-
-Quia dolor sit amet consectetur adipiscing velit, sed quia non numquam eius modi tempora incidunt, ut labore et dolore magnam aliquam quaerat voluptatem. Then here is another lemma:
-\begin{lemma}
-Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua $\mathcal{Z}(\alpha)$. 
-\begin{equation*}
-\frac{\sum_i z^i}{\prod_i q^i} \to \frac{\int_{0}^{\infty} \alpha(i) \cdot [1-\beta]\,di}{1-\exp(\alpha)\sin(\beta)}.
-\end{equation*}
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-\end{lemma}
-
-Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aliquam erat volutpat. Donec tincidunt, quam sed pellentesque fermentum, lorem dolor consequat lectus, at pulvinar arcu ipsum in ligula. Mauris pretium ipsum id sapien posuere vehicula. Vivamus consectetur, turpis vitae pellentesque molestie, libero odio venenatis mauris, id vestibulum nisl nulla sit amet enim. Cras ultricies consectetur ex, sit amet vestibulum lacus hendrerit vel. Sed lacinia eleifend purus. Nunc dignissim eros et sapien lacinia eleifend. Curabitur sit amet velit eu metus suscipit tempus. Maecenas in libero felis. Sed quis eros sapien. Suspendisse potenti. Curabitur porta est sed enim efficitur, a tempor justo fermentum. Vivamus pulvinar enim vitae semper rutrum. Aenean non mauris sed lectus vestibulum feugiat eget et ipsum. Donec semper vitae enim at ultricies. Sed eu arcu justo.
-
-Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum. And here is a theorem following the lemma:
-\begin{theorem} 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua:
-\begin{equation*}
-\mathbb{E}(N(z^*)) \approx \frac{1-\mathbb{P}(\alpha\pi)}{1-\pi}- \frac{f(y)}{z(p)^*} + P(\Gamma).
-\end{equation*}
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-\end{theorem}
-
-Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui dolorem ipsum. And here is a corollary following the theorem:
-\begin{corollary} 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua:
-\begin{equation*}
-\mathcal{Q}^* = \int_{-\infty}^{+\infty} \mu(j)^2 \cdot \frac{1-\ln(\nu(j))}{1-\exp(\beta(j))}\,dj.
-\end{equation*}
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-\end{corollary}
-
-\section{Section with lists}\label{s:lists}
-
-Lists are not very common in scientific papers, but they are sometimes useful. This section presents a few possible lists.
-
-\subsection{Subsection with itemized lists}
-
-
-Here is a basic itemized list with one level:
-\begin{itemize}
-\item Et harum quidem rerum facilis est et expedita distinctio.
-\item Nam libero tempore, cum soluta nobis est eligendi optio.
-\item Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae.
-\item Nam libero tempore, cum soluta nobis est eligendi optio.
-\end{itemize}
-Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus, omnis voluptas assumenda est, repellendus. Here is a list with two levels:
-\begin{itemize}
-\item Et harum quidem rerum facilis est et expedita distinctio.
-\item Nam libero tempore, assumenda est, repellendus, cum soluta nobis est eligendi optio:
-\begin{itemize}
-\item Cumque nihil impedit
-\item Quo minus id, quod maxime placeat. Emporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet---nam libero tempore, cum (soluta) nobis est eligendi optio.
-\item Facere possimus, omnis voluptas assumenda est
-\end{itemize}
-\item Emporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet. Nam libero tempore, cum soluta nobis est eligendi optio.
-\end{itemize}
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-\subsection{Subsection with numbered lists}\label{s:numberedlists}
-
-And here is a numbered lists with two levels:
-\begin{enumerate}
-\item Et harum quidem rerum facilis est et expedita distinctio.
-\item Nam libero tempore, cum soluta nobis est eligendi optio.
-\item Emporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet. Nam libero tempore, cum soluta nobis est eligendi optio:
-\begin{enumerate}
-	\item Cumque nihil impedit.
-	\item Quo minus id, quod maxime placeat.
-	\item Facere possimus, omnis voluptas assumenda est.
-\end{enumerate}
-\item Et harum quidem rerum facilis est et expedita distinctio.
-\item Nam libero tempore, cum soluta nobis est eligendi optio.
-\end{enumerate}
-Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. 
-
-\section{Section with graphs}\label{s:graphs}
-
-Here is a section with a variety of graphs. At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga. 
-
-\subsection{Subsection with graphs at the top of the page}
-
-A simple two-panel graph is on figure \ref{f:graph1}. It will be placed at the top of the page, just about here. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae.
+Figure~\ref{f:chain} places the stages on a time line. The solid path is what the enforcement record shows. The dashed path is the counterfactual that Stage~2 tests: whether information needed to reach $t_2$ sooner was already public while the fraud was under way.
 
 \begin{figure}[t]
-\subcaptionbox{A first panel, 1951--2019\label{f:panelA}}{\includegraphics[scale=0.2,page=1]{\pdf}}\hfill
-\subcaptionbox{A second panel, 1951--2019\label{f:panelB}}{\includegraphics[scale=0.2,page=2]{\pdf}}
-\caption{Graph with two panels}
-\note{This is a note for the graph. Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus.}
-\label{f:graph1}\end{figure}
+\begin{tikzpicture}[x=1cm,y=1cm,font=\footnotesize,>={Stealth[length=2mm]}]
+\draw[->,line width=0.5pt] (0,0) -- (14.8,0);
+\foreach \x/\t/\l in {1.0/t_0/{Examined\\period starts}, 5.0/t_1/{Examined\\period ends}, 9.4/t_2/{First public\\action}, 13.4/t_3/{Final\\order}}{
+  \draw[line width=0.5pt] (\x,-0.1) -- (\x,0.1);
+  \node[above] at (\x,0.12) {$\t$};
+  \node[above,align=center] at (\x,0.5) {\l};
+}
+\draw[decorate,decoration={brace,mirror,amplitude=4pt}] (1.05,-0.2) -- (4.95,-0.2) node[midway,below=5pt,align=center] {Conduct under way};
+\draw[decorate,decoration={brace,mirror,amplitude=4pt}] (5.05,-0.2) -- (9.35,-0.2) node[midway,below=5pt,align=center] {Detection lag $T$\\(Stage 1)};
+\draw[decorate,decoration={brace,mirror,amplitude=4pt}] (9.45,-0.2) -- (13.35,-0.2) node[midway,below=5pt,align=center] {Resolution lag $R$\\(Stage 1)};
+\node[align=center] (sig) at (3.0,-1.75) {Public signals observable\\between $t_0$ and $t_1$ (Stage 2)};
+\draw[->,dashed,line width=0.5pt] (sig.east) to[out=0,in=-90] (9.4,-1.05);
+\node[align=center] (car) at (12.2,-1.75) {Market reaction at $t_2$ and $t_3$\\(Stage 3)};
+\end{tikzpicture}
+\caption{The enforcement chain}
+\note{The first public action is the earliest interim order or show-cause notice recited in an order, or the order itself. SEBI's internal date of opening a matter is not public and would lie between $t_1$ and $t_2$, or earlier.}
+\label{f:chain}\end{figure}
 
-\subsection{References to figures and panels} 
+\subsection{Why the three stages belong together}
 
-As usual with LaTeX, it is easy to refer to a figure: see figure \ref{f:graph1}. It is possible to refer to a specific panel in a figure, for instance figure \ref{f:panelA} or figure \ref{f:panelB}. Its also possible to refer to the entire figure, for instance figure \ref{f:graph1} or figure \ref{f:graph2}.
-
-\subsection{A subsection with a full-page figure}
-
-Here is a full-page figure (figure \ref{f:graph2}). It will be placed in a full page about here. At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.
-
-\begin{figure}[p]
-\subcaptionbox{A first black-and-white panel}{\includegraphics[scale=0.2,page=5]{\pdf}}\hfill
-\subcaptionbox{A second black-and-white panel}{\includegraphics[scale=0.2,page=6]{\pdf}}\\
-\subcaptionbox{A third black-and-white panel}{\includegraphics[scale=0.2,page=7]{\pdf}}\hfill
-\subcaptionbox{A fourth black-and-white panel}{\includegraphics[scale=0.2,page=8]{\pdf}}\\
-\subcaptionbox{A fith black-and-white panel}{\includegraphics[scale=0.2,page=9]{\pdf}}\hfill
-\subcaptionbox{A sixth black-and-white panel}{\includegraphics[scale=0.2,page=10]{\pdf}}
-\caption{Graph with six black-and-white panels}
-\note[Note]{Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Aenean fermentum purus id lacus volutpat, a eleifend mi posuere! Mauris nec nunc commodo, vehicula enim nec; vehicula ex. Nullam euismod lorem at eros efficitur: ut ultricies ante fringilla? Nam sagittis sapien id tortor commodo—a pulvinar velit ultricies. Integer ac magna velorci mollis vestibulum. Fusce id ipsum vel magna placerat vehicula. Curabitur ac lobortis justo.}
-\label{f:graph2}\end{figure}
-
-Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. 
-
-\section{A section with table}
-
-Here is a section with a variety of tables. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. 
-
-\subsection{A subsection with a simple table}
-
-Table \ref{t:table1} is a simple table with one panel. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. 
+Any one stage alone gives a misleading conclusion. Table~\ref{t:joint} sets out how the combination identifies the binding constraint. These readings are mutually exclusive, and they point to different spending.
 
 \begin{table}[t]
-\caption{Basic table with one panel and multicolumns}
-\begin{tabular*}{\textwidth}[]{p{4cm}@{\extracolsep\fill}cccc}
+\caption{What each joint pattern would mean}
+\begin{tabular*}{\textwidth}[]{L{4.2cm}@{\extracolsep\fill}L{5.1cm}L{4.3cm}}
 \toprule
-& \multicolumn{2}{c}{Columns 1--2} & \multicolumn{2}{c}{Columns 3--4}\\
-\cmidrule{2-3}\cmidrule{4-5}
-& Column 1 &  Column 2 &  Column 3  &  Column 4 \\
+Pattern & Reading & Where resources belong \\
 \midrule
-Line 1: & $\alpha$& $\beta$& $\gamma$ & $\delta$\\
-Line 2: & $\epsilon$& $\phi$ & $\kappa$ & $\eta$  \\
-Line 3: & $\kappa$& $\nu$& $\pi$ & $\kappa$ \\
-Line 4: & $\psi$& $\mu$& $\nu$ & $\zeta$ \\
+Fraud predictable, detection fast & The system works; the critique is wrong & No change to detection \\
+Fraud predictable, detection slow & Screening capacity is the binding link & Surveillance and screening \\
+Fraud unpredictable, detection slow & Preventive screening is the wrong instrument & Forensic and recovery capacity \\
+Detection fast, no market cost & Sanction design is the binding link & Penalty design \\
 \bottomrule
 \end{tabular*}
-\note{This is a note for the table. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Pellentesque nec justo aliquet, commodo nulla sed, fringilla odio. Nullam non hendrerit nisi. Curabitur et metus vel velit blandit pharetra. Morbi interdum metus a erat bibendum, nec hendrerit eros ultricies. Vestibulum vel arcu id nulla ultricies commodo. Suspendisse potenti.}
-\label{t:table1}\end{table}
+\label{t:joint}\end{table}
 
-Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+\subsection{The implied optimal penalty}\label{s:optimal}
 
-\subsection{A subsection with a multi-panel table}
+The stages close on one calculation. The standard deterrence result sets the penalty that makes an offence unprofitable equal to the harm divided by the probability of being caught. Allowing for delay,
+\begin{equation}
+S^{*} = \frac{H}{p} \cdot e^{r\tau}.
+\label{e:optimal}\end{equation}
+Stage~3 gives $H$ as market value lost around revelation, which measures shareholder loss and not total social harm. Stage~1 gives $\tau$. The probability $p$ is the weak term: it needs the number of frauds committed, which is what enforcement data cannot show. I therefore plan to report $S^{*}$ as a sensitivity table over $p \in \{0.20, 0.33, 0.50\}$ and $r \in \{8\%, 12\%\}$, with $p = 0.33$ marked as a benchmark imported from \citet{DMZ24} and not an Indian estimate, and to compare the range with penalties observed in the corpus.
 
-Table \ref{t:table2} is a more sophisticated table with several panels. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat. 
+\subsection{Hypotheses}\label{s:hypotheses}
 
-Suspendisse potenti. Ut venenatis maximus tellus, sit amet mattis lorem finibus nec. Mauris non libero eget ipsum ultricies congue id et eros. Duis nec vehicula nunc. In hac habitasse platea dictumst. Morbi non magna vitae ex fermentum placerat. Quisque eu ultrices velit. Nullam ac odio ac ex tincidunt posuere. Mauris viverra arcu eu metus ultrices, id vestibulum felis posuere.
-
-Fusce eu magna in quam tincidunt placerat. Proin laoreet lacus eget lacinia ullamcorper. Nunc pulvinar, risus quis tempor vestibulum, odio odio fermentum tortor, nec dictum felis libero quis mauris. Vestibulum vel justo a eros efficitur fringilla. Sed at tempus urna. Nulla facilisi. Vivamus sit amet nisl at libero fermentum posuere.
-
+Table~\ref{t:hypotheses} states each hypothesis as a restriction on an estimated quantity, together with the result that would reject it. The hypotheses were fixed before any data were collected. Data construction has since narrowed what can be tested, and the last column says how.
 
 \begin{table}[t]
-\caption{Bigger table with several panels}
-\begin{tabular*}{\textwidth}[]{p{2cm}@{\extracolsep\fill}ccccccc}
+\caption{Hypotheses, rejection criteria and what the data allow}
+\begin{tabular*}{\textwidth}[]{L{0.6cm}@{\extracolsep\fill}L{4.3cm}L{4.1cm}L{4.4cm}}
 \toprule
-    & Column 1 &  Column 2 &  Column 3  &  Column 4 &  Column 5 &  Column 6 &  Column 7 \\
+& Hypothesis & Rejected if & Status \\
 \midrule
-\multicolumn{8}{l}{A. A first panel with calligraphic letters}\\
-Line 1: & $\mathcal{A}$ & $\mathcal{C}$ & $\mathcal{V}$  & -- & -- & $\mathcal{K}$ & $\mathcal{A}$\\
-Line 2: & $\mathcal{X}$ &  $\mathcal{H}$ & $\mathcal{O}$  & -- & -- & $\mathcal{K}$ & $\mathcal{A}$  \\
-\midrule
-\multicolumn{8}{l}{B. A second panel with capital letters}\\
-Line 3: & U & B & J  & K & A & K & A\\
-Line 4: & N & Y & T  & L & T & K & A\\
-Line 5: & G & S & Q  & P & Q & K & A\\
-\midrule
-\multicolumn{8}{l}{C. A third panel with blackboard-bold letters}\\
-Line 6: & $\mathbb{U}$ & $\mathbb{B}$ & $\mathbb{J}$  & $\mathbb{K}$ & $\mathbb{K}$ & $\mathbb{K}$ & $\mathbb{A}$\\
-Line 7: & $\mathbb{N}$ & $\mathbb{Y}$ & $\mathbb{T}$  & $\mathbb{L}$ & $\mathbb{T}$ & $\mathbb{U}$ & $\mathbb{E}$\\
-Line 8: & $\mathbb{G}$ & $\mathbb{S}$ & $\mathbb{Q}$  & $\mathbb{P}$ & $\mathbb{Q}$ & $\mathbb{K}$ & $\mathbb{P}$\\
-\midrule
-\multicolumn{8}{l}{D. A fourth panel with numbers}\\
-Line 9: & 1.0\% & 2.3\% & 4.5\%  & 9.0\% & 9.8\% & 91.2\% & 0\\
-Line 10: & $\infty$ & 23 & 1 & 90 & 33 & 4.0\% & 0\\
-Line 11: & -- & -- & 1.2  & 4.4 & 0 & 9.0\% & 0\\
+H1 & Fraud is predictable from public information before detection & Out-of-time performance is indistinguishable from random ranking & Testable with market and ownership signals only \\
+H2 & Detection has not accelerated despite the 2015 and 2018 reforms & Hazard ratio significantly above 1 on the cohort-restricted sample & Testable for the 2015 reform; the restricted sample has almost no windows after the 2018 reform \\
+H3 & Audit signals carry independent detection information & Audit variables add nothing to the hazard or the screen & Not testable as stated: audit qualification and resignation data were not collected \\
+H4 & Automated surveillance is not the dominant first-detection channel & Surveillance accounts for a majority of first detections & Testable at matter level once the unit is fixed; depends on what counts as surveillance \\
+H5 & Ownership opacity predicts fraud and slower detection & Null in both Stage 1 and Stage 2 & Partly testable: pledging from FY2016 only; group affiliation and related-party intensity not collected \\
+H6 & Sanctions impose market costs exceeding the monetary penalty & Cumulative abnormal return indistinguishable from zero & Testable \\
+H7 & Sanctions transmit through auditor and director networks & No difference from matched firms, or none under rewiring placebos & Future work: auditor identity by firm-year is not available as a data field \\
 \bottomrule
 \end{tabular*}
-\note[Note]{Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae. Ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.}
-\note[Source]{\citet[table~1]{MS21} and \citet[table~2]{EMM21}.}
-\label{t:table2}\end{table}
+\note{H1 and H5 use predictors measured before the fraud became public. A rejection is informative for every hypothesis: rejecting H1, for instance, would say that preventive screening from public data is not achievable, and that resources belong in forensic and recovery capacity.}
+\label{t:hypotheses}\end{table}
 
-Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet, ut et voluptates repudiandae sint et molestiae non recusandae.
+\section{Data}\label{s:data}
 
-\section{A section with cross-references}
+This section describes how the corpus was built and what it contains. All code is deterministic, every request went through a cache that keeps the raw response, and a full rebuild from the stored responses makes no network calls. Throughout, I use \emph{fraud} as shorthand for a violation charged or found in an order. Many orders concern compliance lapses and some find no violation, so the word should not be read as a legal conclusion.
 
-As usual, it is possible to reference an equation, such as equation \eqref{e:cv}. It is also possible to reference a section, such as section \ref{s:graphs}, or a subsection, such as section \ref{s:numberedlists}. It is also possible to reference an appendix, such as appendix \ref{a:appendix1}, or a subsection in an appendix, such as appendix~\ref{a:subappendix}. 
+\subsection{The order corpus}\label{s:corpus}
 
-Of course it is possible to reference figures, such as figure \ref{f:graph2}, or tables, such as table~\ref{t:table1}. It is possible to refer to a specific panel in a figure, for instance figure \ref{f:panelA} or figure \ref{f:panelB}, and to the entire figure, for instance figure \ref{f:graph1} or figure \ref{f:graph2}.
+The corpus is every order in SEBI's four primary listing categories on 23 September 2026: 20,861 orders dated from 7 December 2000 to 23 September 2026 (table~\ref{t:corpus}). Each listing row gives a date, a title and a link. SEBI's listing also annotates 1,414 orders (6.8\%) with SAT appeal numbers. All annotated orders are dated between 2003 and 2022, so the absence of an annotation on a recent order says nothing about whether it was appealed.
 
-\section{Quotes}
+\begin{table}[t]
+\caption{The corpus by listing category}
+\input{tables/corpus}
+\note{$N$ = 20,861 orders listed on 23 September 2026. \emph{With text}: orders with recoverable text. \emph{Pages}: median pages of PDF orders. \emph{Window}, \emph{Prior action} and \emph{Issuer}: share of orders with text that have an examined period, a recited prior action, and a match to a listed firm, before hand review of matches. All figures are pipeline figures, not yet validated.}
+\label{t:corpus}\end{table}
 
-It is easy to quote material within the paper. Vivamus at commodo nisl. Integer sodales eros a metus efficitur, eu tincidunt leo ullamcorper. Sed fermentum tellus nec nisi lobortis, vel pharetra neque mollis. Cras non dolor ut ex semper lobortis. Vivamus sit amet sapien in elit sodales luctus. Donec a tortor ut elit consequat mollis ac id metus. Maecenas vehicula, turpis at lacinia interdum, dolor dolor pretium turpis, non fermentum purus magna at est. Quotes appear as follows:
+Two checks support the completeness of the corpus. The listing totals reconcile with SEBI's published counts: exactly for Chairperson/Members and ED/CGM, while the settlement and adjudicating officer lists exceed them by three orders and one, all dated after those counts were recorded. Independently, \citet{DZ22} report that SEBI passed 9,048 enforcement orders from 2011 to 2020, and the corpus holds exactly 9,048 orders dated in those years (5,418 adjudicating officer, 2,858 Chairperson/Members, 772 settlement). Their median penalty of about Rs~5 lakh also matches the median here. A further check against the enforcement tables in SEBI's annual reports \citep{SEBI26a} and the public section 11B summaries for 2014--2022 remains to be done.
 
-\begin{quote}
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-\end{quote}
+Documents were retrieved one at a time with a delay between requests: 40,017 requests over 27.5 hours. SEBI's detail pages embed the PDF in a viewer under an opaque file name, so the address must be read from each page. Older pages print the order itself and link only its annexures, and taking the link naively would have archived annexures as orders; 32 such cases were corrected. Of the 20,861 orders, 20,849 (99.94\%) yielded a document: 19,267 PDFs and 1,582 orders printed on the page. Twelve have none, mostly because of dead links on SEBI's side.
 
-So this was a one-paragraph quote. Cras non dolor ut ex semper lobortis. Vivamus sit amet sapien in elit sodales luctus. Donec a tortor ut elit consequat mollis ac id metus. Maecenas vehicula, turpis at lacinia interdum, dolor dolor pretium turpis, non fermentum purus magna at est. 
+\subsection{From documents to text}
+
+The PDFs hold 318,116 pages, with a median of 12 pages per order. A simple character count does not reveal whether a text layer is usable: 15 orders from 2013 carry a layer of control codes over a legible page. I therefore classify each page by text quality, image coverage and the number of vector paths, and send to optical character recognition (OCR) only the pages that need it. That covers 7,782 pages (2.45\%) in 708 orders (3.67\% of PDF orders). Mean OCR word confidence is 93.1, and 205 pages were recovered by a retry that tests rotations and resolutions. Because the need for OCR is small and concentrated (all 28 orders from 2000--01, and 10--14\% in 2013--15), no restriction of the study period was needed.
+
+\subsection{The violation window}\label{s:window}
+
+\paragraph{Definition} The window is one quantity: the period of business activity SEBI examined, which I use as a proxy for the period of the violation. Orders call it the investigation, examination, inspection or relevant period, and all these names fill one pair of dates. SEBI's frequent wording ``conducted investigation during the period $X$ to $Y$'' reads like the time the investigation took, but in such sentences the defined label and durations of months to years show that it means the activity period. The window is never the time the probe itself took. Such dates appear as a range only for on-site inspection visits, which are screened out. Where no period is named, the dates of the alleged conduct are the same quantity, and I record that the window was stated in this way (\emph{conduct dates} against \emph{stated period}). The true start of a fraud is unknowable, and the examined period is what SEBI chose to look at.
+
+Dating fraud to this window, and not to the order, is the construction on which the prediction stage depends. Labelling Taksheel fraudulent in 2014, the year of the penalty, would put it three years after the conduct, and any predictor measured then would reflect the consequences of detection.
+
+\paragraph{Extraction} A survey of all order texts showed that the defining sentence usually puts the dates before the label, and that many date ranges in an order are something else: open-offer periods, correspondence dates, quarters ending, or schemes. Extraction therefore has two steps. Rules score the sentences of each order, keep the best three candidates (28,140 sentences in all) and parse dates with an explicit day-first grammar. Orders left with a date range but no confirming label, or a label the rules could not read, go to a 4.7-billion-parameter open language model run locally (2,712 orders, temperature zero, fixed seed). The model sees only the candidate sentences and must quote the dates. Code then checks that the quotes occur in the sentence and parses them itself, so the model never supplies a date of its own.
+
+\paragraph{Sanity rules and yield} Five rules then flag impossible or unusual windows: an end after the order, a start after the end, a non-positive lag, a lag of 20 years or more, and a start before 1995. They flagged 43 windows, which were read by hand: 33 were kept, 8 dropped and 2 corrected. The result is 12,142 windows, or 58.2\% of orders with text (table~\ref{t:windows}). Rules supply 86.5\% of them.
+
+\begin{table}[t]
+\caption{Violation windows}
+\input{tables/windows}
+\note{$N$ = 20,849 orders with text, of which 12,142 have a window. \emph{Median days}: median length of the window. ISO orders are those whose title or window sentence names illiquid stock options (2,375 orders; 2,243 by title alone). Windows are as extracted and reviewed for sanity, before blind validation.}
+\label{t:windows}\end{table}
+
+\paragraph{Who drops out} Windows are not missing at random. By listing category the yield runs from 71.7\% for adjudicating officers to 27.4\% for settlement orders, which typically name the alleged violation without dating it. By order year it runs from 31.7\% in 2000--05 to 77.9\% in 2021--26. Drop-out is moderately associated with both (Cram\'er's $V$ of 0.33 for category and 0.30 for year). The orders with no candidate sentence are mainly settlement orders, takeover exemptions, investor-grievance cases and collective-investment matters. I keep settlement orders in the sample and report their under-representation. Stage~1 is therefore estimated on matters whose orders state a period, which is a selection in its own right.
+
+\paragraph{Development checks} On hand-labelled development sets, accepted model windows were right in 30 of 33 unambiguous cases (91\%), and 30 of 32 real windows were found. A later reading of 50 random model windows judged 42--45 of them right (84--90\%). These checks were made by an AI coding assistant reading the source sentence, some on orders used for tuning, and they are not blind. They guided fixes and do not replace the validation in section~\ref{s:validation}.
+
+\subsection{Prior actions and the first public action}\label{s:actions}
+
+Orders recite earlier show-cause notices, interim orders and confirmatory orders with their dates. I extract every such mention (51,925) and keep the earliest plausible date: one not after the order, not before SEBI's statutory existence, and not before the window starts, since earlier dates usually belong to another matter. The false friends are many, such as a reply to a notice ``vide letter dated'' or an interim order ``disposed of vide final order dated''. A prior action is found for 16,918 orders (81.1\%) and for 10,821 of the 12,142 windowed orders (89.1\%). The earliest recited action is a notice in 13,550 orders, an interim order in 3,347 and a confirmatory order in 21. The \emph{first public action} is the earlier of this date and the order date. It is the matter's first public step against someone, which need not be the entity the order addresses; the entity-level alternative is its earliest show-cause notice.
+
+\subsection{Sanctions, parties and provisions}\label{s:sanctions-data}
+
+\paragraph{Sanctions} I read sanctions from the operative part of each order with one rupee normaliser, which handles Indian digit grouping, crore and lakh, an old font that renders the rupee sign as a backtick, and common typing errors. Where words accompany a figure it checks one against the other; 53 of 12,053 such pairs disagree (0.4\%), and the figure is kept and flagged. Statutory ranges quoted in the text, and restatements of the same amount, are not counted. Penalties are read in 8,473 orders, settlement amounts in 1,717 of 1,994 settlement orders, and disgorgement in 219. Restraints, suspensions, cancellations and warnings are recorded as flags.
+
+% UPDATE: delete or shrink this paragraph if the penalty reader is fixed.
+\paragraph{A known undercount} The penalty count is too low. In 498 orders with no penalty read, the closing paragraphs direct the noticee to pay one. In a random reading of 14 of these orders (excluding the blind sample), all 14 were real penalties the reader had missed. The causes are forms it does not recognise, such as amounts written only in words in a table and passive phrasings. The count of penalty orders may therefore be understated by up to 5.9\%. The median is unlikely to move much, because the amounts in the orders read look ordinary, but the totals in this thesis are lower bounds. The blind validation does not cover sanctions, so this needs its own fix.
+
+\paragraph{Parties and provisions} A party list is recovered for 19,460 orders (93.3\%), giving 47,981 party rows, of which 67\% carry a Permanent Account Number. The list is hardest to recover from Chairperson/Members orders, where the table of noticees is often an image or an annexure. Roles such as promoter, director or trader are a first guess, and about a third remain unknown. A citation parser resolves provisions across about 40 instruments, including the aliases each order defines for itself, and assigns each citation a role: violated, penal, a power, or merely cited. That distinction matters. A clause in nearly every adjudication order mentions recovery under section 28A, and a standard explanation of section 15J lists most penalty sections; counted as charges, these had inflated some provisions by thousands of orders. A violated-provision list exists for 16,865 orders (80.9\%). The PFUTP Regulations appear in 8,451 of them, the SEBI Act in 4,532, the takeover regulations in 2,610 and the insider trading regulations in 2,223.
+
+\subsection{Fraud category}\label{s:category}
+
+Each order with text receives one of eight categories under a written protocol fixed before the classifier was built (appendix~\ref{a:category}). Violated provisions decide first. PFUTP and section 12A charges cover every kind of fraud and never decide alone: for those, the order's narrative decides. Where several categories are charged, a fixed precedence puts the specific frauds before the ways they are concealed or exploited, and fraud before compliance. One rule deserves mention because it is a definitional choice: whose money was diverted decides the category. Issue proceeds are fund diversion. A company's own funds moved to insiders are related-party tunnelling. Clients' assets at a broker are intermediary misconduct, and a collective scheme's collections are other.
+
+The classifier assigns high confidence to 12,679 orders, medium to 3,481 and low to 4,689, of which 959 are unresolved. Development agreement was 75 of 81 orders, on orders it was tuned on. A fresh draw of 16 found 11 right, which led to three fixes; a second fresh draw of 16 found all 16 right. These counts are again development figures, judged by an AI coding assistant from charges and quoted evidence, and they are not accuracy estimates.
+
+\subsection{Detection channel}\label{s:channel}
+
+The detection channel records how a matter first came to the notice of SEBI or an exchange, as the order states it (appendix~\ref{a:channel}). The values are surveillance, complaint, audit, media, referral, self-disclosure, inspection and unclear. Three rules govern the coding. A source counts only if the order ties it to the start of SEBI's work, because almost every order mentions complaints, inspections or the press somewhere, for instance in a noticee's defence. The channel is never inferred from the kind of fraud. And the coder does not stretch a marker to avoid ``unclear'', because the share of unclear orders is itself a finding about how much the record discloses.
+
+Two definitional choices affect the results. An order in which SEBI or an exchange observed a trading pattern or a filing, without naming the mechanism, is coded surveillance and flagged, so that the flagged detail can be moved in robustness checks. An exchange reference with no stated basis is unclear. Rules decide 8,208 orders. The local model reads cue-bearing sentences in a further 5,325 orders, and its quote must carry the channel's cue. It adds 897 channels at medium confidence; an unconstrained version invented channels and was rejected. On a 58-order development set, tuned on, the coder agreed on 54 orders.
+
+\subsection{Validation design}\label{s:validation}
+
+% UPDATE: replace this subsection's future tense with the scored results and the Gate 1 decision.
+The extraction will be validated against a blind hand coding of 150 orders, drawn on 4 November 2026 and not yet coded. Table~\ref{t:validation} gives the design. The sample is stratified by how the window was obtained and, within strata, systematically by listing category and date. The ISO matter is capped, so that one window does not fill the sample. The 539 orders recorded as seen while building the pipeline are excluded: development sets, protocol examples, flagged windows and orders quoted in project notes. A few early spot-check samples were not recorded and cannot be excluded; at random they would place about three seen orders in the sample. The coder sees only SEBI's title and the document. Weights per cell undo the over-sampling of small strata and sum to the 20,849 orders with text. Weighted shares by listing category match the corpus closely (58.2\%, 30.3\%, 9.8\% and 1.7\% against 57.5\%, 30.8\%, 9.6\% and 2.1\%).
+
+\begin{table}[t]
+\caption{Design of the blind validation sample}
+\input{tables/validation}
+\note{$N$ = 150 orders from a population of 20,849 orders with text. \emph{Weight}: cell population divided by orders sampled. There are no ISO orders among the model's conduct-date windows, so that cell does not exist. Random seed 20261006.}
+\label{t:validation}\end{table}
+
+The coder records the window, how it is stated, the fraud category, the detection channel and the primary issuer. Scoring compares these with the pipeline. For the window it reports agreement on whether a window exists, and exact and within-31-day rates over the pipeline's windows, the hand windows and the orders where both give one. For category and channel it reports weighted agreement and Cohen's $\kappa$ \citep{C60}, with 95\% intervals from a bootstrap within sampling cells. The rule for proceeding was fixed in advance: with extraction between 50\% and 70\% and $\kappa$ above 0.6 the work proceeds and reports the drop-out; with $\kappa$ below 0.6 the protocol is rewritten through its change log and the affected orders recoded. Errors found will be fixed and the pipeline re-run, but a second measurement will need a fresh draw. Re-coding 30 orders will give intra-coder reliability. At corpus proportions the rare classes receive few orders each, so accuracy is measurable overall and for the large classes only. Sanctions, prior actions and parties are outside the sample.
+
+\subsection{Listed firms and entity matching}\label{s:matching}
+
+The firm stages need each order's issuer to be linked to a listed company. The listed universe comes from BSE's lists of active, delisted and suspended securities and NSE's main and SME lists, with NSE's records of name and symbol changes: 13,451 securities and 10,180 firms, identified by the issuer prefix of the ISIN. Including delisted and suspended companies matters because fraud firms are disproportionately in those groups, and a universe of survivors would remove them. Only 230 orders print an ISIN or a scrip code, so names carry the matching. A single normaliser cleans both sides. Exact matches, and token-sort similarity of at least 92, are accepted; scores from 80 to 92 go to hand review; lower scores are rejected. Private companies are never matched, because the normaliser would otherwise turn ``XYZ Pvt Ltd'' into the listed ``XYZ Ltd''. A fuzzy match must also agree on the name's distinctive words, which cut false pairs sharing only generic words and reduced the review list from 1,665 names to 564.
+
+% UPDATE: refresh after the hand review of the 564 names.
+Table~\ref{t:funnel} shows the funnel. Of 13,314 orders naming an issuer, 8,599 match a listed firm (41.2\% of orders with text), including 5,613 of the 12,142 windowed orders. Companies listed only on regional exchanges, many of them 1990s frauds, appear in neither list, and neither do collective investment schemes and unlisted subsidiaries, which is correct for the firm stages. The 564 names in the review band are not yet decided. In spot checks by an AI coding assistant, 43--44 of 45 fuzzy matches and 15 of 15 matches through a rename were right.
+
+\begin{table}[t]
+\caption{From the corpus to the firm sample}
+\input{tables/funnel}
+\note{Listed universe from BSE and NSE lists of 14 October 2026. Matches are before the hand review of 564 names. Panel~B is a dry run of the sample construction and will change when the review is finished and the sample is frozen.}
+\label{t:funnel}\end{table}
+
+\subsection{Analysis sample}\label{s:sample}
+
+% UPDATE: refresh from the frozen sample (hand/sample_frozen.csv) and record its fingerprint.
+Fraud firms are the listed firms matched to a windowed order. A firm-year is a \emph{fraud firm-year} if the financial year (April to March) overlaps a window, which dates fraud to the conduct and never to the order. In the dry run this gives 1,221 fraud firms and 3,357 fraud firm-years, of which 2,387 fall in FY2010--FY2025. In only 1,096 of those 2,387 is the issuer itself a noticee. In the rest, others traded in its shares, so a label based on the firm's own wrongdoing is much narrower than one based on its stock, and Stage~2 reports both. Controls are firms that are never an issuer or a review candidate in any order. They are a random draw of 600 from 5,709 eligible firms, each carrying a weight of 9.52 so that base rates remain population estimates. Events are the public actions on these firms: 7,243, of which 6,867 are orders and 376 are interim orders recited in later ones. The sample is to be frozen once, before estimation.
+
+\subsection{Market data and ownership}\label{s:market}
+
+Prices come from the exchanges' daily bhavcopy files: 5,642 trading days on NSE from 1 January 2004 and 5,075 on BSE from 1 March 2006, the first day BSE's archive serves, up to 2 November 2026. The files hold 25.3 million security-days. Their format changes on 8 July 2024, and the 2004--06 gap means that older events on BSE-only firms have no prices. Bhavcopy prices are not adjusted for splits or bonuses, including the previous close, so a raw return on Tata Steel's split of 28 July 2022 reads $-89.5\%$; adjusted with BSE's corporate-action records it is $+4.6\%$. The action file holds 36,935 records, including 1,109 splits and 1,305 bonuses. The 151 consolidations carry no ratio and are flagged, not adjusted. Returns are price returns, without dividends. The market return is the BSE 500 index. In the dry-run sample, 93.9\% of fraud firms and 90.7\% of controls have at least one price.
+
+Ownership will come from BSE's quarterly shareholding summaries: promoter holding, pledged shares and shares outstanding. Their current format begins in December 2015, so ownership covers FY2016 onward, and just over half of the fraud firm-years in the study period (1,287 of 2,387) have none. These data have not yet been collected. The firm-year panel merges the sample, prices and ownership, with row counts asserted at each join, and its coverage table will be reported here.
+
+The planned accrual-based predictors (Beneish and Dechow scores) are not available, because no database of financial statements could be confirmed for the project, and the audit variables were dropped because they require parsing annual reports. Stage~2 is therefore a test of market and ownership signals only.
+
+\subsection{The unit of analysis}\label{s:unit}
+
+The pipeline has one row per order, but the quantity of interest is per fraud. SEBI issues one order per noticee in mass matters. The 12,142 windowed orders contain only about 3,400 distinct windows, and the ISO matter alone contributes 2,363 windowed orders sharing a single window of 1 April 2014 to 30 September 2015, with order dates from 2018 to 2026. Order-level lags in that matter measure SEBI's adjudication queue, not detection. In what follows I report orders, orders excluding ISO, and \emph{matter clusters}: orders sharing an issuer and an identical window, with all ISO orders treated as one. This gives 4,558 clusters, of which 1,416 hold more than one order. The clustering is crude. It splits a matter whose orders state slightly different windows and cannot place orders with no window. A proper matter-grouping step remains to be built, and the choice of unit for Stage~1 is open.
+
+\section{Descriptive evidence}\label{s:descriptive}
+
+Everything in this section is order-level or cluster-level description of pipeline output before validation, and it is conditional on detection. It says what the enforcement record contains, not how much fraud occurred.
+
+\subsection{Enforcement activity over time}
+
+Figure~\ref{f:orders} shows two waves. Orders peak at 1,334 and 1,585 in 2009 and 2010. No single matter explains that peak: the largest contributes about 55 orders, and market manipulation accounts for just over half of the two years' orders. The second wave is largely one matter. Orders reach 1,710 in 2023, 892 of them ISO orders, and fall to 551 in 2024. Excluding ISO, the fall is from 818 to 489, so a reader of the raw series would overstate the decline in enforcement activity in those years.
+
+\begin{figure}[htb]
+\includegraphics[page=1]{\pdf}
+\caption{Orders per year}
+\note{$N$ = 20,861 orders. 2026 runs to 23 September. Illiquid Stock Options orders are those whose title or window sentence names the matter (2,375 orders).}
+\label{f:orders}\end{figure}
+
+\subsection{What is enforced}
+
+Market manipulation (35.9\%), disclosure failure (21.4\%) and intermediary misconduct (15.9\%) make up nearly three-quarters of orders (table~\ref{t:categories}). The residual category is large at 20.6\%, and it holds non-cooperation with summons, investor-grievance failures, collective investment schemes and orders that find no violation. Insider trading is 2.7\% of orders. Fund diversion, accounting misstatement and related-party tunnelling together are 720 orders (3.5\%), or 493 of the windowed orders (4.1\%). Those three categories are also where the classifier is least sure of itself, with high confidence for 32\%, 16\% and 8\% of orders.
+
+\begin{table}[htb]
+\caption{Fraud categories}
+\input{tables/categories}
+\note{$N$ = 20,849 orders with text. \emph{With window}: orders with an examined period. \emph{High confidence}: share of the category's orders the classifier codes with high confidence. \emph{Channel stated}: share with a detection channel other than unclear. Automated coding, not yet validated.}
+\label{t:categories}\end{table}
+
+Figure~\ref{f:categories} shows the categories over time, excluding ISO. Market manipulation peaks around 2009--10, with a smaller rise around 2018--20. Disclosure failure orders are spread from about 2008 to 2024. Fund diversion, accounting misstatement and related-party tunnelling are concentrated after 2017. This could reflect more of that conduct, more attention, or simply the rules that came into force, and the figure cannot separate these.
+
+\begin{figure}[htb]
+\includegraphics[page=5]{\pdf}
+\caption{Orders per year by fraud category, excluding ISO orders}
+\note{$N$ = 18,474 orders with text, excluding ISO orders. Each panel has its own vertical scale, marked at zero and at its largest year, so panels show the shape of each series and not their relative size. 2026 runs to 23 September.}
+\label{f:categories}\end{figure}
+
+\subsection{Sanctions}
+
+Table~\ref{t:sanctions} summarises sanctions. The median penalty is Rs~5 lakh, the interquartile range is Rs~2--7 lakh, and the penalties sum to Rs~12,485 crore. That sum is not informative about the typical case. One order, the PACL matter of 2015, accounts for Rs~7,269 crore (58.2\%), and the ten largest account for 82.0\%. Without the largest order the sum is Rs~5,215 crore. Settlement amounts have a median of Rs~5.9 lakh and sum to Rs~1,460 crore. Disgorgement is rare but large, with 219 orders and Rs~5,552 crore, including Rs~1,258.88 crore in the Satyam matter. Market restraints appear in 3,111 orders.
+
+\begin{table}[htb]
+\caption{Sanctions as imposed in the orders}
+\input{tables/sanctions}
+\note{$N$ = 20,861 orders. \emph{Total} and \emph{Largest} are in Rs crore; \emph{p25}, \emph{Median} and \emph{p75} are in Rs lakh, over orders with that sanction. Amounts are as imposed, not as collected or as they stood after appeal. Penalties are understated by up to 498 orders (section~\ref{s:sanctions-data}). \emph{Settlement amount}: the largest amount in a settlement order, which undercounts where several applicants pay in separate sentences.}
+\label{t:sanctions}\end{table}
+
+\subsection{Lags}\label{s:lags}
+
+Table~\ref{t:lags} and figure~\ref{f:lags} give the central descriptive result. At the level of the order, the median time from the end of the window to the first public action is 3.15 years, and the middle half of orders lie between 1.48 and 5.35 years. The median time from first action to order is 1.19 years. The median from window end to order is 5.50 years; the medians do not add, since each is taken over its own distribution. The median time to the entity's own first show-cause notice, or to the order where none is recited, is 3.86 years.
+
+\begin{table}[htb]
+\caption{Lags from the end of the window, in years}
+\input{tables/lags}
+\note{Median, with the interquartile range in parentheses. Panels B and C use orders. $N$ = 12,142 orders with a window, 9,779 excluding ISO, and 4,558 matter clusters (section~\ref{s:unit}). For clusters the first lag runs to the earliest action in the cluster and the second to its latest order. \emph{No positive lag}: first action on or before the window's end. All lags are uncorrected for right truncation (section~\ref{s:stage1}) and are not comparable across cohorts or categories with different dates.}
+\label{t:lags}\end{table}
+
+\begin{figure}[htb]
+\subcaptionbox{Window end to first public action\label{f:lagA}}{\includegraphics[page=2]{\pdf}}\hfill
+\subcaptionbox{First public action to order\label{f:lagB}}{\includegraphics[page=3]{\pdf}}
+\caption{Two lags, by order}
+\note{$N$ = 12,142 orders with a window, in half-year bins. Panel~A shows lags from $-2$ to 16 years and panel~B from 0 to 16; lags beyond those limits are placed in the end bins. Every matter here was detected, so these are empirical distributions of completed lags, without censoring.}
+\label{f:lags}\end{figure}
+
+The unit of analysis changes these numbers. Excluding ISO gives 3.31 and 1.10 years. Collapsing to matter clusters gives 2.59 and 1.29 years: the first lag falls because a matter's earliest action counts once, while the second rises because it runs to the matter's last order. Whichever unit is used, the delay before the first public action is two to three times the delay after it. These figures are close to those of \citet{DZ22}, who report a median of a little over three years from violation to show-cause notice and a year and a half from notice to a penalty order, using a coded sample of 2011--2020 orders and their own definitions. Two independent constructions thus give the same scale.
+
+In 1,250 windowed orders (10.3\%), the first action is on or before the window's end, and 968 of those are ISO orders that cite the interim order of 20 August 2015 against 59 entities, issued 41 days before the window closed. Excluding ISO the share is 2.9\%. These cases are informative, as the Taksheel example shows: SEBI can act while conduct continues, and a non-positive lag is not always an extraction error.
+
+Differences across fraud categories appear in panel~C, but they should not be read as differences in detection speed. Related-party cases have a median of 1.45 years and fund diversion 6.63 years, and figure~\ref{f:categories} shows why comparison is unsafe: categories with recent orders mechanically have short observed lags. Figure~\ref{f:cohort} shows the problem directly. The median lag excluding ISO is 5.59 years for windows ending in 2011, 2.39 for 2018, 0.97 for 2020 and 0.58 for 2024. The dashed line is the longest lag the corpus could show for each cohort, and the median falls as that ceiling comes down. A naive reading would say that SEBI has become far faster. The figure cannot support that reading, because the slow cases from recent cohorts have not happened yet.
+
+\begin{figure}[htb]
+\includegraphics[page=4]{\pdf}
+\caption{Lag to first public action by year the window ended, excluding ISO orders}
+\note{$N$ = 8,248 orders with a window ending from 2003 to 2025, excluding ISO orders; years with fewer than 20 orders are omitted. The dashed line is the time from 31 December of each year to 23 September 2026.}
+\label{f:cohort}\end{figure}
+
+\subsection{Detection channels}\label{s:channels}
+
+Of 20,849 orders with text, 8,617 (41.3\%) state how the matter reached SEBI (table~\ref{t:channels}). The unclear share is 83.0\% for settlement orders and between 46.8\% and 56.5\% for the others, and it falls over time, from 69.6\% in 2006--10 to 46.3\% in 2021--26. It also varies by category: 82\% of fund diversion orders are unclear, against 46\% of intermediary misconduct orders.
+
+\begin{table}[htb]
+\caption{Detection channels}
+\input{tables/channels}
+\note{Panel~A: shares of orders stating a channel. \emph{Orders}: all orders. \emph{Issuer frauds}: windowed orders in categories with an issuer at their centre (insider trading, fund diversion, related-party tunnelling, accounting misstatement, market manipulation, disclosure failure), excluding ISO. \emph{Explicit alert}: orders that cite a surveillance alert or system, as opposed to an observed pattern or filing. Order-level shares of an automated coding that has not been validated; orders stating a channel are a selected subset.}
+\label{t:channels}\end{table}
+
+The surveillance share depends on the population. Across all orders stating a channel it is 41.9\%. Excluding ISO it is 25.6\%, and complaints lead at 41.5\%. Among windowed issuer frauds excluding ISO it is 54.9\%, with complaints at 23.4\%. It also depends on the definition. Most surveillance codes are flagged cases in which SEBI or an exchange observed a pattern or a filing. Only 415 orders cite an explicit alert: 4.8\% of orders stating a channel, 5.8\% excluding ISO, and 13.8\% of the issuer-fraud group. Audit (31 orders) and self-disclosure (73) barely register in any population.
+
+Orders of one matter should agree, and this gives a check that needs no hand coding. Among 321 clusters with at least two orders stating a channel, 22 (6.9\%) hold more than one channel; among rule-coded orders alone the figure is 14 of 265 (5.3\%). The check covers only orders sharing an exact window. A reading of the twelve Taksheel orders, which lie mostly outside it, found three false codes: a noticee's inspection of documents coded as an inspection, and twice a finding about statements in the media coded as a media trigger. The validation will measure this kind of error properly. For now, the channel shares should be read as approximate.
+
+\section{Empirical strategy}\label{s:strategy}
+
+This section fixes the estimators before any estimate has been seen. Primary hypotheses are those in table~\ref{t:hypotheses}, and other findings will be labelled exploratory.
+
+\subsection{Stage 1: detection and resolution lags}\label{s:stage1}
+
+For matter $i$, the detection lag and the resolution lag are
+\begin{equation}
+T_i = t_i^{\text{first action}} - t_i^{\text{window end}}, \qquad R_i = t_i^{\text{final order}} - t_i^{\text{first action}}.
+\label{e:lags}\end{equation}
+Reporting the two separately is what makes ``enforcement is slow'' usable, because their causes differ: the first concerns how SEBI learns of a matter and investigates it, and the second concerns process and contest. $T_i$ runs to a public action, so it is an upper bound on the time SEBI took to learn of the matter. It combines undetected time with investigation time, and only SEBI's internal dates could split them. Non-positive lags are inspected and flagged. The Kaplan--Meier curve of $T_i$ is reported as an empirical distribution, not a survival curve under censoring, since every matter in the sample was detected.
+
+\paragraph{Hazard models} The baseline is a Cox model \citep{C72}, with standard errors clustered by firm because firms recur:
+\begin{equation}
+h_i(t \mid \bm{x}_i) = h_0(t) \exp(\bm{x}_i'\bm{\beta}).
+\label{e:cox}\end{equation}
+Covariates enter in blocks. \emph{Visibility}: log market capitalisation, turnover and illiquidity. \emph{Ownership}: promoter holding and pledging, from FY2016. \emph{Fraud characteristics}: category, number of parties, whether an intermediary is a noticee. \emph{Regime}: indicators for windows ending after December 2015 and after November 2018. Proportional hazards are tested with Schoenfeld residuals; a covariate that fails is stratified or moved to the accelerated failure time model. A Weibull accelerated failure time model, $\ln T_i = \bm{x}_i'\bm{\gamma} + \sigma\varepsilon_i$, is estimated alongside it, since its coefficients read as proportional changes in time, and agreement between the two serves as a specification check. Both models estimate conditional associations and not causal effects.
+
+\paragraph{Right truncation} The sample holds only matters acted on by the corpus date $C$. A matter whose window ended at $e_i$ is observed only if $T_i \le C - e_i$. This is right truncation, not censoring: the undetected matters are absent, not partly observed. It biases lags downward, and most strongly for recent cohorts, which is exactly the pattern in figure~\ref{f:cohort}. Three treatments are reported together. The primary sample keeps windows ending by 2018, which holds 10,837 orders (8,475 excluding ISO) and 3,627 clusters. A reverse-time estimator for right-truncated data \citep{LBD88} gives a non-parametric distribution on the full sample, shown beside the naive one so that the size of the distortion is visible. And regime effects are read only on the restricted sample.
+
+The restriction is not a complete cure. The last cohort has 7.7 years of follow-up, and 10.8\% of lags among windows ending by 2010 are longer than that. It also limits H2: inside the restricted sample and excluding ISO, 836 orders fall after the 2015 reform but only 29 (22 clusters) after the 2018 one. The 2015 reform can be examined. The 2018 reform effectively cannot, and I will say so instead of reporting a coefficient that rests on two months of windows.
+
+\paragraph{Competing risks} Channels are modelled as competing causes of first action, with cause-specific Cox hazards and Fine--Gray subdistribution hazards \citep{FG99} for the cumulative incidence of each channel. Unclear stays as its own category, since dropping it would distort every other share. H4 is read at matter level, under the broad definition of surveillance and under the alert-only definition. A matter's channel will be the earliest stated across its orders, under a rule set before the counts are seen.
+
+\paragraph{Robustness} I will repeat the main results using window start in place of window end, excluding settlement orders, excluding model-extracted windows, with stated periods only, at the alternative unit of analysis, and on the hand-coded orders.
+
+\subsection{Stage 2: ex-ante predictability}\label{s:stage2}
+
+% UPDATE: Stage 2 is first in line to be cut if time runs short; if cut, reduce this subsection to a paragraph and move H1 to the conclusion as an open question.
+The unit is the firm-year, labelled by the violation year and never the order year. Years after a firm's first public action are dropped, since predictors there reflect detection. Predictors are promoter holding and pledging and their changes, twelve-month return, volatility, turnover, illiquidity, the share of zero-volume days and log market capitalisation, each lagged to a date on which it was public. The models are a logit, a penalised logit and gradient-boosted trees, with class weights for imbalance. Scalers and imputers are fitted inside the training period, and no predictor may encode the future, such as a delisting flag.
+
+Validation is out of time: models are trained on violation years up to 2018 and evaluated from 2019. Ownership begins in FY2016, so ownership predictors have only three training years, and I will report market-only and market-plus-ownership models separately. Fraud is rare, so accuracy is uninformative and the area under the ROC curve flatters. The headline measure follows from SEBI's constraint. SEBI took up 402 investigations in 2025--26 \citep{SEBI26a}, so the question is how many of a year's frauds a ranked list would reach at that capacity:
+\begin{equation}
+\text{Recall}_{y}(k) = \frac{\sum_{i \in \text{top } k \text{ in year } y} \text{fraud}_{iy}}{\sum_{i} \text{fraud}_{iy}}.
+\label{e:recall}\end{equation}
+I sweep $k$ from 50 to 1,000, mark $k = 402$, and compare with random ranking; control firms count with their weight in the ranking. The area under the precision-recall curve is reported alongside. Because of the labels, this measures the prediction of fraud that SEBI caught, not fraud.
+
+That selection is addressed, as a robustness exercise, by modelling commission and detection as separate latent processes with the fraud label observed only when both occur \citep{WWY10}. Identification needs variables that affect detection but not commission, which is contestable, so the exercise bounds sensitivity and is not a headline result.
+
+\subsection{Stage 3: sanctions and market value}\label{s:stage3}
+
+\paragraph{Events} Each firm contributes its earliest public action, with later orders kept for a robustness cut because the first contaminates them. Interim orders, final orders and settlement orders are treated separately, since their news content differs: interim orders are usually the first public signal, final orders are partly anticipated, and settlements resolve uncertainty. This requires a finality label that has not yet been built. Only 15.5\% of Chairperson/Members titles name the order's type, so it must be read from the text.
+
+\paragraph{Abnormal returns} Returns are measured against a market model estimated over trading days $-250$ to $-30$, with the BSE 500 as the market:
+\begin{equation}
+AR_{it} = R_{it} - (\hat{\alpha}_i + \hat{\beta}_i R_{mt}), \qquad CAR_i(\tau_1, \tau_2) = \sum_{t=\tau_1}^{\tau_2} AR_{it}.
+\label{e:car}\end{equation}
+Event windows are $(-1,+1)$, $(-5,+5)$ and $(0,+10)$. Firms must have traded on at least 60\% of estimation days, and those that fail are logged. Sanctioned firms are often thinly traded, which biases market-model betas, so I use the corrected betas of \citet{D79} and \citet{SW77} and report a liquid subsample separately. An event can raise return variance, which makes a simple $t$-test over-reject, so inference uses the standardised cross-sectional test of \citet{BMP91} and the rank test of \citet{C89}.
+
+\paragraph{Cross-section and the reputational gap} Cumulative abnormal returns are related to the sanction and the firm:
+\begin{equation}
+CAR_i = \gamma_0 + \gamma_1 \ln(\text{Penalty}_i) + \gamma_2 \text{Debarment}_i + \gamma_3 \text{PromoterNamed}_i + \bm{x}_i'\bm{\gamma} + \varepsilon_i.
+\label{e:cross}\end{equation}
+The quantity of interest is the gap between market value lost, $|CAR_i|$ times pre-event market capitalisation, and the monetary penalty: the component that \citet{KLM08} find to dominate in the United States. Whether it exists where promoters keep control regardless of market discipline is open, and the existing Indian evidence conflicts \citep{J22,GPS26}. The design here can help to reconcile it. \citet{GPS26} study final orders in insider-trading matters, where news may already be out, while interim orders in all categories are the sharper test.
+
+\paragraph{Suspended firms} Some firms stop trading exactly when an order lands, and dropping them silently would remove the most severe cases. I will report them, treat suspension as an outcome with its own determinants, and bound the main estimate under assumptions about the returns that would have been observed.
+
+\subsection{Synthesis}
+
+The three stages close on equation~\eqref{e:optimal}. Stage~3 supplies $H$, the cohort-restricted Stage~1 estimate supplies $\tau$, and $r$ and $p$ vary over the grid in section~\ref{s:optimal}. The comparison with observed penalties gives a direct answer: if observed penalties fall short in every cell, the case for penalty reform does not depend on any single assumption about $p$.
+
+\section{Discussion}\label{s:discussion}
+
+% UPDATE: rewrite from the estimates when Stages 1 and 3 exist; recommendations must follow findings.
+The estimates are still to come, so this section does not answer the research question. It sets out what the descriptive record already suggests, what it cannot show, and how the corpus changes the questions the estimates must answer.
+
+\subsection{Where the delay sits}
+
+The clearest pattern is that delay before the first public action is two to three times the delay after it, under each unit of analysis. If that pattern survives truncation adjustment, the common focus on adjudication backlogs addresses the smaller part of the delay. Two cautions apply. The first lag is a composite: a matter SEBI noticed at once and investigated for three years looks the same as one that went unnoticed for three years, and these call for different remedies. The resolution lag is also understated, since it stops at the order in hand while remands and appeals continue; in Taksheel the first adjudication order came 2.5 years after the first action, and a fresh one came 7.1 years after that.
+
+The deterrence framework gives the delay a scale. A penalty paid 5.50 years after the window ends, the median in these data, is worth 64\% of its face value to a promoter discounting at 8\%, and 52\% at 12\%. In the terms of equation~\eqref{e:deterrence}, delay alone removes a third to a half of the sanction. This is an illustration and not an estimate. It treats the promoter's gain as arriving at the end of the window and uses an assumed discount rate, and the median is taken over orders, not matters. Its use is to put delay on the same scale as the sanction itself.
+
+\subsection{What the sanctions show}
+
+The typical order imposes a few lakh rupees, and a handful of orders dominate the total. A median of Rs~5 lakh sits at the statutory floor for fraudulent and unfair trade practices, though many penalties fall under other sections with lower floors. Any statement about the average penalty is largely a statement about PACL. Whether Rs~5 lakh is low cannot be judged without the gain it responds to, and the record often lacks that: \citet{DZ22} find that the size of the violation went uncalculated in 90\% of their sampled cases. This matters for the implied penalty of section~\ref{s:optimal}, because comparing $S^{*}$ with a median penalty will be persuasive only if the matters compared are of similar size. The corpus records imposed amounts. Recovery rates and reversals on appeal would lower the effective $S$ further, and \citet{AKPPS25} report that about half of appealed insider-trading sanctions were modified.
+
+\subsection{What the record's mix does and does not imply}
+
+The conduct that motivates much of the Indian debate, promoters taking money out of companies, accounts for a small share of orders. Three readings are possible. Such conduct may be rare, it may be hard to detect, or it may be handled elsewhere, by the Ministry of Corporate Affairs, the Serious Fraud Investigation Office or the courts. The corpus cannot choose between them, because it conditions on SEBI's having acted. It does sharpen the prediction stage. If Stage~2 finds that market and ownership signals carry information about these cases, that favours the second reading, and it would be the most policy-relevant result in the thesis. But with few such cases, and with ownership data only from FY2016, statistical power for these categories will be limited. Pooled results will be driven by market manipulation, and that should be said when they are reported.
+
+\subsection{Who catches fraud}
+
+H4 asks whether automated surveillance is the dominant channel, and the descriptive evidence shows why the answer needs care. Under a broad definition, the surveillance share among issuer frauds is a majority at 54.9\%, which taken at face value would reject H4. Under the alert-only definition it is 13.8\%, and H4 would stand. The difference lies in orders stating that SEBI or an exchange observed something, without saying how. Those could be automated alerts that orders do not bother to describe, or they could be staff reading filings. The protocol codes them surveillance and flags them, so both readings can be reported.
+
+Selection is the larger problem. Among all orders, surveillance could be anywhere from 17.3\% to 76.0\%, depending on what the unclear orders conceal. Orders may also be more likely to state a trigger when the trigger is a complaint or a reference, which leaves a paper trail, and in that case the stated shares would understate surveillance. The unclear share has fallen by more than 20 points since 2006--10. The record is improving, which itself complicates comparisons over time.
+
+\subsection{What this already implies for the record}
+
+Some implications do not wait for the estimates, because they concern the record and not the conduct. Over 40\% of orders state no examined period, and most state no trigger. SEBI presumably holds both facts for every matter. Publishing the examined period, the date a matter was opened and the source of first information in a fixed field of each order would cost little. It would also let SEBI and outsiders answer the questions in this thesis directly, and would remove the largest measurement problem here, the composite detection lag. Publishing matter identifiers would resolve the unit-of-analysis problem at a stroke. I offer these as recommendations about measurement. Recommendations about surveillance, screening or penalties must wait for the results in table~\ref{t:joint}.
+
+\section{Limitations}\label{s:limitations}
+
+\paragraph{Selection on detection} This is the central limitation. The corpus contains frauds that SEBI caught and acted on. Clean-labelled firm-years contain undetected fraud, lags describe detected cases only, and nothing here estimates prevalence. \citet{DMZ24} could estimate the undetected share for the United States because the collapse of Arthur Andersen forced a fresh look at a set of firms; no such shock is in hand here. Every claim in this thesis is conditional on detection.
+
+\paragraph{Right truncation} Slow detections of recent frauds have not happened yet, so recent lags are mechanically short. Cohort restriction and reverse-time estimation reduce the bias but do not remove it, and they leave the 2018 reform effectively untested.
+
+\paragraph{The measured lag is not awareness} SEBI's internal opening dates are not public. The detection lag includes investigation time and may substantially overstate the time SEBI took to notice a matter.
+
+\paragraph{The window is SEBI's choice} The examined period is a proxy. SEBI selects it, it may close when SEBI intervenes, and it may miss earlier or later conduct. Lags measured from its end inherit these features, and windows of different matters are not strictly comparable.
+
+\paragraph{Drop-out} Only 58.2\% of orders state a window, and the drop-out is systematic by category and year. Settlement orders are under-represented, so anything associated with settling is under-weighted in Stage~1.
+
+\paragraph{Extraction error} No extracted field has yet been validated blind. Development checks were made on tuned or non-blind samples. Known errors include the unread penalties, channel false positives from both rules and the model, and a residual of misread windows. Sanctions, prior actions and parties fall outside the validation sample. Rare categories will be too thinly sampled for category-level accuracy. A single person does the hand coding, so reliability is intra-coder.
+
+\paragraph{Coverage of firms and data} Firms listed only on regional exchanges are unmatched. NSE alone publishes rename history, so BSE-only renames are known by their last name. BSE prices begin in March 2006. Prices exclude dividends, and consolidations are unadjusted. Ownership begins in December 2015, and no accounting or audit data are available, so Stage~2 tests a narrower question than the literature it builds on, and H3 cannot be tested.
+
+\paragraph{Scope} Frauds handled by the Ministry of Corporate Affairs, the Serious Fraud Investigation Office or the Reserve Bank lie outside the corpus, and claims are confined to securities-market enforcement by SEBI. SAT and court outcomes are not modelled, and sanctions are recorded as imposed.
+
+\paragraph{Causality} Stage~1 estimates conditional associations and Stage~2 estimates prediction. Only Stage~3, which rests on dated events, supports a causal reading, and then only for the market's reaction to an order.
 
 \section{Conclusion}\label{s:ccl}
 
-\paragraph{Summary}  At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga. At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint.
+\paragraph{Summary} % UPDATE: rewrite around the estimates.
+This thesis asks where India's enforcement chain against capital-market fraud fails, and it builds the evidence needed to answer. The corpus covers all 20,861 orders in SEBI's four enforcement categories. It gives an examined period for 58.2\% of those with text, reads sanctions, parties and provisions from the orders, and codes categories and channels under a protocol fixed in advance. It reconciles exactly with an independent count of SEBI's orders for 2011--2020. The descriptive record shows a median of about three years from the end of the examined period to the first public action and a further 1.2 to 1.3 years to the order. It is silent on the source of most matters, and the surveillance share depends heavily on who is counted and on what is called surveillance.
 
-\paragraph{Implications} Dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Curabitur suscipit metus eget quam consequat, eget condimentum justo consectetur. Donec interdum ante nec felis fringilla, a rhoncus magna dapibus. Sed ultricies odio et magna consequat, ut posuere felis vehicula. Vivamus at commodo nisl. Integer sodales eros a metus efficitur, eu tincidunt leo ullamcorper. Sed fermentum tellus nec nisi lobortis, vel pharetra neque mollis. Cras non dolor ut ex semper lobortis. Vivamus sit amet sapien in elit sodales luctus. Donec a tortor ut elit consequat mollis ac id metus. Maecenas vehicula, turpis at lacinia interdum, dolor dolor pretium turpis, non fermentum purus magna at est. 
+\paragraph{Implications} Two implications already stand. Any study of SEBI enforcement that counts orders is partly counting a few mass matters, so the unit of analysis must be a stated choice. And recent improvement in enforcement speed cannot be read from raw lags, because right truncation produces the same picture. More broadly, SEBI could remove the main measurement problems by publishing a small set of dates and sources that it should already hold.
 
-\paragraph{Next steps} Sed in purus nec nulla vulputate scelerisque. Curabitur rutrum aliquet sollicitudin. Suspendisse dapibus metus nunc, id tempus orci accumsan at. Sed rutrum purus velit, vel sollicitudin risus bibendum sed. Sed suscipit arcu ut purus malesuada dictum. Vivamus nec posuere neque. Sed consequat, odio sit amet cursus tincidunt, nulla nunc vulputate elit, ac pharetra eros metus nec ex. Vivamus at ligula id odio auctor blandit a et velit. Suspendisse potenti. Nunc efficitur est id tortor consectetur, sed convallis velit vulputate. Phasellus lacinia magna nec neque viverra ullamcorper.
+\paragraph{Next steps} % UPDATE: delete when done.
+The remaining steps are, in order: the blind validation and the fixes it calls for, a repair of the penalty reader, the hand review of 564 name matches and the freezing of the sample, the ownership data and panel, a matter-grouping step and a finality classifier, and then the estimation of Stages 1 and 3, followed by Stage~2 as time allows. Beyond the thesis, the network extension in H7 needs auditor identity by firm-year. The corpus and its code are intended for public release, so that the measurement can be checked and extended.
 
 \bibliography{\bib}
+\clearpage
 \appendix
 
 % Enter appendix text:
-\section{Generic appendix}\label{a:appendix1}
+\section{Fraud categories}\label{a:category}
 
-This is a generic appendix. Obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. 
+Table~\ref{t:appcategory} summarises the coding protocol for fraud categories. When several categories are charged, the first in the order listed applies. PFUTP Regulations 3 and 4, and section 12A(a)--(c) of the SEBI Act, never decide a category alone, and definitions sections never count as charges. Worked examples are excluded from the validation sample.
 
-\subsection{Generic subsection} 
+\begin{table}[h!]
+\caption{Fraud categories, in order of precedence}
+\begin{tabular*}{\textwidth}[]{L{3.0cm}@{\extracolsep\fill}L{6.4cm}L{4.3cm}}
+\toprule
+Category & Core conduct & Worked example \\
+\midrule
+Insider trading & Trading while holding unpublished price-sensitive information, or communicating it & Rupa and Company (75894) \\
+Fund diversion & Issue money (IPO, GDR, rights, preferential) diverted from its stated use & IPO of Tijaria Polypipes (23691) \\
+RPT and tunnelling & Related-party transactions without required approvals; a company's own funds moved to insiders & Niraj Cement Structurals (82086); Rana Sugars (86164) \\
+Accounting misstatement & False or misleading financial statements; the order must say the accounts were false & Oriental Trimex (99823) \\
+Market manipulation & Trading that creates a false appearance of volume or price, including front-running and fictitious options trades & Kavveri Telecom Products (39418) \\
+Disclosure failure & Failure or delay in a required disclosure, with no fraud above; open-offer obligations & Burnpur Cement (45046) \\
+Intermediary misconduct & Breach of a registered intermediary's business rules; unregistered advice; misuse of clients' assets & Moneylicious Securities (65476) \\
+Other & Non-cooperation; investor grievances; unregistered schemes and deemed public issues; listing compliance; orders finding no violation & Kanchan International (48699); Sumangal Industries (25029) \\
+\bottomrule
+\end{tabular*}
+\note{Numbers in parentheses are the identifiers in SEBI's web addresses. The rule for diverted money: issue money is fund diversion; a company's own money moved to insiders is tunnelling; clients' assets at an intermediary are intermediary misconduct; a collective scheme's collections are other.}
+\label{t:appcategory}\end{table}
 
-This is a generic subsection in the appendix. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
+\FloatBarrier
+\section{Detection channels}\label{a:channel}
 
-In efficitur mi sed eros tincidunt tempus. Cras ut neque vehicula, convallis odio in, lacinia orci. Vivamus et nunc vestibulum, efficitur eros vitae, bibendum justo. Aenean tincidunt ligula ut augue pulvinar, ut placerat risus accumsan. Integer pellentesque odio ac commodo dictum. Ut ut justo a mi consequat vestibulum. 
+Table~\ref{t:appchannel} summarises the protocol for detection channels. The trigger must be tied to the start of SEBI's or an exchange's work, the earliest stated source wins, and what SEBI does after it has noticed a matter is not a trigger.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce gravida aliquam velit, sed fermentum odio fermentum eu. Donec eget fermentum ligula. Nulla facilisi. Integer vitae metus eget risus vulputate consectetur. Suspendisse potenti. Quisque dictum purus non justo aliquet, sed tristique odio dapibus. Sed tincidunt justo vitae leo mattis, a ullamcorper metus vestibulum. Sed ac sapien metus. Sed non mauris nec nisl vehicula iaculis eget eget enim. Suspendisse potenti. Sed ac purus volutpat, venenatis sem eget, fermentum lorem. Suspendisse eu convallis tortor. Suspendisse potenti. Nunc vel dictum libero. Cras eleifend, orci non faucibus gravida, sapien quam pharetra ligula, nec tincidunt elit ex at sapien. 
+\begin{table}[h!]
+\caption{Detection channels}
+\begin{tabular*}{\textwidth}[]{L{2.3cm}@{\extracolsep\fill}L{7.0cm}L{4.4cm}}
+\toprule
+Channel & Inclusion & Worked example \\
+\midrule
+Surveillance & A surveillance alert or system; flagged: a trading pattern or filing that SEBI or an exchange observed & Nivedita Mercantile (39468); ISO order (69454), flagged \\
+Complaint & A complaint from any person, including through the SCORES portal; a whistle-blower & AGI Greenpac (83117) \\
+Audit & A statutory auditor's qualification or resignation; a forensic audit commissioned by others that reached SEBI & Reliance Home Finance (76787) \\
+Media & A news item or research report that prompted SEBI & Orchid Chemicals (23871) \\
+Referral & A reference from another public body, including an inspection it did & Twilight Litaka Pharma (66742); ISG Traders (55522) \\
+Self-disclosure & The company, its management or the noticee disclosed the irregularity & Satyam Computer Services (79496) \\
+Inspection & A routine, thematic or limited-purpose inspection, with no earlier trigger stated & Indiabulls Securities (28712) \\
+Unclear & No trigger stated; ``suo motu''; an exchange reference with no stated basis & PVP Ventures (29459) \\
+\bottomrule
+\end{tabular*}
+\note{The channel is never inferred from the kind of fraud. Findings (``during the investigation it was observed'') are not triggers. Numbers in parentheses are the identifiers in SEBI's web addresses.}
+\label{t:appchannel}\end{table}
 
-\subsection{Subsection with assumptions and results}
+\FloatBarrier
+\section{Reading the window}\label{a:window}
 
-This subsection displays an assumption and results in the appendix to illustrate how they are typeset and numbered. First is an assumption:
-\begin{assumption} 
-Similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga:
-\begin{equation*}
-\mathbb{E}(\Omega_{m,n}) = \mathbb{P}(\omega\cdot \mu - \xi) - \sum_{i=0}^{m}\sum_{j=1}^{n} \sigma(i,j) + 123^{56}.
-\end{equation*}
-Curabitur volutpat ultrices nunc id efficitur. Donec posuere, dui vel gravida elementum, ligula nisi lobortis elit, eu aliquet quam ligula id libero. Sed ac efficitur tur.
-\label{a:appe}\end{assumption}
+Table~\ref{t:appwindow} lists what fills the window and what does not, with the date conventions used by both the code and the hand coder.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Next is a theorem:
-\begin{theorem}
-Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum:
-\begin{equation}
-X^* =\iint_{0}^{\infty} \alpha(i) \cdot \mathcal{A}^2(i) + \mathbb{P}(X\mid Z(i))\,di\,dj,\end{equation}
-integer vestibulum sapien nec velit varius, nec scelerisque nunc eleifend. Cras sollicitudin, justo sit amet tempus vehicula, ex ex vulputate nulla, non vestibulum quam tortor nec nisl. 
-\end{theorem}
+\begin{table}[h!]
+\caption{Rules for the violation window}
+\begin{tabular*}{\textwidth}[]{L{3.0cm}@{\extracolsep\fill}L{11.1cm}}
+\toprule
+Rule & Content \\
+\midrule
+Counts as the window & Investigation, examination, inspection or relevant period, ``patch'', ``IP''; ``conducted investigation \ldots{} during the period $X$ to $Y$''; where no period is named, the dates of the alleged conduct \\
+Never the window & An on-site inspection visit (inspection windows of up to 31 days, or up to 100 days phrased ``conducted the inspection during''); dates of letters, notices, hearings or orders; offer, issue or subscription periods; periods of bank or demat statements \\
+Date reading & Day first. Month only: first day to last day of the month. Financial year: 1 April to 31 March. Year only: 1 January to 31 December. Several patches: earliest start to latest end \\
+Sanity flags & End after the order; start after end; lag not positive; lag of 20 years or more; start before 1995 \\
+Hand review & 43 flags: 33 kept, 8 dropped (for example a statutory period, share lock-ins and a registration validity period), 2 corrected \\
+\bottomrule
+\end{tabular*}
+\label{t:appwindow}\end{table}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed aliquam magna vel urna ultrices, sed lacinia nulla mattis. Fusce non nunc nec est mollis malesuada. Here is another theorem based on assumption~\ref{a:appe}:
-\begin{theorem}
-Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua: $y(\gamma) \geq 3\pi + \cos(\vartheta)$.
-\label{t:theorem1}\end{theorem}
+\FloatBarrier
+\section{The pipeline and reproducibility}\label{a:pipeline}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed aliquam magna vel urna ultrices, sed lacinia nulla mattis. Fusce non nunc nec est mollis malesuada. Nullam dignissim nulla sit amet libero facilisis, eget fringilla libero sagittis. Suspendisse potenti. Vivamus fermentum consectetur ante, at rhoncus nisi tristique vel. Vivamus in est quis justo fermentum lacinia ac eu leo. Maecenas nec tempor nisi---as in theorem \ref{t:theorem1}.
+Table~\ref{t:apppipeline} lists the stages. Each stage is a script that reads defined inputs and writes defined outputs. Raw responses are kept unchanged, every extracted value keeps its source sentence, and the local model's answers are cached by model digest, options and prompt, so a rebuild reproduces the tables without network access or model calls.
 
-\subsection{A subsection with math}
-
-Here is math and equations in the appendix---see equations \eqref{e:appendix1} and \eqref{e:experiments}. Temporibus autem quibusdam $\xi$ et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae $1-\gamma$. Itaque earum rerum hic $\mathcal{S}(\zeta^0)$ tenetur a sapiente delectus $\mathcal{B}^\theta$, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat $\mathbb{V}^i$:
-\begin{equation}
-\mathbb{V}^r = (1-\gamma) \times 0 +\gamma S(z^*) v^s+\gamma [1-S(z^*)] \mathcal{V}^i-c.
-\label{e:appendix1}\end{equation}
-
-Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur? 
-\begin{equation}
-\mathbb{E}(N(z)) = \frac{1}{1-\gamma F(z)}.
-\label{e:experiments}\end{equation}
-
-\section{Another appendix}\label{a:appendix2}
-
-Here is a second appendix. At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti.
-
-\subsection{Larger figure, without panel, in the appendix} 
-
-Here is a large, simple figure in the appendix (see figure \ref{f:appendix1}). At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga.
-
-\begin{figure}[t]
-\includegraphics[scale=0.3,page=8]{\pdf}
-\caption{A larger graph in the appendix}
-\note[Source]{This is the source for the larger graph. Nam libero tempore, cum soluta nobis est eligendi optio, cumque nihil impedit, quo minus id, quod maxime placeat, facere possimus.}
-\label{f:appendix1}\end{figure}
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-Nullam fringilla, risus sit amet tincidunt sagittis, ligula nisi suscipit nisi, nec vulputate libero odio sit amet metus. Sed auctor elit nec orci venenatis, in dignissim lacus venenatis. Curabitur auctor odio sit amet leo molestie, vel lacinia sem congue. Integer id interdum metus. Ut ultrices ultricies lorem eget egestas. Integer efficitur libero id sapien posuere, at laoreet mauris consectetur. Nulla facilisi. Sed dapibus lectus at lacus interdum, ac vehicula dui bibendum. In hac habitasse platea dictumst. Sed luctus metus quis libero ultrices, vitae fringilla purus varius. Sed efficitur suscipit felis vel dapibus. Nunc condimentum laoreet ipsum, ut faucibus risus sodales sed. Sed dignissim, magna vel suscipit fermentum, lectus lorem suscipit tortor, eu suscipit elit tortor non dolor. 
-
-\subsection{Subsection with references}\label{a:subappendix}
-
-Here is a sentence with some references in text: \citet{MS19,MS21} found something but that is an uncommon result. The references can also go in parentheses at the end of the sentence \citep{MS21,MS22}. The references go to the reference list at the end of the main text---so appendix and main text share a common list of references.
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-\subsection{Subsection with a foonote}
-
-Here is a sentence with a footnote.\footnote{Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.} The numbering of the footnotes, just like the numbering of the pages, continues from the main text to the appendix.
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-\section{Last appendix with text}
-
-This is a last appendix with a bit of text.
-
-\subsection{A first subsection}
-
-Sed vestibulum ex a tristique lacinia. Integer interdum magna vel magna rutrum fermentum. Maecenas sed mi in nunc convallis rutrum. Vivamus dapibus bibendum est, ac tincidunt ipsum fermentum id. Nunc id est turpis. Suspendisse potenti. Sed ac laoreet nulla, eu sollicitudin libero. Suspendisse tempus orci nec mauris volutpat eleifend. Integer nec tristique libero. Sed vehicula ipsum sit amet magna accumsan, nec pulvinar nisl consequat. In ac hendrerit turpis. Sed aliquet luctus mauris, vitae congue turpis. Nullam blandit lacus vel interdum eleifend. 
-
-\subsection{A second subsection}
-
-Nam pretium mauris eros, nec sollicitudin risus tincidunt a. Vivamus in augue vitae ligula scelerisque dapibus. Integer eget metus aliquet, efficitur nibh eget, pharetra eros. Suspendisse luctus interdum ex id suscipit. Donec quis augue mauris. Nulla ut erat eget nisl hendrerit malesuada. Vivamus eu tortor sit amet sem fringilla eleifend. In hac habitasse platea dictumst. Suspendisse potenti. Ut eget libero sed orci tempor ullamcorper:
-\begin{equation}
-S^*(z) = \frac{\alpha}{1-\gamma (1-\alpha)} > \int_{-\infty}^{+\infty}\alpha(x)\,dx.
-\label{e:type1Classical}\end{equation}
-
-\subsection{A third subsection}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed aliquam magna vel urna ultrices, sed lacinia nulla mattis. Fusce non nunc nec est mollis malesuada. Nullam dignissim nulla sit amet libero facilisis, eget fringilla libero sagittis. Suspendisse potenti. Vivamus fermentum consectetur ante, at rhoncus nisi tristique vel. Vivamus in est quis justo fermentum lacinia ac eu leo. Sed ac pulvinar nulla. Etiam quis felis dapibus, vulputate metus eu, finibus nunc. Sed vel sodales dui. Nam venenatis dolor non orci tempus fermentum. Vivamus sodales justo a ligula cursus aliquet. Sed fringilla nunc vitae justo finibus, id placerat lectus sodales.
+\begin{table}[h!]
+\caption{Pipeline stages}
+\begin{tabular*}{\textwidth}[]{l@{\extracolsep\fill}L{11.3cm}}
+\toprule
+Stage & What it does \\
+\midrule
+Listings & Walks the listing pages of the four categories: 836 pages, none failed \\
+Documents & Reads each detail page and archives the PDF or inline text \\
+Text & Classifies each page and applies OCR where needed \\
+Windows & Rule-based candidates and parsing; local model fallback with verified quotes \\
+Sanity & Flags impossible and unusual windows and applies the hand review \\
+Actions & Prior notices and orders, first public action, sanctions \\
+Parties & Parties, roles, cited provisions and their roles \\
+Category & Fraud category under the coding protocol \\
+Channel & Detection channel: rules, then a cue-verified model pass \\
+Orders & Joins everything into one row per order: 20,861 rows, 71 columns \\
+Validation & Draws the blind sample and scores the hand coding \\
+Universe, matching & Builds the listed universe and links issuers and parties to firms \\
+Sample & Defines fraud firm-years, controls and events; frozen once \\
+Prices, ownership & Fetches daily prices, corporate actions, the index and shareholding \\
+Panel & Merges the firm-year panel, with row counts asserted at each join \\
+Tables & Builds this thesis's tables and figures from the outputs \\
+\bottomrule
+\end{tabular*}
+\label{t:apppipeline}\end{table}
 
 \end{document}

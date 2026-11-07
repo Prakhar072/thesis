@@ -1,7 +1,7 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-10-21 (every function documented with typed Args/Returns; `CODE_GUIDE.md` and `TASKS.md` added;
-Week 4 built and scratch-verified, its runs and the Week 3 hand coding are the user's). Read this before touching
+Last updated: 2026-11-07 (thesis drafted in `paper/paper.tex`, results still to come; prices, universe, matching and the
+blind draw are run; the Week 3 hand coding and the rest of Week 4 are the user's). Read this before touching
 code or data.
 Companion docs: `TASKS.md` (**the user's remaining tasks, in order, with instructions**), `CODE_GUIDE.md` (every file:
 what it does, inputs/outputs, key functions, what to check), `timeline.md` (the thesis runbook: weekly plan, 8 rules,
@@ -51,19 +51,25 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (Week 4 built; Week 3 hand coding deferred)
+## 2. Status (thesis drafted; Week 3 hand coding and the Week 4 freeze pending)
+
+**Thesis (2026-11-07):** `paper/paper.tex` holds everything except the results. `python -m src.paper_tables` writes
+`paper/tables/*.tex`, `paper/figures.pdf` and `derived/paper_numbers.json`; `grep -n UPDATE paper/paper.tex` lists what
+changes as results arrive. It has no Stage 1–3 estimates and no validation figures: never add one that is not in
+`results_log.md`. Prior work exists (`results_log.md`, 2026-11-07): do not reuse `technical_plan.md`'s "no dataset exists" or
+"first evidence" claims, or its Taksheel "two and a half years to first action" (the interim order came in the window's last days).
 
 `TASKS.md` is the user's step-by-step list (recommended order: start the price download, draw the blind sample,
 match and review, freeze, code the 150, score, ownership download, panel; decisions D1–D5; code review; writing).
 Keep it in step with the tables below when a task is done or added.
 
-**Pending on the user (Week 4; nothing here has been run into `derived/`), in order:**
+**Pending on the user (Week 4; W4-1 to W4-3 are done, run 2026-11-03/04; the rest are not), in order:**
 
 | # | Step | Command | Time | Needs |
 |---|---|---|---|---|
-| W4-1 | Prices — start first, it is the longest and depends on nothing else | `setsid nohup .venv/bin/python -m src.fetch_prices > logs/fetch_prices.out 2>&1 &` | ~7–8 h (≈12,200 requests, 2004-01-01 → yesterday; resumable: re-run reads the cache) | network (NSE, BSE) |
-| W4-2 | Listed universe | `python -m src.universe` | seconds (its 7 snapshots are already cached, 2026-10-14) | — |
-| W4-3 | Matching | `python -m src.match_entities` | ~35 s; writes `hand/match_review.csv` (564 names) | W4-2 |
+| W4-1 ✓ | Prices — start first, it is the longest and depends on nothing else | `setsid nohup .venv/bin/python -m src.fetch_prices > logs/fetch_prices.out 2>&1 &` | ~7–8 h (≈12,200 requests, 2004-01-01 → yesterday; resumable: re-run reads the cache) | network (NSE, BSE) |
+| W4-2 ✓ | Listed universe | `python -m src.universe` | seconds (its 7 snapshots are already cached, 2026-10-14) | — |
+| W4-3 ✓ | Matching | `python -m src.match_entities` | ~35 s; writes `hand/match_review.csv` (564 names) | W4-2 |
 | W4-4 | **Hand review** of the 80–92 band | fill `decision` in `hand/match_review.csv` (`accept` / `reject` / a `firm_id` from the candidates), most-used names first; then re-run W4-3 | ~2 h (runbook) | W4-3 |
 | W4-5 | Freeze the sample | `python -m src.build_sample` (once; refuses to overwrite) | ~15 s | W4-4 |
 | W4-6 | Price sanity check | `python -m src.prices --check TATASTEEL` → `figures/price_check_TATASTEEL.png`; look at it | seconds | W4-1, W4-2 |
@@ -79,7 +85,7 @@ documented robustness check, or wait to freeze until the validation fixes are in
 
 | # | Step | Command / file | State |
 |---|---|---|---|
-| 1 | Draw the blind sample (Days 3–4) | `python -m src.validation_sample` (seconds; once — refuses to overwrite a started sheet) | not run: `hand/validation_sample.csv`, `hand/validation_pdfs/`, `derived/validation_key.parquet` do not exist |
+| 1 | Draw the blind sample (Days 3–4) | `python -m src.validation_sample` (seconds; once — refuses to overwrite a started sheet) | done 2026-11-04; the sheet is uncoded |
 | 2 | Hand-code the 150 (Days 3–4, ~7 h, two sittings) | `hand/validation_sample.csv`, from the copies, with `hand/coding_protocol.md` open; `python -m src.validation_sample --check` as you go | not started |
 | 3 | Score (Day 5) | `python -m src.score_validation --official` | not run (needs 1–2) |
 | 4 | Record the figures and the Gate 1 decision | `results_log.md` (Week 3 checkpoint) | open |
@@ -265,7 +271,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (807 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (838 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -370,6 +376,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 | 15b check | `python -m src.prices --check <symbol>` | prices, corporate_actions, universe | `figures/price_check_<symbol>.png` | none |
 | 16 ownership | `python -m src.fetch_shareholding [--quarterly] [--role] [--limit]` | sample, prices (spans), BSE API (cache) | `derived/shareholding.parquet`, `logs/fetch_shareholding.log` | ≤ ~19,000 requests (~6–9 h) |
 | 17 panel | `python -m src.build_panel` | sample*, universe, prices, corporate_actions, market_index, shareholding | `derived/panel.parquet`, `derived/panel_coverage.csv`, `logs/build_panel.log` | none (~1 min) |
+| thesis | `python -m src.paper_tables [--sample DIR]` | orders, order_issuers, firms, universe, name_matches, price_days, prices, validation_key, sample* | `paper/tables/*.tex`, `paper/figures.pdf`, `derived/paper_numbers.json`, `logs/paper_tables.log` | none (~10 s); aggregates only, never a per-order result |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
 `scrape_listings --offline` → `fetch_pdfs --offline` → `extract_text` → `extract_windows`
@@ -705,6 +712,9 @@ before building stems (`104646.0` ≠ `104646`). Deduplicate documents on
   entities …"). Names in all capitals joined by "AND" without honorifics stay one
   party ("BHAVESH THAKKAR AND BIMAL THAKKAR"). A proprietor's PAN is printed for each
   of his firms, so PANs repeat across parties of one order.
+- **Penalties are undercounted.** 498 orders with no penalty read direct payment of one (`paper_tables.PAY_CLAUSE`); 14 of 14
+  read at random were real. Forms missed: number words in tables, passive voice, "I impose … as under", stray punctuation
+  after the rupee sign. Not fixed (`results_log.md`, 2026-11-07).
 - Roles are a first guess: 33.6% UNKNOWN; `role_basis = suffix` (any company with no
   other evidence → ISSUER) is weak. Penalty links fail in 162 penalty orders and are
   partial in 58 (party named in a form the list does not use).

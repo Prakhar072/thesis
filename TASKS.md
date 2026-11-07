@@ -20,11 +20,20 @@ cd ~/projects/thesis && source .venv/bin/activate
 
 - **Built and run:** the corpus (20,861 orders, text for 20,849); windows, actions, parties, fraud category and
   detection channel for every order; `derived/orders.parquet` (20,861 × 71).
-- **Built, not yet run:**
-  - Week 3: the blind validation sample and its scorer.
-  - Week 4: the listed universe, matching, the analysis sample, prices, ownership and the panel. All were
-    dry-run on small slices; nothing from Week 4 is in `derived/` yet.
-- **Every function** in `src/` now documents its inputs and output with their types. All 807 tests pass.
+- **Run by you since 2026-10-21:** prices (A1), the universe and the matcher (A2–A3), the blind sample (B1).
+- **Built, not yet run:** the scorer (needs the coding); the sample freeze, ownership and the panel.
+- **Thesis:** `paper/paper.tex` drafted on 2026-11-07 (37 pages): everything except the results. See E.
+- **Every function** in `src/` documents its inputs and output with their types. All 838 tests pass.
+
+**New since the draft (see `results_log.md`, 2026-11-07):**
+- **Fix the penalty reader.** 498 orders direct payment of a penalty that was not read; 14 of 14 read at random were
+  real. `extract_actions` needs the fix and stages 7–11 a re-run. Sanctions are outside the blind sample, so this need not
+  wait for the coding. Ask an agent.
+- **Decide Stage 2.** Gate 2 (2 November) has passed without Stage 1 results; the runbook's rule cuts Stage 2 in that case.
+  The draft keeps it in section 6.2, marked for cutting.
+- **Two steps the estimates need are not built:** matter grouping (D1) and the finality classifier (interim / final).
+- **Add the paper behind Damle and Zaveri Shah.** The thesis cites their blog post and dataset; SSRN 4198772 blocked
+  automated reading, so its exact title is unconfirmed.
 
 ## Recommended order
 
@@ -70,8 +79,8 @@ cd ~/projects/thesis && source .venv/bin/activate
 ## A. Week 4 data runs
 
 ### A1. Start the price download
-- [ ] Started
-- [ ] Finished
+- [x] Started
+- [x] Finished
 
 **Why.** Daily prices for every listed equity from 2004, the BSE 500 index and corporate actions. Stage 3 needs
 them for the event study, and Stage 2 for its market signals. This is the longest step, and it needs nothing else.
@@ -95,7 +104,7 @@ cache in seconds, and days NSE marked as holidays are not asked again.
 - "rows" should run to millions for each exchange.
 
 ### A2. Build the listed universe
-- [ ] Done
+- [x] Done
 
 ```bash
 python -m src.universe
@@ -105,7 +114,7 @@ This takes seconds and makes no network calls: its seven lists were cached on 20
 10,180 firms and 23,900 aliases.
 
 ### A3. Run the matcher
-- [ ] Done
+- [x] Done
 
 ```bash
 python -m src.match_entities
@@ -228,7 +237,7 @@ firms, of control firms and of fraud firm-years with prices, with ownership, and
 ## B. Week 3 validation (deferred until now)
 
 ### B1. Draw the blind sample
-- [ ] Done
+- [x] Done
 
 ```bash
 python -m src.validation_sample
@@ -416,46 +425,24 @@ The runbook wants event-study controls matched on industry, size and pre-event r
 
 ## E. Write the paper
 
-- [ ] Data: sources and corpus
-- [ ] Data: extraction and coding
-- [ ] Data: validation
-- [ ] Data: sample, matching and coverage
-- [ ] Introduction and framework
+- [x] Data: sources and corpus (drafted 2026-11-07)
+- [x] Data: extraction and coding (drafted 2026-11-07)
+- [ ] Data: validation (design drafted; results wait for B3)
+- [ ] Data: sample, matching and coverage (drafted from the dry run; refresh after A5 and A8)
+- [x] Introduction and framework (drafted 2026-11-07; tighten at the end)
 - [ ] Stage 1 results (by Gate 2, 2 November)
 - [ ] Stage 3 results (Week 7)
 - [ ] Stage 2 results (Week 8; Gate 3, 16 November)
-- [ ] Synthesis, policy, conclusion, abstract (Week 9)
+- [ ] Synthesis, policy, conclusion, abstract (Week 9; interim versions drafted 2026-11-07)
 - [ ] Revision and final checks (Week 10)
 
-**Where.** `paper/paper.tex` is still the LaTeX template, with generic sections and example content. Replace its
-sections with the thesis outline.
+**Where.** `paper/paper.tex`, with `paper/paper.bib`. The tables and figures are generated: after any pipeline change run
+`python -m src.paper_tables`, then recompile with `latexmk -pdf paper.tex` in `paper/`. Until the sample is frozen, add
+`--sample DIR` with a `build_sample --scratch DIR` dry run, or panel B of the funnel table is left out.
 
-**What you can write now: the data section.** Every number is already in `results_log.md`:
-- **Sources and corpus:** the Week 1 entries. 20,861 orders in four categories, reconciled with SEBI's counts;
-  text for 20,849; OCR needed for 3.67% of PDF orders.
-- **Extraction:** the windows entries. 58.2% of orders have a window; regex vs model; the sanity rules and your
-  review of the 43 flagged windows; drop-out by type and year.
-- **Coding:**
-  - fraud category: written protocol, rules, confidence;
-  - detection channel: the UNCLEAR share is itself a finding, 58.7%, falling from 66–70% before 2011 to 46% since
-    2021.
-- **Method notes:** under "Method notes for the data section" in `results_log.md`.
-- **Validation:** after B3, from `derived/validation_table.md`.
-- **Sample and coverage:** after A5 and A8.
-
-**How.** Follow the runbook's writing map (`timeline.md`, "Writing: what goes down each week"):
-- Write each number into a sentence the day it exists, never as a placeholder.
-- Every number in the text must match `results_log.md`.
-- Every table says its N and its sample.
-
-**The runbook's final checks** (Week 10, Day 4):
-- numbers against `results_log.md`;
-- N on every table;
-- figures readable in greyscale;
-- citations resolve;
-- a fresh clone reproduces the headline numbers;
-- an audit of causal language;
-- a specific limitations section naming selection on detection.
+**What changes as results arrive.** `grep -n UPDATE paper/paper.tex` lists every passage to rewrite. Prose numbers are typed
+by hand: `derived/paper_numbers.json` and `results_log.md` hold their sources. Results sections do not exist yet; add
+them after section 5 as the estimates arrive, and rewrite the discussion from them.
 
 ---
 

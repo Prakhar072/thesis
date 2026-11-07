@@ -1,60 +1,193 @@
-\begin{thebibliography}{9}
+\begin{thebibliography}{28}
 \newcommand{\enquote}[1]{``#1''}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 
-\bibitem[{Eyster, Madarasz, and Michaillat(2021)}]{EMM21}
-Eyster, Erik, Kristof Madarasz, and Pascal Michaillat. 2021.
-\newblock \enquote{Pricing under Fairness Concerns.}
-\newblock \emph{Journal of the European Economic Association} 19~(3): 1853--1898.
-\newblock \url{https://doi.org/10.1093/jeea/jvaa041}.
+\bibitem[{Aggarwal et~al.(2025)Aggarwal, Kulkarni, Patel, Patel, and
+  Sane}]{AKPPS25}
+Aggarwal, Natasha, Amol Kulkarni, Bhavin Patel, Sonam Patel, and Renuka Sane.
+  2025.
+\newblock \enquote{Balancing Power and Accountability: An Evaluation of
+  {SEBI}'s Adjudication of Insider Trading.}
+\newblock Working Paper~13, TrustBridge Rule of Law Foundation.
+\newblock \url{https://econpapers.repec.org/RePEc:bjd:wpaper:13}.
 
-\bibitem[{Landais, Michaillat, and Saez(2018{\natexlab{a}})}]{LMS18a}
-Landais, Camille, Pascal Michaillat, and Emmanuel Saez. 2018{\natexlab{a}}.
-\newblock \enquote{A Macroeconomic Approach to Optimal Unemployment Insurance: Applications.}
-\newblock \emph{American Economic Journal: Economic Policy} 10~(2): 182--216.
-\newblock \url{https://doi.org/10.1257/pol.20160462}.
+\bibitem[{Bao et~al.(2020)Bao, Ke, Li, Yu, and Zhang}]{BKLYZ20}
+Bao, Yang, Bin Ke, Bin Li, Y.~Julia Yu, and Jie Zhang. 2020.
+\newblock \enquote{Detecting Accounting Fraud in Publicly Traded {U.S.} Firms
+  Using a Machine Learning Approach.}
+\newblock \emph{Journal of Accounting Research} 58~(1): 199--235.
+\newblock \url{https://doi.org/10.1111/1475-679X.12292}.
+\newblock See also the erratum in the same journal (2022),
+  \url{https://doi.org/10.1111/1475-679X.12454}.
 
-\bibitem[{Landais, Michaillat, and Saez(2018{\natexlab{b}})}]{LMS18b}
-Landais, Camille, Pascal Michaillat, and Emmanuel Saez. 2018{\natexlab{b}}.
-\newblock \enquote{A Macroeconomic Approach to Optimal Unemployment Insurance: Theory.}
-\newblock \emph{American Economic Journal: Economic Policy} 10~(2): 152--181.
-\newblock \url{https://doi.org/10.1257/pol.20150088}.
+\bibitem[{Becker(1968)}]{B68}
+Becker, Gary~S. 1968.
+\newblock \enquote{Crime and Punishment: An Economic Approach.}
+\newblock \emph{Journal of Political Economy} 76~(2): 169--217.
+\newblock \url{https://doi.org/10.1086/259394}.
 
-\bibitem[{Michaillat(2012)}]{M12}
-Michaillat, Pascal. 2012.
-\newblock \enquote{Do Matching Frictions Explain Unemployment? Not in Bad Times.}
-\newblock \emph{American Economic Review} 102~(4): 1721--1750.
-\newblock \url{https://doi.org/10.1257/aer.102.4.1721}.
+\bibitem[{Beneish(1999)}]{B99}
+Beneish, Messod~D. 1999.
+\newblock \enquote{The Detection of Earnings Manipulation.}
+\newblock \emph{Financial Analysts Journal} 55~(5): 24--36.
+\newblock \url{https://doi.org/10.2469/faj.v55.n5.2296}.
 
-\bibitem[{Michaillat(2014)}]{M14}
-Michaillat, Pascal. 2014.
-\newblock \enquote{A Theory of Countercyclical Government Multiplier.}
-\newblock \emph{American Economic Journal: Macroeconomics} 6~(1): 190--217.
-\newblock \url{https://doi.org/10.1257/mac.6.1.190}.
+\bibitem[{Bertrand, Mehta, and Mullainathan(2002)}]{BMM02}
+Bertrand, Marianne, Paras Mehta, and Sendhil Mullainathan. 2002.
+\newblock \enquote{Ferreting out Tunneling: An Application to {I}ndian Business
+  Groups.}
+\newblock \emph{Quarterly Journal of Economics} 117~(1): 121--148.
 
-\bibitem[{Michaillat and Saez(2015)}]{MS15}
-Michaillat, Pascal and Emmanuel Saez. 2015.
-\newblock \enquote{Aggregate Demand, Idle Time, and Unemployment.}
-\newblock \emph{Quarterly Journal of Economics} 130~(2): 507--569.
-\newblock \url{https://doi.org/10.1093/qje/qjv006}.
+\bibitem[{Boehmer, Musumeci, and Poulsen(1991)}]{BMP91}
+Boehmer, Ekkehart, Jim Musumeci, and Annette~B. Poulsen. 1991.
+\newblock \enquote{Event-Study Methodology under Conditions of Event-Induced
+  Variance.}
+\newblock \emph{Journal of Financial Economics} 30~(2): 253--272.
 
-\bibitem[{Michaillat and Saez(2019)}]{MS19}
-Michaillat, Pascal and Emmanuel Saez. 2019.
-\newblock \enquote{Optimal Public Expenditure with Inefficient Unemployment.}
-\newblock \emph{Review of Economic Studies} 86~(3): 1301--1331.
-\newblock \url{https://doi.org/10.1093/restud/rdy030}.
+\bibitem[{Cohen(1960)}]{C60}
+Cohen, Jacob. 1960.
+\newblock \enquote{A Coefficient of Agreement for Nominal Scales.}
+\newblock \emph{Educational and Psychological Measurement} 20~(1): 37--46.
+\newblock \url{https://doi.org/10.1177/001316446002000104}.
 
-\bibitem[{Michaillat and Saez(2021)}]{MS21}
-Michaillat, Pascal and Emmanuel Saez. 2021.
-\newblock \enquote{Resolving {N}ew {K}eynesian Anomalies with Wealth in the Utility Function.}
-\newblock \emph{Review of Economics and Statistics} 103~(2): 197--215.
-\newblock \url{https://doi.org/10.1162/rest_a_00893}.
+\bibitem[{Corrado(1989)}]{C89}
+Corrado, Charles~J. 1989.
+\newblock \enquote{A Nonparametric Test for Abnormal Security-Price Performance
+  in Event Studies.}
+\newblock \emph{Journal of Financial Economics} 23: 385--395.
 
-\bibitem[{Michaillat and Saez(2022)}]{MS22}
-Michaillat, Pascal and Emmanuel Saez. 2022.
-\newblock \enquote{An Economical Business-Cycle Model.}
-\newblock \emph{Oxford Economic Papers} 74~(2): 382--411.
-\newblock \url{https://doi.org/10.1093/oep/gpab021}.
+\bibitem[{Cox(1972)}]{C72}
+Cox, D.~R. 1972.
+\newblock \enquote{Regression Models and Life-Tables.}
+\newblock \emph{Journal of the Royal Statistical Society: Series B} 34~(2):
+  187--220.
+\newblock \url{https://doi.org/10.1111/j.2517-6161.1972.tb00899.x}.
+
+\bibitem[{Damle and {Zaveri Shah}(2022)}]{DZ22}
+Damle, Devendra and Bhargavi {Zaveri Shah}. 2022.
+\newblock \enquote{How Are Securities Laws Enforced in {I}ndia: Some Facts from
+  a New Data-Set of {SEBI} Orders.}
+\newblock The Leap Blog, 22 September.
+\newblock
+  \url{https://blog.theleapjournal.org/2022/09/how-are-securities-laws-enforced-in.html}.
+
+\bibitem[{Dechow et~al.(2011)Dechow, Ge, Larson, and Sloan}]{DGLS11}
+Dechow, Patricia~M., Weili Ge, Chad~R. Larson, and Richard~G. Sloan. 2011.
+\newblock \enquote{Predicting Material Accounting Misstatements.}
+\newblock \emph{Contemporary Accounting Research} 28~(1): 17--82.
+\newblock \url{https://doi.org/10.1111/j.1911-3846.2010.01041.x}.
+
+\bibitem[{Dharmapala and Khanna(2013)}]{DK13}
+Dharmapala, Dhammika and Vikramaditya Khanna. 2013.
+\newblock \enquote{Corporate Governance, Enforcement, and Firm Value: Evidence
+  from {I}ndia.}
+\newblock \emph{Journal of Law, Economics, and Organization} 29~(5):
+  1056--1084.
+
+\bibitem[{Dimson(1979)}]{D79}
+Dimson, Elroy. 1979.
+\newblock \enquote{Risk Measurement when Shares Are Subject to Infrequent
+  Trading.}
+\newblock \emph{Journal of Financial Economics} 7~(2): 197--226.
+
+\bibitem[{Dyck, Morse, and Zingales(2010)}]{DMZ10}
+Dyck, Alexander, Adair Morse, and Luigi Zingales. 2010.
+\newblock \enquote{Who Blows the Whistle on Corporate Fraud?}
+\newblock \emph{Journal of Finance} 65~(6): 2213--2253.
+
+\bibitem[{Dyck, Morse, and Zingales(2024)}]{DMZ24}
+Dyck, Alexander, Adair Morse, and Luigi Zingales. 2024.
+\newblock \enquote{How Pervasive Is Corporate Fraud?}
+\newblock \emph{Review of Accounting Studies} 29~(1): 736--769.
+\newblock \url{https://doi.org/10.1007/s11142-022-09738-5}.
+
+\bibitem[{Fine and Gray(1999)}]{FG99}
+Fine, Jason~P. and Robert~J. Gray. 1999.
+\newblock \enquote{A Proportional Hazards Model for the Subdistribution of a
+  Competing Risk.}
+\newblock \emph{Journal of the American Statistical Association} 94~(446):
+  496--509.
+\newblock \url{https://doi.org/10.1080/01621459.1999.10474144}.
+
+\bibitem[{Gupta, Patel, and Sane(2026)}]{GPS26}
+Gupta, Arjun, Sonam Patel, and Renuka Sane. 2026.
+\newblock \enquote{Market Reaction to Insider Trading: Evidence from Regulatory
+  Orders in {I}ndia.}
+\newblock The Leap Blog, 11 May.
+\newblock
+  \url{https://blog.theleapjournal.org/2026/05/market-reaction-to-insider-trading.html}.
+
+\bibitem[{Jackson and Roe(2009)}]{JR09}
+Jackson, Howell~E. and Mark~J. Roe. 2009.
+\newblock \enquote{Public and Private Enforcement of Securities Laws:
+  Resource-Based Evidence.}
+\newblock \emph{Journal of Financial Economics} 93~(2): 207--238.
+
+\bibitem[{Jain(2022)}]{J22}
+Jain, Prateek. 2022.
+\newblock \enquote{Regulatory Actions against Corporate Irregularities in
+  {I}ndia: Analyzing the Stock Market Impact.}
+\newblock \emph{Cogent Economics \& Finance} 10~(1).
+\newblock \url{https://doi.org/10.1080/23322039.2022.2122187}.
+\newblock Article 2122187.
+
+\bibitem[{Karpoff et~al.(2017)Karpoff, Koester, Lee, and Martin}]{KKLM17}
+Karpoff, Jonathan~M., Allison Koester, D.~Scott Lee, and Gerald~S. Martin.
+  2017.
+\newblock \enquote{Proxies and Databases in Financial Misconduct Research.}
+\newblock \emph{The Accounting Review} 92~(6): 129--163.
+\newblock \url{https://doi.org/10.2308/accr-51766}.
+
+\bibitem[{Karpoff, Lee, and Martin(2008)}]{KLM08}
+Karpoff, Jonathan~M., D.~Scott Lee, and Gerald~S. Martin. 2008.
+\newblock \enquote{The Cost to Firms of Cooking the Books.}
+\newblock \emph{Journal of Financial and Quantitative Analysis} 43~(3):
+  581--611.
+
+\bibitem[{{La Porta}, de~Silanes, and Shleifer(2006)}]{LLS06}
+{La Porta}, Rafael, Florencio~Lopez de~Silanes, and Andrei Shleifer. 2006.
+\newblock \enquote{What Works in Securities Laws?}
+\newblock \emph{Journal of Finance} 61~(1): 1--32.
+
+\bibitem[{Lagakos, Barraj, and {De Gruttola}(1988)}]{LBD88}
+Lagakos, S.~W., L.~M. Barraj, and V.~{De Gruttola}. 1988.
+\newblock \enquote{Nonparametric Analysis of Truncated Survival Data, with
+  Application to {AIDS}.}
+\newblock \emph{Biometrika} 75~(3): 515--523.
+\newblock \url{https://doi.org/10.2307/2336602}.
+
+\bibitem[{Scholes and Williams(1977)}]{SW77}
+Scholes, Myron and Joseph Williams. 1977.
+\newblock \enquote{Estimating Betas from Nonsynchronous Data.}
+\newblock \emph{Journal of Financial Economics} 5~(3): 309--327.
+
+\bibitem[{{Securities and Exchange Board of
+  India}(2026{\natexlab{a}})}]{SEBI26a}
+{Securities and Exchange Board of India}. 2026{\natexlab{a}}.
+\newblock \enquote{Annual Report 2025--26.}
+\newblock Published August 2026.
+\newblock
+  \url{https://www.sebi.gov.in/reports-and-statistics/publications/aug-2026/SEBI%20ANNUAL%20REPORT%202025_26.pdf}.
+
+\bibitem[{{Securities and Exchange Board of
+  India}(2026{\natexlab{b}})}]{SEBI26b}
+{Securities and Exchange Board of India}. 2026{\natexlab{b}}.
+\newblock \enquote{Enforcement Orders Database.}
+\newblock Listing categories scraped on 23 September.
+\newblock
+  \url{https://www.sebi.gov.in/sebiweb/home/HomeAction.do?doListing=yes&sid=2&ssid=9&smid=2}.
+
+\bibitem[{Wang, Winton, and Yu(2010)}]{WWY10}
+Wang, Tracy~Yue, Andrew Winton, and Xiaoyun Yu. 2010.
+\newblock \enquote{Corporate Fraud and Business Conditions: Evidence from
+  {IPO}s.}
+\newblock \emph{Journal of Finance} 65~(6): 2255--2292.
+
+\bibitem[{{Zaveri Shah} and Damle(2022)}]{ZD22}
+{Zaveri Shah}, Bhargavi and Devendra Damle. 2022.
+\newblock \enquote{Securities Law Enforcement in {I}ndia.}
+\newblock Mendeley Data, version 2.
+\newblock \url{https://doi.org/10.17632/ppdk9pzfdp.2}.
 
 \end{thebibliography}

@@ -424,3 +424,66 @@ and about 75 shareholding requests. Nothing has been written into `derived/` yet
 
 **Weekend: panel** (`src/build_panel.py`): plumbing run on the scratch slices only (a few weeks of prices), 5,150
 firm-years. The coverage table is produced by the user's run and recorded then. 807 tests pass.
+
+## 2026-11-07 — Runs since 2026-10-21, and the thesis's descriptive figures
+
+**Runs by the user** (`logs/`; `derived/` holds these). `hand/match_review.csv` has 0 of 564 decisions; the validation
+sheet is uncoded; no frozen sample, shareholding or panel exists yet.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| `fetch_prices` (2026-11-03) | 12,716 requests, 444.5 min | 2004-01-01 to 2026-11-02 |
+| Trading days read | NSE 5,642 from 2004-01-01 · BSE 5,075 from **2006-03-01** | BSE's archive serves nothing earlier; 566 BSE weekdays confirmed absent (2004: 252 · 2005: 249 · 2006: 45 · later: 20); 1 unreadable (2021-12-29) |
+| Security-days | NSE 9,219,911 · BSE 16,090,151 · 25.3 million | |
+| Corporate actions | 36,935: dividend 30,506 · bonus 1,305 · split 1,109 · rights 794 · buyback 396 · demerger 173 · consolidation 151 · merger 1 · other 2,500 | |
+| BSE 500 | 5,669 days | |
+| `universe`, `match_entities` (2026-11-04) | identical to the 2026-10-14 scratch figures | 8,599 orders matched; 564 names await review |
+| `validation_sample` (2026-11-04) | 150 drawn, as the dry run: 60 / 25 / 25 / 40; ISO 5; 539 excluded; AO 77 · WTM 54 · Settlement 15 · ED/CGM 4 | none coded |
+| `build_sample --scratch` (2026-11-07) | reproduces the Week 4 figures; fingerprint aadeddb73e48c442 | dry run, not frozen. FY≤2015 is 1,287 of the 2,387 in-period fraud years (53.9%): no ownership there |
+| Prices in the dry-run sample | 93.9% of fraud firms, 90.7% of controls have at least one price | any exchange, any day |
+
+**Thesis tables and figures** (`src/paper_tables.py` → `paper/tables/`, `paper/figures.pdf`, `derived/paper_numbers.json`).
+Order-level, unvalidated, uncorrected for truncation. ISO here means title *or* window sentence names it: **2,375** orders
+(2,243 by title alone; 2,363 windowed), which reproduces the channel figures above. Excluding them the window rate
+is 52.9% (53.3% by the title-only definition in the Week 2 entry).
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Lags, orders (median, IQR, years) | window end → first action 3.15 (1.48–5.35) · first action → order 1.19 (0.42–3.01) · window end → order 5.50 · → first SCN or order 3.86 | matches the Week 2 entry; n = 12,142 |
+| …excluding ISO | 3.31 (1.80–5.08) · 1.10 (0.39–2.50) · window end → order 5.04 | n = 9,779 |
+| **…matter clusters** | **2.59 (1.17–4.35) · 1.29 (0.44–3.01)** | issuer × exact window, all ISO as one: 4,558 clusters, 1,416 with more than one order. Crude; D1 is open. The second lag runs to the cluster's latest order |
+| No positive lag | 1,250 (10.3%), of which ISO 968; excluding ISO 282 (2.9%); clusters 4.6% | |
+| Median window length | 359 days | all windows |
+| Median lag by year of window end, excl. ISO | 2011: 5.59 · 2018: 2.39 · 2020: 0.97 · 2024: 0.58 | the fall tracks the ceiling: truncation, not speed |
+| Cohort restriction (window end ≤ 2018) | 10,837 orders · 8,475 excl. ISO · 3,627 clusters · 5,113 matched excl. ISO | follow-up 7.73 years; 10.8% of lags among windows ending by 2010 exceed it |
+| **Post-reform windows inside the restriction** | after LODR 836 orders · **after NFRA 29 orders (22 clusters)** | excl. ISO. H2 cannot be tested for the 2018 reform as designed |
+| Orders per year | 2009: 1,334 · 2010: 1,585 · 2023: 1,710 (892 ISO) · 2024: 551; excl. ISO 2023: 818 · 2024: 489 | 2009–10: largest matter about 55 orders; MM 1,529 of 2,919 |
+| Penalty concentration | largest order 58.2% of the sum · top ten 82.0% · sum without the largest ₹5,215 crore | 8,473 orders, ₹12,485 crore |
+| Diversion + accounting + RPT | 720 orders (3.5%); 493 windowed (4.1%) | |
+| **Explicit surveillance alerts** | **415 orders**: 4.8% of 8,617 stating a channel · 5.8% of 6,726 excl. ISO · 13.8% of 2,002 windowed issuer frauds excl. ISO | SURVEILLANCE detail: trading_pattern_observed 2,596 · alert 415 · filings_observed 332 · model 266. H4 is about *automated* surveillance |
+| Surveillance bounds, all orders | 17.3% (no unclear order is surveillance) to 76.0% (all are) | 20,849 orders |
+| Within-matter channel check | 22 of 321 clusters (6.9%) hold more than one stated channel; rule-coded only 14 of 265 (5.3%) | needs no hand coding; same issuer and exact window, ISO excluded |
+| Discounting (illustrative) | a penalty 5.50 years after the window: 0.64 of face value at 8%, 0.52 at 12% | assumed rates, median over orders |
+
+**External check.** Damle and Zaveri Shah (2022) report SEBI passed **9,048** enforcement orders in 2011–2020; the corpus holds
+exactly **9,048** dated in those years (AO 5,418 · WTM 2,858 · Settlement 772), with the same median penalty (₹5 lakh).
+Their duration figures (a little over 3 years violation → SCN; 1.5 years SCN → penalty order) agree in scale with ours.
+Their mean penalty (about ₹57 lakh) does not match ours for those years (₹2.98 crore; ₹1.03 crore without the largest),
+which a few very large orders explain at least in part; not reconciled.
+
+**Penalty undercount (found while writing; not fixed).** 498 orders with no penalty read carry a direction to pay one
+in their last fifth (`paper_tables.PAY_CLAUSE`; AO 406 · WTM 48 · ED/CGM 44; `penalty_outcome` unknown 402 · no_penalty 96; 6 are
+in the blind sheet and were not read). A random reading of **14 of the others: all 14 are real penalties.** Forms missed:
+number words in a table ("Fifteen crores", 51767, the 2021 Taksheel order), passive voice ("is imposed on the following
+Noticees"), "I impose … as under", a stray comma ("₹,1,00,000/"), "Rs . 20,000". Penalty orders may be understated by up
+to 5.9%; the totals are lower bounds. The blind sample does not cover sanctions.
+
+**Corrections to `technical_plan.md` that the thesis makes** (the plan itself is unchanged):
+- "There is no machine-readable dataset": Damle and Zaveri Shah published one (8,032 orders, 2011–2020; 818 hand-coded).
+- "Provides the first evidence on whether SEBI sanctions impose costs": Jain (2022) and Gupta, Patel and Sane (2026) exist, and
+  conflict. Novelty claims now rest on full coverage, the truncation treatment, the channel coding and the joint framework.
+- Taksheel: the first *public action* was the interim order of 28 December 2011, in the last days of the window. The
+  "two and a half years" is the lag to the first *penalty* (30 June 2014).
+- Taksheel development note: of its 12 orders, three carry false channels (23397 INSPECTION: a noticee's inspection of
+  documents; 24670 and 25585 MEDIA: a finding about media statements). None is in the blind sheet. Not fixed: fixes wait for the scoring.
+
