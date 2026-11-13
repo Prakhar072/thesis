@@ -1,0 +1,1855 @@
+firm_id,role,name,weight
+BSE:519012,fraud,Alpine Industries Ltd,1.0
+BSE:526857,fraud,Majestic Industries Ltd.,1.0
+BSE:530523,fraud,Karishma Floriculture Ltd.,1.0
+BSE:530963,fraud,J.G.Finance Ltd.,1.0
+BSE:531455,fraud,Prakash Fotran Softech Ltd,1.0
+BSE:531718,fraud,Anik Ship Breaking Industries Ltd.,1.0
+BSE:531763,fraud,Mazda Fabric Processors Ltd.,1.0
+BSE:750328,fraud,ALLCARGO GATI LIMITED,1.0
+BSE:750609,fraud,Dhani Services Limited,1.0
+INE001B,fraud,KRBL Limited,1.0
+INE002A,fraud,Reliance Industries Limited,1.0
+INE002I,fraud,Vishwamitra Financial Services Limited,1.0
+INE003C,fraud,M.P.Telelinks Ltd.,1.0
+INE003E,fraud,Sarang Chemicals Ltd.,1.0
+INE004I,fraud,Abhishek Corporation Ltd,1.0
+INE005C,fraud,RTS Power Corporation Limited,1.0
+INE005D,fraud,Ramsarup Industries Ltd.,1.0
+INE006A,fraud,Indian Petrochemicals Corpn. Ltd.,1.0
+INE007A,fraud,Crisil Limited,1.0
+INE007B,fraud,Geojit Financial Services Limited,1.0
+INE008D,fraud,Malvica Engineering Ltd.,1.0
+INE008F,fraud,RCL Foods Limited,1.0
+INE008M,fraud,Veronica Production Limited,1.0
+INE009A,fraud,Infosys Limited,1.0
+INE009Q,fraud,Shri Krishna Prasadam Limited,1.0
+INE00Y8,fraud,Akg Exim Limited,1.0
+INE010M,fraud,Gujarat Meditech Ltd.,1.0
+INE010R,fraud,Ultracab (India) Limited,1.0
+INE012F,fraud,Polytex India Ltd.,1.0
+INE013A,fraud,Reliance Capital Limited,1.0
+INE013B,fraud,Sharp Industries ltd.,1.0
+INE015A,fraud,Ranbaxy Laboratories Ltd.,1.0
+INE017C,fraud,Kisan Mouldings Ltd.,1.0
+INE017P,fraud,Multipurpose Trading & Agencies Ltd,1.0
+INE018F,fraud,Rose Zinc Ltd.,1.0
+INE018I,fraud,MindTree  Limited,1.0
+INE019B,fraud,Transchem Limited.,1.0
+INE019C,fraud,Himadri Speciality Chemical Limited,1.0
+INE01B5,fraud,Add-Shop E-Retail Limited,1.0
+INE01KI,fraud,Vinny Overseas Limited,1.0
+INE020G,fraud,Inspirisys Solutions Limited,1.0
+INE021A,fraud,Asian Paints Limited,1.0
+INE021B,fraud,Monalisa Infotech Ltd.,1.0
+INE021E,fraud,Somplast Leather Industries Ltd.,1.0
+INE022I,fraud,Asian Granito India Limited,1.0
+INE022R,fraud,Bronze Trading Limited,1.0
+INE023A,fraud,Nalwa Sons Investments Limited,1.0
+INE023M,fraud,Setubandhan Infrastructure Limited,1.0
+INE024L,fraud,Gravita India Limited,1.0
+INE025N,fraud,Vishvjyoti Trading Ltd.,1.0
+INE026B,fraud,JIK Industries Ltd,1.0
+INE026L,fraud,Tilak Ventures Limited,1.0
+INE027C,fraud,Ahlcon Parenterals (India) Ltd.,1.0
+INE028B,fraud,SHARON BIO-MEDICINE LTD.,1.0
+INE028C,fraud,Linaks Microelectronics Ltd.,1.0
+INE028D,fraud,Rainbow Papers Ltd.,1.0
+INE029B,fraud,COSYN Limited,1.0
+INE029D,fraud,Rashel Agrotech Ltd.,1.0
+INE029L,fraud,Kalyani Investment Company Limited,1.0
+INE029N,fraud,Shah Investor's Home Limited,1.0
+INE02NC,fraud,Fino Payments Bank Limited,1.0
+INE030B,fraud,Elbee Services Ltd.,1.0
+INE030P,fraud,Alacrity Securities Limited,1.0
+INE030U,fraud,Khemani Distributors & Marketing Limited,1.0
+INE031B,fraud,Ajanta Pharma Limited,1.0
+INE032A,fraud,Bombay Dyeing & Mfg Company Limited,1.0
+INE032E,fraud,Aryaman Financial Services Limited,1.0
+INE032G,fraud,VARUN INDUSTRIES LIMITED,1.0
+INE033B,fraud,Quintegra Solutions Limited,1.0
+INE036B,fraud,Gujarat Ambuja Exports Limited,1.0
+INE039D,fraud,HYPERSOFT TECHNOLOGIES LIMITED,1.0
+INE039E,fraud,ERA Infra Engineering Ltd,1.0
+INE040A,fraud,HDFC Bank Limited,1.0
+INE040C,fraud,Cals Refineries Ltd,1.0
+INE040H,fraud,Suzlon Energy Limited,1.0
+INE040K,fraud,Sampada Chemicals Ltd.,1.0
+INE040M,fraud,Tree House Education & Accessories Limited,1.0
+INE042C,fraud,Alfa Ica (India) Ltd,1.0
+INE043D,fraud,IDFC LIMITED,1.0
+INE043U,fraud,CHD Chemicals Limited,1.0
+INE044B,fraud,Dhar Textile Mills Ltd.,1.0
+INE045J,fraud,Fineotex Chemical Limited,1.0
+INE047E,fraud,JMD Ventures Limited,1.0
+INE048B,fraud,Jagsonpal Pharmaceuticals Limited,1.0
+INE049B,fraud,Wockhardt Limited,1.0
+INE049C,fraud,Top Media Entertainment Ltd.,1.0
+INE04I4,fraud,KPIT Technologies Limited,1.0
+INE04LG,fraud,Par Drugs And Chemicals Limited,1.0
+INE050C,fraud,Bonanza Biotech Ltd.,1.0
+INE050D,fraud,Ratnabali Capital Markets ltd.,1.0
+INE051B,fraud,Vakrangee Limited,1.0
+INE051E,fraud,Acclaim Industries Limited,1.0
+INE052C,fraud,IKF Technologies Ltd.,1.0
+INE052T,fraud,Best Agrolife Limited,1.0
+INE053D,fraud,Amit International Ltd.,1.0
+INE055L,fraud,Acropetal Technologies Limited,1.0
+INE055O,fraud,Inland Printers Ltd.,1.0
+INE056I,fraud,Refex Industries Limited,1.0
+INE059B,fraud,Simplex Infrastructures Limited,1.0
+INE059Q,fraud,Kalpa Commercial Limited,1.0
+INE060A,fraud,Navneet Education Limited,1.0
+INE060C,fraud,Globe Stocks & Securities Ltd.,1.0
+INE060E,fraud,Kemp & Company Limited,1.0
+INE061F,fraud,Fortis Healthcare Limited,1.0
+INE062B,fraud,Accurate Exports Ltd.,1.0
+INE062C,fraud,Global Capital Markets Ltd.,1.0
+INE063B,fraud,Cyberspace Infosys Ltd.,1.0
+INE063D,fraud,Aadhaar Ventures India Limited,1.0
+INE063H,fraud,Well Pack Papers & Containers Ltd.,1.0
+INE063Z,fraud,Gautam Gems Limited,1.0
+INE064D,fraud,Quest Financial Services Ltd.,1.0
+INE064H,fraud,GEE Ltd.,1.0
+INE064T,fraud,INTERACTIVE FINANCIAL SERVICES LIMITED,1.0
+INE066C,fraud,ACIL Cotton Industries Limited,1.0
+INE066E,fraud,Shree Nidhi Trading Co. Ltd.,1.0
+INE066F,fraud,Hindustan Aeronautics Limited,1.0
+INE067A,fraud,CG Power and Industrial Solutions Limited,1.0
+INE067D,fraud,Vimal Oil & Foods Ltd.,1.0
+INE067H,fraud,ABG Shipyard Ltd.,1.0
+INE068B,fraud,Saint Gobain Sekurit India Limited,1.0
+INE068D,fraud,Castex Technologies Limited,1.0
+INE069I,fraud,Embassy Developments Limited,1.0
+INE06H2,fraud,Gensol Engineering Limited,1.0
+INE072D,fraud,MODEX INTERNATIONAL SECURITIES LTD.,1.0
+INE073C,fraud,Emmsons International Limited,1.0
+INE074D,fraud,Fast Track Entertainment Ltd.,1.0
+INE074G,fraud,Shivom Investment & Consultancy Limited,1.0
+INE075A,fraud,Wipro Limited,1.0
+INE077H,fraud,Pithampur Steels Ltd.,1.0
+INE077P,fraud,Thacker & Company Limited,1.0
+INE079A,fraud,Ambuja Cements Limited,1.0
+INE080B,fraud,Kohinoor Foods Limited,1.0
+INE080C,fraud,Linkhouse Industries Ltd.,1.0
+INE080D,fraud,Sybly Industries Ltd.,1.0
+INE081B,fraud,Carnation Industries Ltd.,1.0
+INE081R,fraud,VEDIC AYURVEDA LIMITED,1.0
+INE082A,fraud,Kopran Limited,1.0
+INE082C,fraud,Patels Airtemp (I) Ltd.,1.0
+INE083A,fraud,Morepen Laboratories Limited,1.0
+INE083G,fraud,Tatia Global Vennture Limited,1.0
+INE084C,fraud,Polo Hotels Ltd.,1.0
+INE084D,fraud,CG Vak Software & Exports Limited,1.0
+INE084F,fraud,Blue Information Technology Ltd.,1.0
+INE086A,fraud,Electrosteel Castings Limited,1.0
+INE088E,fraud,Golden Legand Leasing & Finance Ltd,1.0
+INE08KD,fraud,Ascom Leasing & Investments Limited,1.0
+INE090C,fraud,STI India Ltd.,1.0
+INE090G,fraud,Anukaran Commercial  Enterprises Lt,1.0
+INE091C,fraud,Super Sales India Ltd.,1.0
+INE091E,fraud,Jaybharat Textiles And Real Estate Limited,1.0
+INE091K,fraud,Midfield Industries Limited,1.0
+INE092A,fraud,Tata Chemicals Limited,1.0
+INE092C,fraud,P.M. Telelinnks Limited,1.0
+INE092G,fraud,Saianand Commercial Limited,1.0
+INE093B,fraud,Alps Industries Ltd.,1.0
+INE094B,fraud,Ashika Global Securities Limited,1.0
+INE094M,fraud,Kyra Landscapes Limited,1.0
+INE094S,fraud,Mishtann Foods Limited,1.0
+INE095A,fraud,IndusInd Bank Limited,1.0
+INE095C,fraud,Yashraj Containeurs Ltd.,1.0
+INE095E,fraud,MPF Systems Limited,1.0
+INE096B,fraud,Nucleus Software Exports Limited,1.0
+INE096H,fraud,Blazon Marbles Limited,1.0
+INE098J,fraud,ETC Networks Limited,1.0
+INE099D,fraud,Unison Metals Ltd,1.0
+INE099E,fraud,Nagpur Power & Industries Ltd,1.0
+INE099M,fraud,Aplaya Creations Limited,1.0
+INE0BDU,fraud,RO Jewels Limited,1.0
+INE0BTR,fraud,Synoptics Technologies Limited,1.0
+INE0CFH,fraud,Rikhav Securities Limited,1.0
+INE0EK9,fraud,TARC Limited,1.0
+INE0FHS,fraud,Deep Industries Limited,1.0
+INE0FW0,fraud,Markolines Pavement Technologies Limited,1.0
+INE0GXK,fraud,V Marc India Limited,1.0
+INE0HPK,fraud,DUDIGITAL GLOBAL LIMITED,1.0
+INE0HS0,fraud,Cool Caps Industries Limited,1.0
+INE0ID0,fraud,Veerkrupa Jewellers Limited,1.0
+INE0O4R,fraud,Kore Digital Limited,1.0
+INE0OK7,fraud,Nirman Agri Genetics Limited,1.0
+INE0PUC,fraud,Sar Televenture Limited,1.0
+INE100B,fraud,Universal Media Network Ltd.,1.0
+INE100L,fraud,KCCL Plastic Ltd,1.0
+INE101A,fraud,Mahindra & Mahindra Limited,1.0
+INE101C,fraud,Advent Computer Services ltd.,1.0
+INE101D,fraud,Granules India Limited,1.0
+INE101H,fraud,SHREE HANUMAN SUGAR & INDUSTRIES LTD.,1.0
+INE103C,fraud,SMC Global Securities Limited,1.0
+INE103E,fraud,Samrat Pharmachem Ltd.,1.0
+INE104F,fraud,Bodhtree Consulting Limited,1.0
+INE105I,fraud,SEL Manufacturing Company Limited,1.0
+INE105R,fraud,Funny Software Limited,1.0
+INE108J,fraud,Coral Hub Limited,1.0
+INE110A,fraud,BPL Limited,1.0
+INE110D,fraud,Gujarat NRE Coke Ltd.,1.0
+INE111B,fraud,63 moons technologies limited,1.0
+INE112F,fraud,Lambodhara Textiles Limited,1.0
+INE113O,fraud,Blue Blends (India) Ltd,1.0
+INE114A,fraud,Steel Authority of India Limited,1.0
+INE114B,fraud,Padmini Technologies Ltd.,1.0
+INE115R,fraud,Pincon Lifestyle Limited,1.0
+INE116C,fraud,ZF Steering Gear (India) Limited,1.0
+INE118H,fraud,BSE Limited,1.0
+INE118K,fraud,Binny Ltd.,1.0
+INE119B,fraud,Svam Software Ltd,1.0
+INE121B,fraud,Wallfort Financial Services Ltd.,1.0
+INE122H,fraud,Tulip Telcom Ltd,1.0
+INE122K,fraud,Sand Plast (India) Ltd.,1.0
+INE122M,fraud,Essar Shipping Limited,1.0
+INE122R,fraud,Manpasand Beverages Limited,1.0
+INE123M,fraud,RDB Rasayans Limited,1.0
+INE126M,fraud,Indiabulls Limited,1.0
+INE127A,fraud,Essar Steel Ltd,1.0
+INE127D,fraud,HDFC Asset Management Company Limited,1.0
+INE129D,fraud,Adinath Bio-Labs Ltd.,1.0
+INE130A,fraud,Global Trust Bank Ltd.,1.0
+INE130C,fraud,Amtek Auto Ltd,1.0
+INE130D,fraud,Shree Tulsi Online.Com Ltd,1.0
+INE131A,fraud,Gujarat Mineral Development Corporation Limited,1.0
+INE131D,fraud,G.k.Consultants Ltd.,1.0
+INE131H,fraud,India Nivesh Limited,1.0
+INE132D,fraud,Seagull Leafin Ltd,1.0
+INE132F,fraud,NCL Research And Financial Services,1.0
+INE133C,fraud,Kesar Petroproducts Ltd,1.0
+INE135A,fraud,BALASORE ALLOYS LTD,1.0
+INE135D,fraud,Golden Capital Services Limited,1.0
+INE137G,fraud,Deccan Chronicle Holdings Ltd.,1.0
+INE138C,fraud,Kanoria Chemicals & Industries Limited,1.0
+INE138O,fraud,IND Renewable Energy Ltd,1.0
+INE138Y,fraud,Kfin Technologies Limited,1.0
+INE140A,fraud,Piramal Enterprises Limited,1.0
+INE141K,fraud,Texmo Pipes and Products Limited,1.0
+INE141N,fraud,First Financial Services Ltd,1.0
+INE142K,fraud,AURUS GEM CORPORATION LIMITED,1.0
+INE143B,fraud,Hitechi Jewellery Industries Ltd.,1.0
+INE143H,fraud,KSK Energy Ventures  Limited,1.0
+INE144J,fraud,20 Microns Limited,1.0
+INE145D,fraud,Polar Pharma India Ltd.,1.0
+INE146N,fraud,FAMILY CARE HOSPITALS LIMITED,1.0
+INE149C,fraud,Inditalia Refcon Ltd.,1.0
+INE150D,fraud,MAURIA UDYOG LIMITED,1.0
+INE150G,fraud,Lux Industries Limited,1.0
+INE151A,fraud,Tata Communications Limited,1.0
+INE152E,fraud,Elegant Floriculture & Agrotech (In,1.0
+INE154A,fraud,ITC Limited,1.0
+INE154G,fraud,Venmax Drugs And Pharmaceuticals Ltd,1.0
+INE155A,fraud,Tata Motors Passenger Vehicles Limited,1.0
+INE155B,fraud,Hind Syntex Ltd.,1.0
+INE155G,fraud,New Delhi Television Limited,1.0
+INE156C,fraud,Pioneer Embroideries Limited,1.0
+INE158H,fraud,VIKASH METAL AND POWER LTD.,1.0
+INE159N,fraud,Viji Finance Limited,1.0
+INE159O,fraud,Mystic Electronics Limited,1.0
+INE160B,fraud,Secure Earth Technologies Limited,1.0
+INE161C,fraud,Solid Carbide Tools Ltd,1.0
+INE163B,fraud,Washington Softwares Ltd.,1.0
+INE165A,fraud,United Western Bank Ltd,1.0
+INE165C,fraud,Priyadarshini Spinning Mills Ltd.,1.0
+INE165H,fraud,PYRAMID SAIMIRA THEATRE LTD.,1.0
+INE166A,fraud,ING Vysya Bank Ltd.,1.0
+INE169A,fraud,Coromandel International Limited,1.0
+INE170B,fraud,CAT Technologies Ltd,1.0
+INE170N,fraud,MIDEAST INTEGRATED STEELS LIMITED,1.0
+INE171A,fraud,The Federal Bank  Limited,1.0
+INE171E,fraud,Shukun Construction Ltd.,1.0
+INE172H,fraud,Radha Madhav Corporation Ltd.,1.0
+INE174N,fraud,Ram Minerals And Chemicals Limited,1.0
+INE174Q,fraud,Womens Next Loungeries Limited,1.0
+INE176A,fraud,Bata India Limited,1.0
+INE176B,fraud,Havells India Limited,1.0
+INE176C,fraud,Sathavahana Ispat Ltd.,1.0
+INE178C,fraud,Smartlink Holdings Limited,1.0
+INE178O,fraud,Eco Friendly Food Processing Park Limited,1.0
+INE179B,fraud,Moh Ltd,1.0
+INE180A,fraud,Max Financial Services Limited,1.0
+INE180C,fraud,Capri Global Capital Limited,1.0
+INE180G,fraud,EMPEE DISTILLERIES LTD,1.0
+INE180K,fraud,Bharat Financial Inclusion Limited,1.0
+INE181G,fraud,AJR INFRA AND TOLLING LIMITED,1.0
+INE183D,fraud,Cybele  Industries Limited,1.0
+INE184Q,fraud,Fraser And Company Limited,1.0
+INE185B,fraud,Sawaca Communication ltd.,1.0
+INE185E,fraud,Filatex Fashions Limited,1.0
+INE186C,fraud,Mefcom Capital Markets Ltd.,1.0
+INE186Q,fraud,Vitan Agro Industries Limited,1.0
+INE186R,fraud,OSIAJEE TEXFAB LIMITED,1.0
+INE188C,fraud,Mefcom Agro Industries Ltd,1.0
+INE188E,fraud,Williamson Financial Services ltd.,1.0
+INE189Q,fraud,Oasis Tradelink Limited,1.0
+INE190B,fraud,Websity Infosys Ltd.,1.0
+INE190E,fraud,Matra Realty Ltd,1.0
+INE190P,fraud,Jaisukh Dealers Limited,1.0
+INE191A,fraud,Orchid Pharma Limited,1.0
+INE191H,fraud,PVR INOX Limited,1.0
+INE191N,fraud,Alexander Stamps And Coin Limited,1.0
+INE192B,fraud,Welspun Living Limited,1.0
+INE192C,fraud,Vas Infrastructure  Ltd.,1.0
+INE192R,fraud,Avenue Supermarts Limited,1.0
+INE194D,fraud,Asian Star Company Limited,1.0
+INE194R,fraud,Fredun Pharmaceuticals Limited,1.0
+INE195B,fraud,Kirloskar Investment & Finance Ltd.,1.0
+INE195Y,fraud,SecUR Credentials Limited,1.0
+INE196B,fraud,Shirpur Gold Refinery Ltd.,1.0
+INE196C,fraud,KGN Industries Ltd.,1.0
+INE197A,fraud,Jyoti Structures Limited,1.0
+INE197C,fraud,Axel Polymers Ltd.,1.0
+INE197D,fraud,Jindal Poly Films Limited,1.0
+INE198H,fraud,Aarey Drugs & Pharmaceuticals Limited,1.0
+INE199G,fraud,Jagran Prakashan Limited,1.0
+INE199P,fraud,Gretex Corporate Services Limited,1.0
+INE200B,fraud,Unisys Softwares And Holdings Indus,1.0
+INE200D,fraud,Media Matrix Worldwide Limited,1.0
+INE200M,fraud,Varun Beverages Limited,1.0
+INE201B,fraud,Majestic Auto Limited,1.0
+INE201C,fraud,Richfield Financial Services Ltd.,1.0
+INE201D,fraud,Stocknet International Ltd.,1.0
+INE202A,fraud,Pentamedia Graphics Ltd,1.0
+INE202B,fraud,Piramal Finance Limited,1.0
+INE202H,fraud,Kernex Microsystems (India) Limited,1.0
+INE203A,fraud,AstraZeneca Pharma India Limited,1.0
+INE204I,fraud,Exdon Trading Co. Ltd.,1.0
+INE204N,fraud,Looks Health Services Limited,1.0
+INE204P,fraud,Gold Line International Finvest Limited,1.0
+INE208D,fraud,Koffee Break Pictures Limited,1.0
+INE209C,fraud,Alfa Transformers ltd.,1.0
+INE209O,fraud,Esteem Bio Organic Food Processing  Limited,1.0
+INE210B,fraud,Eider Telecom Ltd.,1.0
+INE211C,fraud,Arvind Remedies ltd.,1.0
+INE211G,fraud,Florence Investech Limited,1.0
+INE213M,fraud,VKS Projects Ltd,1.0
+INE216D,fraud,KSS Limited,1.0
+INE216H,fraud,Educomp Solutions Ltd,1.0
+INE216Q,fraud,Mega Nirman & Industries Limited,1.0
+INE217B,fraud,Kajaria Ceramics Limited,1.0
+INE217K,fraud,Reliance Home Finance Limited,1.0
+INE217P,fraud,Partani Appliances Limited,1.0
+INE218A,fraud,K-Lifestyle & Industries Limited,1.0
+INE218C,fraud,Ausom Enterprise Limited,1.0
+INE218G,fraud,Palred Technologies Limited,1.0
+INE218P,fraud,Amrapali Capital and Finance Services Limited,1.0
+INE219A,fraud,KSL AND INDUSTRIES LTD,1.0
+INE219B,fraud,Platinum Corporation Ltd,1.0
+INE219H,fraud,SRS Limited,1.0
+INE219N,fraud,Dee Kartavya Finance Ltd.,1.0
+INE220A,fraud,Eskay K'n'IT (India) Ltd,1.0
+INE220C,fraud,Dhanalaxmi Roto Spinners Ltd.,1.0
+INE220D,fraud,Mudit Finlease Ltd.,1.0
+INE220G,fraud,Jindal Stainless Limited,1.0
+INE221B,fraud,Dynamatic Technologies Limited,1.0
+INE221I,fraud,Celestial Biolabs Limited,1.0
+INE222P,fraud,Dwitiya Trading Limited,1.0
+INE223P,fraud,Kausambi Vanijya Limited,1.0
+INE224B,fraud,Birla Power Solutions Ltd.,1.0
+INE224D,fraud,Sunil Agro Foods ltd.,1.0
+INE224M,fraud,Bharatiya Global Infomedia Limited,1.0
+INE225I,fraud,ZYLOG SYSTEMS LIMITED,1.0
+INE227A,fraud,Integrated Enterprises (India) Ltd.,1.0
+INE228D,fraud,Orissa Sponge Iron And Steel Limited,1.0
+INE229A,fraud,Onward Technologies Limited,1.0
+INE230G,fraud,Nutraplus India Limited,1.0
+INE230R,fraud,Rama Steel Tubes Limited,1.0
+INE231N,fraud,Mishka Finance and Trading Limited,1.0
+INE232I,fraud,Sun Pharma Advanced Research Company Limited,1.0
+INE232N,fraud,Kelvin Fincap Ltd,1.0
+INE233C,fraud,Prime Property Development Corporation Ltd.,1.0
+INE233H,fraud,Aarya Global Shares and Securities Ltd.,1.0
+INE234B,fraud,Cranes Software International Ltd.,1.0
+INE234E,fraud,DJS Stock & Shares Ltd.,1.0
+INE235C,fraud,Sumeet Industries Limited,1.0
+INE235G,fraud,Usher Agro Limited,1.0
+INE236B,fraud,GCV Services Limited,1.0
+INE236C,fraud,Sun Infoways Ltd.,1.0
+INE238A,fraud,Axis Bank Limited,1.0
+INE238D,fraud,Ankur Drugs & Pharma Ltd,1.0
+INE242A,fraud,Indian Oil Corporation Limited,1.0
+INE243A,fraud,Sabero Organics Gujarat Ltd.,1.0
+INE243B,fraud,Padmalaya Telefilms Ltd.,1.0
+INE244I,fraud,Temptation Foods Limited,1.0
+INE244W,fraud,Veer Global Infraconstruction Limited,1.0
+INE245C,fraud,Leel Electricals Limited,1.0
+INE247B,fraud,Ransi Softwares India Ltd,1.0
+INE247C,fraud,Virtual Global Education Limited,1.0
+INE247D,fraud,Jindal Worldwide Limited,1.0
+INE247G,fraud,CORE Education & Technologies Ltd,1.0
+INE248B,fraud,SAWACA ENTERPRISES LIMITED,1.0
+INE248F,fraud,International Diamond Services Ltd.,1.0
+INE249C,fraud,Fedders Electric and Engineering Limited,1.0
+INE249D,fraud,Riddhi Siddhi Gluco Biols Ltd,1.0
+INE250A,fraud,Kirloskar Industries Limited,1.0
+INE250C,fraud,Jai Mata Glass Ltd.,1.0
+INE252K,fraud,Le Waterina Resorts & Hotels Limited,1.0
+INE253C,fraud,Bloom Dekor Ltd.,1.0
+INE254H,fraud,SVC Resources Limited,1.0
+INE255A,fraud,EPL Limited,1.0
+INE255D,fraud,Gulshan Polyols Limited,1.0
+INE255E,fraud,Veer Energy & Infrastructure Limited,1.0
+INE256A,fraud,Zee Entertainment Enterprises Limited,1.0
+INE256D,fraud,GENUS PRIME INFRA LIMITED,1.0
+INE256G,fraud,Vijay Textiles Ltd.,1.0
+INE256Z,fraud,Akshar Spintex Limited,1.0
+INE259B,fraud,Gammon India Ltd.,1.0
+INE259E,fraud,Mindvision Capital Ltd,1.0
+INE260B,fraud,Godfrey Phillips India Limited,1.0
+INE260D,fraud,Olectra Greentech Limited,1.0
+INE260F,fraud,Speciality Papers Ltd.,1.0
+INE260M,fraud,Pawansut Holdings Limited,1.0
+INE265A,fraud,Tata Finance Ltd,1.0
+INE265D,fraud,GKB Ophthalmics Limited,1.0
+INE265N,fraud,Matra Kaushal Enterprise Limited,1.0
+INE266F,fraud,Aptech Limited,1.0
+INE267I,fraud,ARSS Infrastructure Projects Limited,1.0
+INE268B,fraud,Krebs Biochemicals and Industries Limited,1.0
+INE269A,fraud,Sonata Software Limited,1.0
+INE270A,fraud,Alok Industries Limited,1.0
+INE271A,fraud,Soundcraft Industries Ltd,1.0
+INE271B,fraud,Maharashtra Seamless Limited,1.0
+INE271C,fraud,DLF Limited,1.0
+INE271D,fraud,Sungold Capital Ltd.,1.0
+INE272A,fraud,Adam Comsof Ltd.,1.0
+INE274M,fraud,COMFORT FINCAP LIMITED,1.0
+INE275A,fraud,Satyam Computer Services Ltd,1.0
+INE275F,fraud,Univa Foods Limited,1.0
+INE275N,fraud,Neycer India Ltd.,1.0
+INE276H,fraud,Nidhi Granites Limited,1.0
+INE277T,fraud,SEACOAST SHIPPING SERVICES LIMITED,1.0
+INE278B,fraud,Shree Rama Newsprint Limited,1.0
+INE280A,fraud,Titan Company Limited,1.0
+INE280B,fraud,Elantas Beck India Limited,1.0
+INE280F,fraud,JAINEX AAMCOL LTD.,1.0
+INE281D,fraud,FCGL Industries Ltd.,1.0
+INE281P,fraud,Abhishek Infraventures Limited,1.0
+INE282Y,fraud,Kaarya Facilities and Services Limited,1.0
+INE283H,fraud,Royal Orchid Hotels Limited,1.0
+INE284D,fraud,HRB Flouriculture Ltd.,1.0
+INE285B,fraud,SpiceJet Limited,1.0
+INE285H,fraud,ATLANTAA LIMITED,1.0
+INE285J,fraud,SIS LIMITED,1.0
+INE286A,fraud,DSQ Software Ltd.,1.0
+INE286D,fraud,NetVision Web Technologies Ltd.,1.0
+INE286E,fraud,Olympic Oil Industries Ltd.,1.0
+INE287C,fraud,MIC Electronics Limited,1.0
+INE289M,fraud,Jolly Plastic Industries Ltd.,1.0
+INE290B,fraud,OCL India Ltd,1.0
+INE291B,fraud,Ricoh India Ltd.,1.0
+INE291D,fraud,KDDL Limited,1.0
+INE294A,fraud,Ballarpur Industries Ltd.,1.0
+INE294G,fraud,Raj Oil Mills Limited,1.0
+INE296A,fraud,Bajaj Finance Limited,1.0
+INE296H,fraud,Emkay Global Financial Services Limited,1.0
+INE296Q,fraud,Moneyboxx Finance Limited,1.0
+INE297H,fraud,Gallantt Ispat Limited,1.0
+INE299C,fraud,Karuturi Global Limited,1.0
+INE300B,fraud,Indian Infotech And Software Ltd.,1.0
+INE302B,fraud,Shalibhadra Infosec Ltd.,1.0
+INE302E,fraud,Sakthi Finance Ltd.,1.0
+INE303D,fraud,Nivyah Infrastructure & Telecom Services Ltd,1.0
+INE306A,fraud,Bajaj Hindusthan Sugar Limited,1.0
+INE306B,fraud,I.C.S.A. (India) Ltd.,1.0
+INE306R,fraud,Intellect Design Arena Limited,1.0
+INE309B,fraud,Hit Kit Global Solutions Ltd,1.0
+INE312B,fraud,SJ Corporation Limited,1.0
+INE312C,fraud,Syncom Formulations (India) Limited,1.0
+INE313D,fraud,Mohota Industries Limited,1.0
+INE313M,fraud,EVEXIA LIFECARE LIMITED,1.0
+INE314C,fraud,Soma Textiles & Industries Limited,1.0
+INE314E,fraud,B&B Realty Limited,1.0
+INE315L,fraud,Jay Energy And S. Energies Limited,1.0
+INE317B,fraud,Nouveau Global Ventures Limited,1.0
+INE318C,fraud,Sayaji Hotels Limited,1.0
+INE318D,fraud,Zenith Steel Pipes & Industries Limited,1.0
+INE318G,fraud,Brahmanand Himghar Limited,1.0
+INE318J,fraud,Nu Tek India Limited,1.0
+INE320A,fraud,Bank Of Rajasthan Ltd.,1.0
+INE320B,fraud,Centum Electronics Limited,1.0
+INE320C,fraud,SFL International Limited,1.0
+INE322Q,fraud,Dune Mercantile Ltd.,1.0
+INE324C,fraud,Sterling Biotech Ltd.,1.0
+INE324N,fraud,Viaan Industries Limited,1.0
+INE324P,fraud,CITYON SYSTEMS (INDIA) LIMITED,1.0
+INE325F,fraud,Shree Yaax Pharma And Cosmetics Ltd,1.0
+INE326A,fraud,Lupin Limited,1.0
+INE326D,fraud,IFL Promoters Ltd,1.0
+INE332Q,fraud,Kapil Raj Finance Ltd.,1.0
+INE333H,fraud,Bheema Cements Limited,1.0
+INE334E,fraud,V B INDUSTRIES LIMITED,1.0
+INE335A,fraud,Surya Roshni Limited,1.0
+INE335D,fraud,Oasis Media Matrix Ltd.,1.0
+INE335I,fraud,Allied Computers International (Asia) Limited,1.0
+INE335K,fraud,Coffee Day Enterprises Limited,1.0
+INE336H,fraud,Gayatri Projects Limited,1.0
+INE338C,fraud,Ashirwad Steels & Industries  Ltd.,1.0
+INE338D,fraud,Bodal Chemicals Limited,1.0
+INE338I,fraud,Motilal Oswal Financial Services Limited,1.0
+INE338O,fraud,Sunstar Realty Development Limited,1.0
+INE339P,fraud,Negotium International Trade Limited,1.0
+INE339Z,fraud,Angel Fibers Limited,1.0
+INE340Z,fraud,Continental Seeds and Chemicals Limited,1.0
+INE341H,fraud,LKP Securities Limited,1.0
+INE341L,fraud,Birla Pacific Medspa Limited,1.0
+INE341Z,fraud,Bhatia Communications & Retail (India) Limited,1.0
+INE343B,fraud,Rajesh Exports Limited,1.0
+INE344D,fraud,Kamanwala Housing Construction Limited,1.0
+INE345B,fraud,Cerebra Integrated Technologies Ltd.,1.0
+INE345D,fraud,LS Industries Limited,1.0
+INE345E,fraud,Flawless Diamond (India) Ltd.,1.0
+INE346H,fraud,Gitanjali Gems Ltd.,1.0
+INE346L,fraud,Timbor Home Limited,1.0
+INE346W,fraud,Apex Frozen Foods Limited,1.0
+INE348A,fraud,Ashapura Minechem Limited,1.0
+INE350C,fraud,Optiemus Infracom Limited,1.0
+INE351F,fraud,Jaiprakash Power Ventures Limited,1.0
+INE352B,fraud,Eonour Software Ltd.,1.0
+INE353B,fraud,Parrys  Sugar  Industries Limited,1.0
+INE353G,fraud,Dishman Pharmaceuticals & Chemicals Ltd.,1.0
+INE353H,fraud,STL Global Limited,1.0
+INE354B,fraud,Commex Technology Limited,1.0
+INE354C,fraud,Bhageria Industries Limited,1.0
+INE356B,fraud,Systematix Corporate Services Limited,1.0
+INE357A,fraud,Action Financial Services (India) L,1.0
+INE357C,fraud,Brushman (India) ltd.,1.0
+INE357D,fraud,Surana Corporation Ltd.,1.0
+INE360G,fraud,Tripex Overseas Ltd.,1.0
+INE360M,fraud,Naisargik Agritech (India) Ltd.,1.0
+INE361B,fraud,Divi's Laboratories Limited,1.0
+INE361S,fraud,ASHARI AGENCIES LIMITED,1.0
+INE362A,fraud,PVP Ventures Limited,1.0
+INE362D,fraud,Vijay Solvex Limited,1.0
+INE364U,fraud,Adani Green Energy Limited,1.0
+INE365A,fraud,Kolar Biotech Ltd.,1.0
+INE365O,fraud,Abans Enterprises Limited,1.0
+INE367C,fraud,Lok Housing & Construction Ltd.,1.0
+INE367E,fraud,Sanathnagar Enterprises Limited,1.0
+INE367G,fraud,Prime Focus Limited,1.0
+INE368A,fraud,Silverline Technologies Ltd.,1.0
+INE368U,fraud,United Polyfab Gujarat Limited,1.0
+INE369I,fraud,IL&FS Engineering and Construction Company Limited,1.0
+INE370C,fraud,Popular Estate Management Ltd,1.0
+INE370E,fraud,Visagar Polytex Limited,1.0
+INE371D,fraud,Geodesic  Ltd.,1.0
+INE373V,fraud,India Green Reality Limited,1.0
+INE374A,fraud,Gujarat Gas Co. Ltd.,1.0
+INE376B,fraud,Divine Entertainment Limited,1.0
+INE376G,fraud,Biocon Limited,1.0
+INE377B,fraud,Vital Communications Ltd.,1.0
+INE377M,fraud,Global Infratech & Finance limited,1.0
+INE378J,fraud,C. Mahendra Exports Limited,1.0
+INE379F,fraud,Emed.com Technologies Limited,1.0
+INE379J,fraud,Veritas (India) Limited,1.0
+INE380C,fraud,Vamshi Rubber Ltd.,1.0
+INE381B,fraud,"Radico Khaitan Ltd.,",1.0
+INE384L,fraud,Sudar Industries Limited,1.0
+INE385B,fraud,Rei Agro Ltd.,1.0
+INE386L,fraud,Santowin Corporation Limited,1.0
+INE387I,fraud,Magnum Ventures Limited,1.0
+INE389H,fraud,KEC International Limited,1.0
+INE390A,fraud,Maars Software International Ltd.,1.0
+INE390H,fraud,Kamdhenu Limited,1.0
+INE391I,fraud,Teledata Technology Solutions Limited,1.0
+INE391Z,fraud,Cox & Kings Financial Service Limited,1.0
+INE392H,fraud,Keto Motors Limited,1.0
+INE393F,fraud,Max heights Infrastucture Ltd,1.0
+INE394C,fraud,Landmarc Leisure Corporation Ltd.,1.0
+INE395B,fraud,G.V. Films  Ltd.,1.0
+INE395H,fraud,Steel City Securities Limited,1.0
+INE397B,fraud,Kaashyap Technologies Limited,1.0
+INE397D,fraud,Bharti Airtel Limited,1.0
+INE397G,fraud,Duke Offshore Ltd.,1.0
+INE397H,fraud,Lokesh Machines Limited,1.0
+INE398F,fraud,Sterling Green  Woods  Limited,1.0
+INE399C,fraud,Suprajit Engineering Limited,1.0
+INE400H,fraud,Adhunik Metaliks Ltd.,1.0
+INE400O,fraud,Rajlaxmi Industries Ltd.,1.0
+INE401F,fraud,Surabhi Chemicals & Investments Ltd,1.0
+INE401H,fraud,Kewal Kiran Clothing Limited,1.0
+INE403N,fraud,Maa Jagdambe Tradelinks Limited,1.0
+INE404L,fraud,Esaar (India) Ltd.,1.0
+INE405E,fraud,UNO Minda Limited,1.0
+INE406A,fraud,Aurobindo Pharma Limited,1.0
+INE406N,fraud,Svaraj Trading & Agencies Ltd.,1.0
+INE407B,fraud,Warner Multimedia Ltd.,1.0
+INE408A,fraud,Pentasoft Technologies Ltd.,1.0
+INE408H,fraud,Glory Polyfilms Ltd,1.0
+INE409C,fraud,Krishna Engineering Works Ltd.,1.0
+INE410A,fraud,Solitaire Machine Tools Ltd,1.0
+INE410O,fraud,Kailash Auto Finance Ltd,1.0
+INE411A,fraud,Numero Uno Projects Ltd.,1.0
+INE411D,fraud,SKM Egg Products Export (India) Limited,1.0
+INE412D,fraud,Apollo Finvest (India) Ltd.,1.0
+INE413C,fraud,Shelter Infra Projects Limited,1.0
+INE413D,fraud,Arihant Foundations & Housing Limited,1.0
+INE414C,fraud,Greencrest Financial Services Limited,1.0
+INE414F,fraud,IFSL LTD,1.0
+INE415B,fraud,Marsons Limited,1.0
+INE415H,fraud,Beryl Drugs Ltd.,1.0
+INE415I,fraud,Kiri Industries Limited,1.0
+INE416D,fraud,Bliss GVS Pharma Limited,1.0
+INE416F,fraud,KARMA INDUSTRIES LIMITED,1.0
+INE417B,fraud,Dynacons Systems & Solutions Limited,1.0
+INE417F,fraud,S.I.Capital And Financial Services,1.0
+INE418H,fraud,Allcargo Logistics Limited,1.0
+INE420B,fraud,Arihant Capital Markets Limited,1.0
+INE420C,fraud,Paisalo Digital Limited,1.0
+INE422B,fraud,MidValley Entertainment Limited,1.0
+INE422D,fraud,Dalal Street Investments Ltd.,1.0
+INE422G,fraud,Hemo Organic Limited,1.0
+INE423A,fraud,Adani Enterprises Limited,1.0
+INE425A,fraud,Metalyst Forgings Limited,1.0
+INE425B,fraud,Brightcom Group Limited,1.0
+INE426A,fraud,Alembic Limited,1.0
+INE427C,fraud,Vista Pharmaceuticals Ltd.,1.0
+INE427H,fraud,Sunday Exports Ltd.,1.0
+INE428O,fraud,ASHAPURA INTIMATES FASHION LIMITED,1.0
+INE429E,fraud,Safari Industries (India) Limited,1.0
+INE429F,fraud,SKIL Infrastructure Limited,1.0
+INE430N,fraud,Vishwaraj Sugar Industries Limited,1.0
+INE433D,fraud,Atlanta Infrastructure and Finance Ltd.,1.0
+INE433G,fraud,Sacheta Metals Ltd.,1.0
+INE435E,fraud,Shalimar Productions Ltd.,1.0
+INE438A,fraud,Apollo Tyres Limited,1.0
+INE438D,fraud,Malabar Trading Co. Ltd.,1.0
+INE438F,fraud,GCCL Infrastructure & Projects Ltd.,1.0
+INE439G,fraud,Enterprise International Limited,1.0
+INE440G,fraud,Triton Valves Limited,1.0
+INE440L,fraud,Tijaria Polypipes Limited,1.0
+INE441C,fraud,Sibar Auto Parts Ltd.,1.0
+INE443D,fraud,BGIL Films & Technologies Ltd,1.0
+INE448A,fraud,Autolite (India) Ltd.,1.0
+INE449G,fraud,Agri-Tech (India) Limited,1.0
+INE450L,fraud,Centron Industrial Alliance Ltd.,1.0
+INE451D,fraud,Rajratan Global Wire Limited,1.0
+INE452C,fraud,Avinash Information Technologies Ltd.,1.0
+INE452L,fraud,INCREDIBLE INDUSTRIES LIMITED,1.0
+INE452N,fraud,Pine Animation Limited,1.0
+INE455A,fraud,Balaji Industrial Corporation Ltd.,1.0
+INE455B,fraud,Phoenix Lamps Limited,1.0
+INE455F,fraud,Jaiprakash Associates Limited,1.0
+INE455I,fraud,Kaveri Seed Company Limited,1.0
+INE455J,fraud,Austral Coke & Projects Limited,1.0
+INE457L,fraud,PG Electroplast Limited,1.0
+INE457N,fraud,Yamini Investments Company Limited,1.0
+INE461H,fraud,Aviva Industries Limited,1.0
+INE466B,fraud,Cauvery Software Engg. Systems Ltd.,1.0
+INE467B,fraud,Tata Consultancy Services Limited,1.0
+INE472B,fraud,Blue Coast Hotels Limited,1.0
+INE473B,fraud,Hatsun Agro Product Limited,1.0
+INE474I,fraud,Tulsi Extrusions Limited,1.0
+INE474L,fraud,OMKAR SPECIALITY CHEMICALS LIMITED,1.0
+INE475H,fraud,Reliance Petroleum Limited,1.0
+INE476D,fraud,Sunbright Stock Broking Limited,1.0
+INE479D,fraud,Kriti Industries (India) Limited,1.0
+INE480C,fraud,Som Distilleries & Breweries Limited,1.0
+INE480S,fraud,Gala Global Products Limited,1.0
+INE481G,fraud,UltraTech Cement Limited,1.0
+INE481K,fraud,Electrosteel Steels Ltd,1.0
+INE482A,fraud,CEAT Limited,1.0
+INE483C,fraud,Tanla Platforms Limited,1.0
+INE483S,fraud,AvenuesAI Limited,1.0
+INE484K,fraud,Bhanot Construction & Housing Limited,1.0
+INE487B,fraud,Natura Hue Chem Ltd.,1.0
+INE488D,fraud,AVT Natural Products Limited,1.0
+INE488E,fraud,Maharashtra Polybutenes Ltd,1.0
+INE489L,fraud,IIFL Capital Services Limited,1.0
+INE491H,fraud,Plethico Pharmaceuticals Ltd.,1.0
+INE493B,fraud,G.G.Automotive Gears Ltd.,1.0
+INE495B,fraud,Suven Life Sciences Limited,1.0
+INE495J,fraud,Pradip Overseas Limited,1.0
+INE497B,fraud,Seamec Limited,1.0
+INE497E,fraud,Rajasthan Tube Mfg. Co,1.0
+INE498G,fraud,Katare Spinning Mills Ltd.,1.0
+INE498L,fraud,L&T Finance Limited,1.0
+INE499A,fraud,DCM Shriram Limited,1.0
+INE499G,fraud,Gujarat Terce Laboratories Ltd,1.0
+INE500I,fraud,Exelon Infrastructure Ltd,1.0
+INE501A,fraud,Deepak Fertilizers and Petrochemicals Corporation Limited,1.0
+INE501O,fraud,Excel Castronics Limited,1.0
+INE502A,fraud,Denso India Ltd,1.0
+INE502K,fraud,TALWALKARS BETTER VALUE FITNESS LIMITED,1.0
+INE503A,fraud,DCB Bank Limited,1.0
+INE503B,fraud,STEEL EXCHANGE INDIA LIMITED,1.0
+INE503D,fraud,Gemstone Investments Ltd.,1.0
+INE506B,fraud,Alpha Hi-Tech Fuel Ltd.,1.0
+INE507O,fraud,HPC Biosciences Limited,1.0
+INE508J,fraud,Beryl Securities Ltd,1.0
+INE509C,fraud,Gennex Laboratories Ltd,1.0
+INE509F,fraud,Cupid Limited,1.0
+INE510H,fraud,Royal India Corporation Limited,1.0
+INE510K,fraud,Shilpi Cable Technologies Limited,1.0
+INE510U,fraud,Pune E - Stock Broking Limited,1.0
+INE511B,fraud,Falcon Tyres Ltd.,1.0
+INE511C,fraud,Poonawalla Fincorp Limited,1.0
+INE511D,fraud,Jyoti Ltd.,1.0
+INE513E,fraud,Rodium Realty Limited,1.0
+INE514B,fraud,Vision Organics Ltd,1.0
+INE514C,fraud,Minolta Finance Ltd.,1.0
+INE514G,fraud,Crew B.O.S. Products Ltd.,1.0
+INE514Y,fraud,Moksh Ornaments Limited,1.0
+INE515H,fraud,Empire Industries Limited,1.0
+INE516A,fraud,UFLEX Limited,1.0
+INE516H,fraud,Richa Industries Limited,1.0
+INE518H,fraud,Simplex Trading & Agencies Ltd.,1.0
+INE519B,fraud,Cyberscape Multimedia Ltd.,1.0
+INE520A,fraud,Zensar Technologies Limited,1.0
+INE521L,fraud,Banas Finance Limited,1.0
+INE522D,fraud,Manappuram Finance Limited,1.0
+INE523B,fraud,Aksh Optifibre Limited,1.0
+INE524F,fraud,Aditya Info-soft Limited.,1.0
+INE525D,fraud,Millennium Cybertech Ltd,1.0
+INE526C,fraud,Nikki Global Finance Ltd.,1.0
+INE526G,fraud,Vivimed Labs Limited,1.0
+INE526K,fraud,Blue Circle Services Ltd.,1.0
+INE527H,fraud,UFO Moviez India Limited,1.0
+INE527R,fraud,Alora Trading Company Limited,1.0
+INE528G,fraud,Yes Bank Limited,1.0
+INE529F,fraud,Signet Industries Limited,1.0
+INE530B,fraud,IIFL Finance Limited,1.0
+INE531F,fraud,Nuvama Wealth Management Limited,1.0
+INE532F,fraud,Edelweiss Financial Services Limited,1.0
+INE534A,fraud,Grand Foundry Limited,1.0
+INE534D,fraud,Ritesh International Ltd,1.0
+INE535B,fraud,Vaishnavi Gold Limited,1.0
+INE535F,fraud,Rajoo Engineers Limited,1.0
+INE536C,fraud,Nutricircle Limited,1.0
+INE536F,fraud,Somani Cements Co Ltd,1.0
+INE537C,fraud,Advik Laboratories Ltd.,1.0
+INE538G,fraud,Gothi Plascon (India) Ltd.,1.0
+INE538H,fraud,Shree Ashtavinayak Cine Vision Ltd,1.0
+INE538P,fraud,Tarang Projects and Consultant Limited.,1.0
+INE539A,fraud,GHCL Limited,1.0
+INE540L,fraud,Alkem Laboratories Limited,1.0
+INE541C,fraud,T. Spiritual World Ltd.,1.0
+INE544H,fraud,JHS Svendgaard Laboratories Limited,1.0
+INE544K,fraud,Aqua Logistics Limited,1.0
+INE545B,fraud,Continental Controls Ltd.,1.0
+INE545N,fraud,Shantanu Sheorey Aquakult ltd.,1.0
+INE546B,fraud,e. Star Infotech Ltd.,1.0
+INE546E,fraud,Hiran Orgachem Ltd.,1.0
+INE546I,fraud,LADDU GOPAL ONLINE SERVICES LIMITED,1.0
+INE548A,fraud,HFCL Limited,1.0
+INE548B,fraud,Gini Silk Mills Ltd.,1.0
+INE548D,fraud,Velan Hotels Ltd.,1.0
+INE549H,fraud,Anand Rathi Share and Stock Brokers Limited,1.0
+INE550C,fraud,Urja Global Limited,1.0
+INE551A,fraud,Hindustan Dorr-Oliver Ltd.,1.0
+INE552B,fraud,HIMALAYA FOOD INTERNATIONAL LIMITED,1.0
+INE552C,fraud,Manna Glass-Tech Industries Ltd.,1.0
+INE553C,fraud,North Eastern Carrying Corporation Limited,1.0
+INE554D,fraud,Gujarat Fiscon Ltd.,1.0
+INE555A,fraud,Hitech Drilling Services India Ltd.,1.0
+INE555C,fraud,Shiva Cement Limited,1.0
+INE556C,fraud,Punjab Woolcombers Ltd.,1.0
+INE557B,fraud,Liberty Shoes Limited,1.0
+INE557Z,fraud,Power & Instrumentation (Gujarat) Limited,1.0
+INE559B,fraud,Nakoda Limited,1.0
+INE559D,fraud,Crest Ventures Limited,1.0
+INE561H,fraud,Parsvnath Developers Limited,1.0
+INE563C,fraud,Saumya Consultants Ltd.,1.0
+INE563D,fraud,Aadi Industries Ltd,1.0
+INE565B,fraud,Shamken Multifab Ltd.,1.0
+INE567D,fraud,Trinity Tradelink Limited,1.0
+INE569A,fraud,Information Technologies (India) Lt,1.0
+INE571U,fraud,Yash Chemex Limited,1.0
+INE572E,fraud,PNB Housing Finance Limited,1.0
+INE572J,fraud,Spandana Sphoorty Financial Limited,1.0
+INE573K,fraud,Rushil Decor Limited,1.0
+INE573R,fraud,Seya Industries Limited,1.0
+INE574I,fraud,Arcotech Limited (Formerly SKS Ltd),1.0
+INE574R,fraud,Superior Finlease Limited,1.0
+INE575A,fraud,Jai Prakash Industries Ltd.,1.0
+INE575C,fraud,International Conveyors Limited,1.0
+INE576I,fraud,J.Kumar Infraprojects Limited,1.0
+INE577B,fraud,Genus Commu-Trade Ltd.,1.0
+INE577C,fraud,Kwality Credit & Leasing Ltd.,1.0
+INE579B,fraud,Elpro International Limited,1.0
+INE580C,fraud,Starlog Enterprises Limited,1.0
+INE580H,fraud,KMF Builders & Developers Ltd.,1.0
+INE581C,fraud,ETP Corporation ltd,1.0
+INE581K,fraud,Regency Hospital Ltd.,1.0
+INE583C,fraud,Deccan Cements Limited,1.0
+INE584F,fraud,Mangalam Drugs And Organics Limited,1.0
+INE586A,fraud,"Nedungadi Bank Ltd.,",1.0
+INE588B,fraud,ECE Industries Ltd.,1.0
+INE590B,fraud,Garnet International Limited,1.0
+INE590L,fraud,Vaswani Industries Limited,1.0
+INE591G,fraud,Coforge Limited,1.0
+INE592M,fraud,Insta Finance Limited,1.0
+INE594R,fraud,Kuber Udyog Limited,1.0
+INE596O,fraud,Newever Trade Wings Limited,1.0
+INE597C,fraud,Hindustan Bio Sciences Ltd.,1.0
+INE600A,fraud,PIL ITALICA LIFESTYLE LIMITED,1.0
+INE600B,fraud,Filmcity Media Ltd.,1.0
+INE600C,fraud,Intellvisions Software Ltd,1.0
+INE600F,fraud,PFL Infotech Ltd.,1.0
+INE601N,fraud,Retro Green Revolution Limited,1.0
+INE602K,fraud,Syncom Healthcare Limited,1.0
+INE603A,fraud,Prakash Industries Limited,1.0
+INE603E,fraud,Focus Industrial Resources Limited,1.0
+INE606A,fraud,Amj Land Holdings Limited,1.0
+INE606K,fraud,Srestha Finvest Limited,1.0
+INE607F,fraud,Universal Credit & Securities Ltd.,1.0
+INE611F,fraud,Eduexel Infotainment Limited,1.0
+INE615A,fraud,The Ravalgaon Sugar Farm Limited,1.0
+INE615W,fraud,PB Global Limited,1.0
+INE616A,fraud,Recron Synthetics Ltd.,1.0
+INE617F,fraud,Sanguine Media Ltd.,1.0
+INE618H,fraud,Parabolic Drugs Ltd,1.0
+INE618L,fraud,5Paisa Capital Limited,1.0
+INE619A,fraud,Patanjali Foods Limited,1.0
+INE619C,fraud,Ranklin Solutions Ltd.,1.0
+INE619I,fraud,A2Z Infra Engineering Limited,1.0
+INE621A,fraud,RPG Transmission Ltd.,1.0
+INE621C,fraud,Gujarat Hotels Ltd.,1.0
+INE621H,fraud,Religare Enterprises Limited,1.0
+INE622E,fraud,Gayatri Sugars Ltd.,1.0
+INE624C,fraud,Valecha Engineering Ltd.,1.0
+INE625B,fraud,Rana Sugars Limited,1.0
+INE627Q,fraud,KRISHANA FABRICS LIMITED,1.0
+INE627Z,fraud,TALWALKARS HEALTHCLUBS LIMITED,1.0
+INE628B,fraud,Orosil Smiths India Limited,1.0
+INE630A,fraud,Seshasayee Paper and Boards Limited,1.0
+INE632B,fraud,Top Telemedia Ltd.,1.0
+INE632C,fraud,Vidhi Specialty Food Ingredients Limited,1.0
+INE633A,fraud,Shrenuj & Co. Ltd.,1.0
+INE633D,fraud,Sigrun Holdings Limited,1.0
+INE634D,fraud,G-Tech Info-Training Ltd.,1.0
+INE634I,fraud,KNR Constructions Limited,1.0
+INE634M,fraud,Osian Industries ltd.,1.0
+INE635Y,fraud,ANI Integrated Services Limited,1.0
+INE636A,fraud,Mawana Sugars Limited,1.0
+INE637D,fraud,Tulive Developers Limited,1.0
+INE638C,fraud,Wisec Global Ltd.,1.0
+INE639C,fraud,Raj Packaging Industries Ltd.,1.0
+INE639X,fraud,Beacon Trusteeship Limited,1.0
+INE641C,fraud,Kavveri Defence & Wireless Technologies Limited,1.0
+INE642B,fraud,Motorol Speciality Oils Ltd,1.0
+INE642O,fraud,Tirupati Fincorp Limited,1.0
+INE642P,fraud,DALMIA INDUSTRIAL DEVELOPMENT LIMITED,1.0
+INE643K,fraud,Arihant Superstructures Limited,1.0
+INE643N,fraud,DECIPHER LABS LIMITED,1.0
+INE646C,fraud,The Grob Tea Company Limited,1.0
+INE646D,fraud,Alchemist Realty Ltd,1.0
+INE647D,fraud,Arnav Corporation Limited,1.0
+INE647N,fraud,KUSHAL LIMITED,1.0
+INE647W,fraud,SHARPLINE BROADCAST LIMITED,1.0
+INE648B,fraud,SMS Techsoft (India) Limited,1.0
+INE649L,fraud,EJECTA MARKETING LIMITED,1.0
+INE650K,fraud,SECUREKLOUD TECHNOLOGIES LIMITED,1.0
+INE650L,fraud,Brooks Laboratories Limited,1.0
+INE651G,fraud,Supreme Tex Mart Ltd.,1.0
+INE652D,fraud,Rich Universe Network Ltd,1.0
+INE655I,fraud,Birla Cotsyn (India) Limited,1.0
+INE655P,fraud,PANAFIC INDUSTRIALS LTD,1.0
+INE656B,fraud,PRADHIN LIMITED,1.0
+INE658E,fraud,Betala Global Securities Ltd.,1.0
+INE659B,fraud,CHD Developers Ltd,1.0
+INE661I,fraud,BGR Energy Systems Limited,1.0
+INE661M,fraud,Inter Globe Finance Ltd.,1.0
+INE661Q,fraud,Vani Commercials Limited,1.0
+INE662C,fraud,Chromatic India Ltd,1.0
+INE663P,fraud,A.F. Enterprises Limited,1.0
+INE664B,fraud,Crazy Infotech Ltd.,1.0
+INE665A,fraud,SWAN CORP LIMITED,1.0
+INE666F,fraud,Jord Engineers India Ltd,1.0
+INE669C,fraud,Tech Mahindra Limited,1.0
+INE669R,fraud,Elitecon International Limited,1.0
+INE670B,fraud,Gangotri Textiles Ltd.,1.0
+INE671D,fraud,Hasti Finance Ltd.,1.0
+INE671H,fraud,Sobha Limited,1.0
+INE671T,fraud,Darshan Orna Limited,1.0
+INE672D,fraud,Highland Industries Ltd.,1.0
+INE673M,fraud,Sulabh Engineers & Services Limited,1.0
+INE674B,fraud,Helios & Matheson Information Technology Ltd.,1.0
+INE675G,fraud,Pincon Spirit Limited,1.0
+INE676A,fraud,Black Box Limited,1.0
+INE678B,fraud,IB Infotech Enterprises Ltd,1.0
+INE678H,fraud,Everonn Education ltd,1.0
+INE679B,fraud,IQ Infotech Ltd.,1.0
+INE679N,fraud,Ratnamani Agro Industries Limited,1.0
+INE680D,fraud,Omkar Overseas ltd.,1.0
+INE680Z,fraud,AVG Logistics Limited,1.0
+INE681D,fraud,Orient Tradelink Ltd.,1.0
+INE682B,fraud,Integrated Capital Services Ltd,1.0
+INE683A,fraud,The South Indian Bank Limited,1.0
+INE683C,fraud,Maithan Alloys Limited,1.0
+INE683D,fraud,Dhanleela Investments & Trading Company Ltd,1.0
+INE686I,fraud,Sita Shree Food Products Ltd,1.0
+INE687A,fraud,Transpek Industry Limited,1.0
+INE688C,fraud,Shree Bhawani Paper Mills Ltd.,1.0
+INE688E,fraud,Hercules Investments Limited,1.0
+INE688J,fraud,Landsmill Green Limited,1.0
+INE690O,fraud,JK Agri Genetics Limited,1.0
+INE691C,fraud,SWASTIKA INVESTMART LIMITED,1.0
+INE692C,fraud,Taneja Aerospace & Aviation Limited,1.0
+INE692G,fraud,Xchanging Solutions Limited,1.0
+INE694A,fraud,Unitech Limited,1.0
+INE696A,fraud,United Breweries (Holdings) Ltd.,1.0
+INE696B,fraud,Ojas Technochem Products Ltd.,1.0
+INE696C,fraud,Sterling International Enterprises Limited,1.0
+INE696K,fraud,Prakash Steelage Limited,1.0
+INE697D,fraud,Softrak Technology Exports LTD.,1.0
+INE698D,fraud,GE Capital Transportation Financial Services Ltd,1.0
+INE700A,fraud,Jubilant Pharmova Limited,1.0
+INE701B,fraud,Punj LLoyd Ltd,1.0
+INE701F,fraud,Parichay Investments Ltd.,1.0
+INE702H,fraud,JAGJANANI TEXTILES LIMITED,1.0
+INE702L,fraud,Paramount Printpackaging Limited,1.0
+INE703A,fraud,Videocon Industries Ltd.,1.0
+INE703H,fraud,Hubtown Limited,1.0
+INE703J,fraud,Anand Credit Ltd.,1.0
+INE703L,fraud,Shree Shaleen Textiles Limited,1.0
+INE704B,fraud,RACL Geartech Limited,1.0
+INE706A,fraud,Vikas WSP Ltd.,1.0
+INE706C,fraud,Auto Pins (India) Ltd.,1.0
+INE713B,fraud,Suryalakshmi Cotton Mills Limited,1.0
+INE713C,fraud,Suraj Limited,1.0
+INE713M,fraud,Parab Infra Limited,1.0
+INE713N,fraud,RRP SEMICONDUCTOR LIMITED,1.0
+INE715Q,fraud,LEADING LEASING FINANCE AND INVESTMENT CO. LIMITED,1.0
+INE716D,fraud,Cressanda Railway Solutions Limited,1.0
+INE716K,fraud,Square Four Projects India Limited,1.0
+INE716N,fraud,Mahavir Advanced Remedies Limited,1.0
+INE717C,fraud,Mangalam Industrial Finance Limited,1.0
+INE717D,fraud,Cubical Financial Services Ltd.,1.0
+INE718B,fraud,USG Tech Solutions Ltd,1.0
+INE721I,fraud,National Stock Exchange of India Limited,1.0
+INE722J,fraud,Ravi Kumar Distilleries Limited,1.0
+INE723K,fraud,Ashutosh Paper Mills Ltd.,1.0
+INE725D,fraud,India Polyspin Ltd.,1.0
+INE725E,fraud,The Orissa Minerals Development Company Limited,1.0
+INE725L,fraud,Karma Energy Limited,1.0
+INE727E,fraud,United Textiles Ltd.,1.0
+INE727F,fraud,Karur K.C.P. Packkagings Limited,1.0
+INE729P,fraud,Alps Motor Finance Limited,1.0
+INE730A,fraud,Oricon Enterprises Limited,1.0
+INE730D,fraud,Konkan Tyres LTD.,1.0
+INE730E,fraud,Prism Medico and Pharmacy Ltd.,1.0
+INE730R,fraud,Svarnim Trade Udyog Limited,1.0
+INE732A,fraud,Kirloskar Brothers Limited,1.0
+INE732C,fraud,NCL Industries Limited,1.0
+INE732I,fraud,Angel One Limited,1.0
+INE732K,fraud,Pro Fin Capital Services Ltd,1.0
+INE733P,fraud,Autumn Builders Limited,1.0
+INE734A,fraud,Snowcem India ltd.,1.0
+INE735B,fraud,Shonkh Technologies International Ltd,1.0
+INE735D,fraud,Mahan Industries Ltd.,1.0
+INE735W,fraud,Utkarsh Small Finance Bank Limited,1.0
+INE736A,fraud,Central Depository Services (India) Limited,1.0
+INE736H,fraud,G.S. Auto International Ltd.,1.0
+INE736P,fraud,Northlink Fiscal And Capital Services Ltd.,1.0
+INE737G,fraud,Haryana Financial Corporation ltd.,1.0
+INE737W,fraud,Akash Infra-Projects Limited,1.0
+INE738A,fraud,Netvista Information Tech. Ltd,1.0
+INE739D,fraud,Doctors Biotech India Ltd.,1.0
+INE740V,fraud,Agro Phos India Limited,1.0
+INE741L,fraud,Ducon Infratechnologies Limited,1.0
+INE742A,fraud,Petron Engineering Construction Ltd,1.0
+INE742C,fraud,Jindal Drilling And Industries Limited,1.0
+INE742D,fraud,Emporis Projects Limited,1.0
+INE742K,fraud,Global Securities Limited,1.0
+INE742R,fraud,ACEWIN AGRITECK LIMITED,1.0
+INE743A,fraud,Roofit Industries Ltd,1.0
+INE743M,fraud,RHI MAGNESITA INDIA LIMITED,1.0
+INE744A,fraud,Sun Earth Ceramics Ltd.,1.0
+INE744C,fraud,Norris Medicines Ltd.,1.0
+INE745G,fraud,Multi Commodity Exchange of India Limited,1.0
+INE745P,fraud,Amarnath Securities Ltd.,1.0
+INE746C,fraud,Zigma Software Ltd,1.0
+INE747K,fraud,Tarapur Transformers Limited,1.0
+INE748D,fraud,Prime Capital Market Limited,1.0
+INE749A,fraud,JINDAL STEEL LIMITED,1.0
+INE750C,fraud,Marksans Pharma Limited,1.0
+INE750M,fraud,Hexa Tradex Limited,1.0
+INE752A,fraud,Wellwin Industry Ltd.,1.0
+INE752H,fraud,CARE Ratings Limited,1.0
+INE752P,fraud,Future Retail Ltd.,1.0
+INE754A,fraud,Subex Limited,1.0
+INE755B,fraud,KGN ENTERPRISES LIMITED,1.0
+INE755Q,fraud,Vishal Fabrics Limited,1.0
+INE756A,fraud,VXL Instruments Ltd.,1.0
+INE757A,fraud,COSMO FIRST LIMITED,1.0
+INE758D,fraud,Dhenu Buildcon Infra Limited,1.0
+INE759A,fraud,Mastek Limited,1.0
+INE760A,fraud,Kokuyo Camlin Limited,1.0
+INE763D,fraud,Voltaire Leasing & Finance Ltd.,1.0
+INE763G,fraud,ICICI Securities Limited,1.0
+INE764K,fraud,GFL Financials India Limited,1.0
+INE764M,fraud,Turbotech Engineering Ltd.,1.0
+INE765B,fraud,Sky Industries Ltd,1.0
+INE765G,fraud,ICICI Lombard General Insurance Company Limited,1.0
+INE767A,fraud,Aarti Drugs Limited,1.0
+INE767B,fraud,VIKAS PROPPANT & GRANITE LTD.,1.0
+INE769A,fraud,Aarti Industries Limited,1.0
+INE770B,fraud,Mobile Telecommunications Ltd,1.0
+INE771B,fraud,Tricom India Ltd.,1.0
+INE772A,fraud,S.Kumars Nationwide Ltd.,1.0
+INE773A,fraud,Exedy India Limited,1.0
+INE773D,fraud,Transgene Biotek Ltd.,1.0
+INE773I,fraud,Alkali Metals Limited,1.0
+INE774I,fraud,Resurgere Mines & Minerals India Limited,1.0
+INE774P,fraud,Dhyana Finstock Limited,1.0
+INE775B,fraud,Kwality Limited,1.0
+INE776E,fraud,Birla Capital & Financial Services Ltd.,1.0
+INE776N,fraud,Lifeline Drugs & Pharma Ltd,1.0
+INE778C,fraud,Interface Financial Services Ltd.,1.0
+INE778E,fraud,CCL International Ltd,1.0
+INE778K,fraud,Emami Realty Limited,1.0
+INE779A,fraud,ABC Bearings Ltd.,1.0
+INE779B,fraud,Clutch Auto Ltd.,1.0
+INE780C,fraud,JM Financial Limited,1.0
+INE782B,fraud,Birmingham Thermotech Ltd.,1.0
+INE783B,fraud,Twilight Litaka Pharma Limited,1.0
+INE783M,fraud,Radford Global Limited,1.0
+INE784B,fraud,Winsome Yarns Ltd.,1.0
+INE784D,fraud,Ankush Finstock ltd.,1.0
+INE785A,fraud,Jayant Agro Organics Limited,1.0
+INE785C,fraud,LANCO INFRATECH LTD.,1.0
+INE785M,fraud,PC Jeweller Limited,1.0
+INE786D,fraud,Baffin Engineering Projects Ltd.,1.0
+INE786K,fraud,Wagend Infra Venture Limited,1.0
+INE787A,fraud,GSL Nova Petrochemicals Limited,1.0
+INE787G,fraud,Amar Remedies Ltd.,1.0
+INE788B,fraud,Ind-Swift Ltd.,1.0
+INE789G,fraud,Jayant Mercantile Co. Ltd,1.0
+INE790G,fraud,Shilpa Medicare Limited,1.0
+INE791A,fraud,BLB Limited,1.0
+INE792X,fraud,Transwind Infrastructures Limited,1.0
+INE793D,fraud,Eltrol Ltd.,1.0
+INE793G,fraud,PMC Fincorp Limited,1.0
+INE796A,fraud,Aftek  Ltd.,1.0
+INE799A,fraud,KLG Systel ltd.,1.0
+INE799L,fraud,Tara Jewels Limited,1.0
+INE800D,fraud,Incap Financial Services Ltd.,1.0
+INE800H,fraud,Omaxe Limited,1.0
+INE803A,fraud,ATN International Ltd.,1.0
+INE804B,fraud,Mega Corporation Ltd,1.0
+INE804D,fraud,Info-Drive Software Ltd.,1.0
+INE805A,fraud,AION-TECH SOLUTIONS LIMITED,1.0
+INE805D,fraud,Sunteck Realty Limited,1.0
+INE806A,fraud,Vikas EcoTech Limited,1.0
+INE806B,fraud,Murli Industries Ltd.,1.0
+INE806C,fraud,TIL Limited,1.0
+INE807F,fraud,Viyash Scientific Limited,1.0
+INE810A,fraud,Vintage Cards & Creations Ltd.,1.0
+INE810H,fraud,Omnitech InfoSolutions Limited,1.0
+INE811H,fraud,Riba Textiles Ltd.,1.0
+INE812C,fraud,Wintac Ltd.,1.0
+INE812P,fraud,Amsons Apparels Limited,1.0
+INE813H,fraud,Torrent Power Limited,1.0
+INE814L,fraud,Perfect-Octave Media Projects Ltd,1.0
+INE816A,fraud,Vatsa Music Ltd,1.0
+INE817D,fraud,Aagam Capital Limited,1.0
+INE817H,fraud,Burnpur Cement Limited,1.0
+INE818C,fraud,Welcome Coir Industries Ltd.,1.0
+INE818D,fraud,Promact Plastics Limited,1.0
+INE820A,fraud,Electrolux Kelvinator Ltd,1.0
+INE821R,fraud,Prabhu Steel Industries Ltd.,1.0
+INE822D,fraud,Rasi Electrodes Ltd.,1.0
+INE822G,fraud,Electrotherm (India) Limited,1.0
+INE825H,fraud,ESS DEE Aluminium Limited,1.0
+INE826C,fraud,Gujarat Apollo Industries Limited,1.0
+INE828I,fraud,Mediaone Global Entertainment Limited,1.0
+INE830D,fraud,Thambbi Modern Spinning Mills Ltd.,1.0
+INE830Q,fraud,Manaksia Coated Metals & Industries Limited,1.0
+INE831A,fraud,Onida Electronics Limited,1.0
+INE836F,fraud,Dish TV India Limited,1.0
+INE836G,fraud,Venus Power Ventures (India) Ltd,1.0
+INE836H,fraud,McDowell Holdings Limited,1.0
+INE837B,fraud,Winsome Textile Industries Ltd,1.0
+INE838E,fraud,Ponni Sugars (Erode) Limited,1.0
+INE843F,fraud,Tricom Fruit Products Limited,1.0
+INE843L,fraud,Superior Industrial Enterprises Limited,1.0
+INE844K,fraud,Bedmutha Industries Limited,1.0
+INE845E,fraud,Camson Bio Technologies Ltd,1.0
+INE846A,fraud,Swarnajyothi Agrotech & Power Limited,1.0
+INE846C,fraud,Eastern Gases Limited,1.0
+INE846H,fraud,Nissan Copper Limited,1.0
+INE847A,fraud,Database Finance Ltd.,1.0
+INE848C,fraud,Alang Industrial Gases Ltd.,1.0
+INE848D,fraud,V.B.Desai Financial Services Ltd,1.0
+INE848M,fraud,Mapro Industries Ltd,1.0
+INE848N,fraud,Decillion Finance Ltd.,1.0
+INE849C,fraud,Shalimar Paints Limited,1.0
+INE849J,fraud,REI Six Ten Retail Limited,1.0
+INE849M,fraud,Tarini International Limited,1.0
+INE850A,fraud,Mahindra Ugine Steel Co. Ltd.,1.0
+INE851B,fraud,Shri Lakshmi Cotsyn Limited,1.0
+INE852B,fraud,Gujarat Arth Ltd.,1.0
+INE853B,fraud,Indtradeco Ltd.,1.0
+INE854D,fraud,United Spirits Limited,1.0
+INE854P,fraud,Classic Global Finance & Capital ltd.,1.0
+INE854S,fraud,Generic Engineering Construction and Projects Limited,1.0
+INE855C,fraud,Websol Energy System Limited,1.0
+INE855F,fraud,Avio Smart Market Stack Limited,1.0
+INE855P,fraud,Quasar India Limited,1.0
+INE857P,fraud,SHIVAMSHREE BUSINESSES LIMITED,1.0
+INE858A,fraud,Socrus Bio Sciences Limited,1.0
+INE858B,fraud,Isgec Heavy Engineering Limited,1.0
+INE858L,fraud,Concord Drugs Limited,1.0
+INE860E,fraud,ObjectOne Information Systems Ltd,1.0
+INE861A,fraud,Visesh Infotecnics Ltd.,1.0
+INE862D,fraud,Capman Financials Ltd.,1.0
+INE863A,fraud,Software Technology Group Intl. Ltd.,1.0
+INE863B,fraud,Premier Explosives Limited,1.0
+INE863C,fraud,Hittco Tools Ltd.,1.0
+INE863F,fraud,Vertex Spinning Limited,1.0
+INE863I,fraud,Bang Overseas Limited,1.0
+INE864A,fraud,MTZ Polyfilms Ltd.,1.0
+INE864E,fraud,Akar Auto Industries Limited,1.0
+INE865C,fraud,Aditya Birla Money Limited,1.0
+INE865D,fraud,Jhaveri Credits & Capital Ltd.,1.0
+INE866G,fraud,Bhoruka Aluminium Ltd.,1.0
+INE866R,fraud,Matrimony.Com Limited,1.0
+INE867D,fraud,Indsil Hydro Power and Manganese Limited,1.0
+INE870A,fraud,Consortex Karl Doelitzch (India) Lt,1.0
+INE871H,fraud,GSS Infotech Limited,1.0
+INE871L,fraud,TV Vision Limited,1.0
+INE873A,fraud,Datapro Information Technology Ltd.,1.0
+INE874H,fraud,C & C Constructions Ltd.,1.0
+INE874N,fraud,Delta Leasing & Finance Limited,1.0
+INE875G,fraud,Nandan Denim Limited,1.0
+INE876A,fraud,Oasis Securities Limited,1.0
+INE877A,fraud,Sankhya Infotech Ltd.,1.0
+INE877F,fraud,PTC India Limited,1.0
+INE878C,fraud,Gemini Communications Ltd.,1.0
+INE878E,fraud,Setco Automotive Limited,1.0
+INE878H,fraud,Inventure Growth & Securities Limited,1.0
+INE878K,fraud,BF Investment Limited,1.0
+INE879A,fraud,Shree Rama Multi-Tech Limited,1.0
+INE879I,fraud,Valor Estate Limited,1.0
+INE880C,fraud,Innovision E-Commerce Ltd.,1.0
+INE880M,fraud,Safal Herbs Limited,1.0
+INE881B,fraud,Supertex Industries Ltd,1.0
+INE883B,fraud,Alfavision Overseas (India) Ltd.,1.0
+INE883N,fraud,Parag Milk Foods Limited,1.0
+INE884A,fraud,Vaibhav Global Limited,1.0
+INE884X,fraud,Trinity League India Limited,1.0
+INE889C,fraud,Sanraa Media Limited,1.0
+INE889I,fraud,Taksheel Solutions Ltd,1.0
+INE889J,fraud,Edserv Softsystems Limited,1.0
+INE890C,fraud,Sanwaria Consumer Limited,1.0
+INE890I,fraud,Farmax India Limited,1.0
+INE891E,fraud,Pressure Sensitive Systems (India),1.0
+INE892C,fraud,Scintilla Commercial & Credit  Limited,1.0
+INE893A,fraud,Baba Arts Ltd,1.0
+INE893C,fraud,BHARAT GLOBAL DEVELOPERS LIMITED,1.0
+INE895B,fraud,Rupa & Company Limited,1.0
+INE895E,fraud,SC Agrotech Limited,1.0
+INE896A,fraud,Mascon Global Ltd,1.0
+INE896L,fraud,IndoStar Capital Finance Limited,1.0
+INE899A,fraud,Zenith Infotech Ltd.,1.0
+INE899L,fraud,Ujaas Energy Limited,1.0
+INE899M,fraud,iSERA LIFESCIENCES LIMITED,1.0
+INE899O,fraud,Edynamics Solutions Limited,1.0
+INE900K,fraud,Shri Aster Silicates Limited,1.0
+INE901C,fraud,Thirani Projects Limited,1.0
+INE903A,fraud,Jaykay Enterprises Limited,1.0
+INE903D,fraud,Monarch Networth Capital Limited,1.0
+INE904G,fraud,Rasoya Proteins Ltd.,1.0
+INE904J,fraud,Jindal Cotex Limited,1.0
+INE905D,fraud,Parsoli Corporation Ltd.,1.0
+INE905P,fraud,B.C. Power Controls Limited,1.0
+INE906C,fraud,Tarai Foods Ltd.,1.0
+INE906Y,fraud,Galactico Corporate Services Limited,1.0
+INE907A,fraud,Kalyani Steels Limited,1.0
+INE907D,fraud,S.T. SERVICES LIMITED,1.0
+INE908B,fraud,Aditya International Ltd.,1.0
+INE908D,fraud,Shakti Pumps (India) Limited,1.0
+INE908L,fraud,Presha Metallurgical Ltd,1.0
+INE909Q,fraud,GOKUL SOLUTIONS LIMITED,1.0
+INE910H,fraud,Cairn India Limited,1.0
+INE912L,fraud,Onelife Capital Advisors Limited,1.0
+INE913A,fraud,Silicon Valley Infotech Ltd.,1.0
+INE914E,fraud,Alankit Limited,1.0
+INE914Q,fraud,Layla Textile And Traders Limited,1.0
+INE915B,fraud,Ind-Swift Laboratories Limited,1.0
+INE916P,fraud,Triveni Enterprises Limited,1.0
+INE917D,fraud,Sunrise Asian Limited,1.0
+INE917I,fraud,Bajaj Auto Limited,1.0
+INE918Z,fraud,Kaynes Technology India Limited,1.0
+INE919E,fraud,Systel Infotech Ltd.,1.0
+INE921C,fraud,Alka Securities Ltd.,1.0
+INE922A,fraud,Bhansali Engineering Polymers Limited,1.0
+INE922D,fraud,Trinethra Infra Ventures Limited,1.0
+INE923D,fraud,Fact Enterprise  Limited,1.0
+INE924C,fraud,Kanchan International Ltd.,1.0
+INE924F,fraud,Mysore Paper Mills Limited,1.0
+INE927M,fraud,Grandma Trading & Agencies Ltd.,1.0
+INE927X,fraud,EL CID Investments Limited,1.0
+INE928B,fraud,Empee Sugars & Chemicals Ltd.,1.0
+INE928K,fraud,Dr.Datsons Labs Limited,1.0
+INE929C,fraud,KLG Capital Services Ltd.,1.0
+INE930C,fraud,Secunderabad Health Care Ltd.,1.0
+INE931D,fraud,Samtex Fashions Ltd.,1.0
+INE932G,fraud,Glodyne Technoserve Ltd,1.0
+INE932K,fraud,VMS INDUSTRIES LIMITED,1.0
+INE933A,fraud,Lyka Labs Limited,1.0
+INE934B,fraud,Mercator Limited,1.0
+INE937A,fraud,SPML Infra Limited,1.0
+INE937K,fraud,Econo Trade (India) Limited,1.0
+INE938A,fraud,LCC Infotech Limited,1.0
+INE939D,fraud,HARITA SEATING SYSTEMS LTD,1.0
+INE940N,fraud,Premier Synthetics Ltd.,1.0
+INE940P,fraud,Citizen Yarns Ltd.,1.0
+INE941B,fraud,Sarita Software & Industrie Ltd.,1.0
+INE941E,fraud,Marg Ltd,1.0
+INE943B,fraud,Southern Ispat and Energy Ltd,1.0
+INE943C,fraud,Srikalahasthi Pipes Limited,1.0
+INE944B,fraud,Todays Writing Instruments Ltd,1.0
+INE945J,fraud,Zodiac Ventures Limited,1.0
+INE946H,fraud,Vipul Limited,1.0
+INE946K,fraud,Premier Capital Services Ltd.,1.0
+INE947J,fraud,Den Networks Limited,1.0
+INE948G,fraud,SBEC Sugar Ltd.,1.0
+INE948Q,fraud,BFL Asset Finvest Limited,1.0
+INE950G,fraud,Uniply Industries Ltd.,1.0
+INE951D,fraud,Atul Auto Limited,1.0
+INE953M,fraud,PS IT Infrastructure & Services Limited,1.0
+INE954E,fraud,Mohit Industries Limited,1.0
+INE954M,fraud,India Infraspace Ltd,1.0
+INE955B,fraud,Beckons Industries Ltd.,1.0
+INE957E,fraud,Brijlaxmi Leasing & Finance ltd.,1.0
+INE958C,fraud,Bridge Securities Ltd.,1.0
+INE961B,fraud,Kay Power And Paper Ltd,1.0
+INE963C,fraud,Faze Three Limited,1.0
+INE964A,fraud,DSQ Biotech Ltd,1.0
+INE964B,fraud,Alchemist Limited,1.0
+INE964H,fraud,SEPC Limited,1.0
+INE965A,fraud,VISU INTERNATIONAL lTD.,1.0
+INE965C,fraud,Innovative Tech Pack Ltd,1.0
+INE965D,fraud,DGP Securities Ltd,1.0
+INE966H,fraud,Zee Media Corporation Limited,1.0
+INE967B,fraud,SGL Resources Limited,1.0
+INE972E,fraud,Dhruva Capital Services Ltd.,1.0
+INE973A,fraud,Golden Tobacco Limited,1.0
+INE974A,fraud,Genomics Biotech Ltd.,1.0
+INE974C,fraud,WinPro Industries Limited,1.0
+INE975G,fraud,IL&FS Transportation Networks Limited,1.0
+INE976E,fraud,Foods & Inns Limited,1.0
+INE977C,fraud,Finalysis Credit & Guaraantee Co.Lt,1.0
+INE977F,fraud,Dhanlaxmi Cotex Ltd.,1.0
+INE980A,fraud,PRESSMAN ADVERTISING LTD,1.0
+INE981D,fraud,Ushdev International Ltd,1.0
+INE982B,fraud,ADF Foods Limited,1.0
+INE984B,fraud,Integra Engineering India Ltd.,1.0
+INE986A,fraud,Bilcare Limited,1.0
+INE986B,fraud,Radhe Developers (India) ltd.,1.0
+INE986W,fraud,GURU KRUPA GEMS AND JEWELLERY LIMITED,1.0
+INE987C,fraud,Classic Diamonds (India) Ltd.,1.0
+INE987M,fraud,Mahavir Industries Limited,1.0
+INE988K,fraud,Equitas Holdings Limited,1.0
+INE990S,fraud,Amrapali Fincap Limited,1.0
+INE993A,fraud,Man Industries (India) Limited,1.0
+INE993B,fraud,Design Auto Systems Ltd,1.0
+INE994A,fraud,Veronica Laboratories Ltd.,1.0
+INE995A,fraud,Gravity (India) Ltd.,1.0
+INE998H,fraud,Oriental Trimex Limited,1.0
+INE048C,control,Viceroy Hotels Limited,9.611666666666666
+INE926K,control,Asian Hotels (East) Limited,9.611666666666666
+INE603F,control,Narendra Properties Ltd.,9.611666666666666
+INE531D,control,Lead Financial Services  Ltd,9.611666666666666
+INE055E,control,REAL ECO-ENERGY LIMITED,9.611666666666666
+INE364D,control,Anjani Synthetics Limited,9.611666666666666
+INE0QQG,control,Royal Sense Limited,9.611666666666666
+INE0NEV,control,AHASOLAR TECHNOLOGIES LIMITED,9.611666666666666
+INE347C,control,Rungta Irrigation Ltd.,9.611666666666666
+INE108E,control,Sundaram Multi Pap Limited,9.611666666666666
+INE222J,control,Rane Engine Valve Limited,9.611666666666666
+INE0KZF,control,QVC Exports Limited,9.611666666666666
+INE560T,control,Vaxfab Enterprises Limited,9.611666666666666
+INE942E,control,Marg Projects and Infrastructure Limited,9.611666666666666
+INE491B,control,Uniport Computers Ltd,9.611666666666666
+INE112D,control,Mahalaxmi Rubtech Limited,9.611666666666666
+INE09FA,control,Yudiz Solutions Limited,9.611666666666666
+INE347B,control,Allsoft Corporation Ltd.,9.611666666666666
+INE539D,control,Skypak Service Specialist Ltd.,9.611666666666666
+INE989S,control,Ontic Finserve Limited,9.611666666666666
+INE0RUY,control,Astron Multigrain Limited,9.611666666666666
+INE0ISZ,control,Z-Tech (India) Limited,9.611666666666666
+INE521J,control,CP Capital Limited,9.611666666666666
+INE937E,control,Lanyard Foods Ltd.,9.611666666666666
+INE07P3,control,Systematix Securities Ltd.,9.611666666666666
+INE909P,control,Starlit Power Systems Limited,9.611666666666666
+INE137E,control,Amit Securities Ltd.,9.611666666666666
+INE755C,control,Gordon Herbert (India) Ltd,9.611666666666666
+INE022B,control,Mukand Engineers Ltd.,9.611666666666666
+INE475F,control,Pramada Finvest Ltd.,9.611666666666666
+INE968G,control,Provogue (India) Ltd.,9.611666666666666
+INE596I,control,Computer Age Management Services Limited,9.611666666666666
+INE976H,control,LEHAR FOOTWEARS LIMITED,9.611666666666666
+INE0S3H,control,Positron Energy Limited,9.611666666666666
+INE931X,control,Captain Technocast Limited,9.611666666666666
+INE547C,control,Spectrum Foods Limited,9.611666666666666
+INE602W,control,Senco Gold Limited,9.611666666666666
+INE631B,control,Central Provinces Railways Co. Ltd.,9.611666666666666
+INE314N,control,Apollo Ingredients Limited,9.611666666666666
+INE127T,control,K.P. Energy Limited,9.611666666666666
+INE0QQJ,control,PARMESHWAR METAL LIMITED,9.611666666666666
+INE622A,control,Sai service Station Ltd.,9.611666666666666
+INE2J87,control,SKF India (Industrial) Limited,9.611666666666666
+INE956G,control,VA Tech Wabag Limited,9.611666666666666
+INE653C,control,Nicco Parks & Resorts Limited,9.611666666666666
+INE985A,control,Sinclairs Hotels Limited,9.611666666666666
+INE277C,control,Regency Ceramics Limited,9.611666666666666
+INE344A,control,"Narmada Cement Co. Ltd.,",9.611666666666666
+INE317W,control,COLAB PLATFORMS LIMITED,9.611666666666666
+INE583A,control,Namaste Exports Ltd,9.611666666666666
+INE492N,control,Amalgamated Electricity Co. Ltd.,9.611666666666666
+INE665L,control,Varroc Engineering Limited,9.611666666666666
+INE411B,control,Venus Remedies Limited,9.611666666666666
+INE618F,control,SPARKLE GOLD ROCK LIMITED,9.611666666666666
+INE454E,control,ABATE AS INDUSTRIES LIMITED,9.611666666666666
+INE0RGM,control,Storage Technologies and Automation Limited,9.611666666666666
+INE0OXY,control,Afcom Holdings Limited,9.611666666666666
+INE095D,control,Pasupati Fabrics Ltd.,9.611666666666666
+INE747F,control,Nashville Investment & Trading Co.,9.611666666666666
+INE443E,control,Sri Nachammai Cotton Mills Ltd.,9.611666666666666
+INE266S,control,Sungold Media and Entertainment Limited,9.611666666666666
+INE542F,control,Swan Defence and Heavy Industries Limited,9.611666666666666
+INE138A,control,Peninsula Land Limited,9.611666666666666
+INE215G,control,Splendid Metal Products Limited,9.611666666666666
+INE0ZN1,control,Rachit Prints Limited,9.611666666666666
+INE0Q96,control,Womancart Limited,9.611666666666666
+INE055S,control,Cyient DLM Limited,9.611666666666666
+INE01P5,control,Xelpmoc Design And Tech Limited,9.611666666666666
+INE547E,control,India Motor Parts and Accessories Limited,9.611666666666666
+INE0SPJ,control,Dhillon Freight Carrier Limited,9.611666666666666
+INE596C,control,"Harisiddha Trading & Finance Ltd.,",9.611666666666666
+INE0TO7,control,Mamata Machinery Limited,9.611666666666666
+INE0LY3,control,Share Samadhan Limited,9.611666666666666
+INE787D,control,Balkrishna Industries Limited,9.611666666666666
+INE583K,control,Vasudhagama Enterprises Limited,9.611666666666666
+INE666B,control,Divya Jyoti Industries Ltd.,9.611666666666666
+INE184C,control,Cimmco Ltd,9.611666666666666
+INE0IGO,control,Destiny Logistics & Infra Limited,9.611666666666666
+INE081G,control,Kanchi Karpooram Limited,9.611666666666666
+INE0Q8P,control,Bondada Engineering Limited,9.611666666666666
+INE385F,control,SG Mart Limited,9.611666666666666
+INE727B,control,Genesys International Corporation Limited,9.611666666666666
+INE318A,control,Pidilite Industries Limited,9.611666666666666
+INE434D,control,"M.J. Pharmaceuticals Ltd.,",9.611666666666666
+INE467D,control,Virat Industries Limited,9.611666666666666
+INE0NR7,control,Krishca Strapping Solutions Limited,9.611666666666666
+INE435A,control,ANDHRA PAPER LIMITED,9.611666666666666
+INE695C,control,Source Industries (India) Ltd,9.611666666666666
+INE0568,control,Ivalue Infosolutions Limited,9.611666666666666
+INE535C,control,Kamadgiri Fashion Limited,9.611666666666666
+INE721A,control,Shriram Finance Limited,9.611666666666666
+INE0AG9,control,Ceigall India Limited,9.611666666666666
+INE196J,control,OCL Iron and Steel Limited,9.611666666666666
+INE762G,control,Intergrated Digital Info Services Ltd.,9.611666666666666
+INE0N7F,control,Homesfy Realty Limited,9.611666666666666
+INE21UM,control,Neochem Bio Solutions Limited,9.611666666666666
+INE075D,control,GM Breweries Limited,9.611666666666666
+INE627A,control,SBI Home Finance Ltd,9.611666666666666
+INE959D,control,Sovereign Diamonds Ltd,9.611666666666666
+INE130N,control,Unijolly Investments Co. Ltd.,9.611666666666666
+INE1WDC,control,GULF LLOYDS (INDIA) LIMITED,9.611666666666666
+INE0R6C,control,Purv Flexipack Limited,9.611666666666666
+INE778N,control,TRILIANCE POLYMERS LIMITED,9.611666666666666
+INE330A,control,Vashisti Detergents Ltd,9.611666666666666
+INE174A,control,Lloyds Finance Ltd.,9.611666666666666
+INE0R73,control,Rulka Electricals Limited,9.611666666666666
+INE335C,control,J.K.Pharmachem Ltd.,9.611666666666666
+INE005G,control,Deep Health AI India Limited,9.611666666666666
+INE326T,control,Niraj Ispat Industries Limited,9.611666666666666
+INE0V8A,control,Karbonsteel Engineering Limited,9.611666666666666
+INE16NZ,control,Orkla India Limited,9.611666666666666
+INE349Y,control,Ideaforge Technology Limited,9.611666666666666
+INE564T,control,Jet Knitwears Limited,9.611666666666666
+INE746A,control,KDL Biotech Ltd.,9.611666666666666
+INE851I,control,Updater Services Limited,9.611666666666666
+INE630C,control,JPT Securities Ltd.,9.611666666666666
+INE428C,control,Refnol Resins & Chemicals Ltd.,9.611666666666666
+INE931S,control,Adani Energy Solutions Limited,9.611666666666666
+INE00LM,control,SONAM LIMITED,9.611666666666666
+INE489D,control,B & A Limited,9.611666666666666
+INE363L,control,Belding India Limited,9.611666666666666
+INE279A,control,Universal Cables Limited,9.611666666666666
+INE405B,control,Trans Techno Foods Ltd.,9.611666666666666
+INE0Q6H,control,Sona Machinery Limited,9.611666666666666
+INE853A,control,Ador Fontech Ltd,9.611666666666666
+INE595G,control,Swarna Securities Ltd.,9.611666666666666
+INE0E4I,control,Ascensive Educare Limited,9.611666666666666
+INE097D,control,Shubham Industries Ltd.,9.611666666666666
+INE285U,control,KIMIA BIOSCIENCES LIMITED,9.611666666666666
+INE094A,control,Hindustan Petroleum Corporation Limited,9.611666666666666
+INE945P,control,Wardwizard Innovations & Mobility Limited,9.611666666666666
+INE712B,control,Superhouse Limited,9.611666666666666
+INE789R,control,Franklin Industries Limited,9.611666666666666
+INE587E,control,"Nova Steel (India) Ltd.,",9.611666666666666
+INE528K,control,Gallantt Ispat Limited,9.611666666666666
+INE145L,control,Keerthi Industries Ltd,9.611666666666666
+INE0Z7N,control,Tankup Engineers Limited,9.611666666666666
+INE569C,control,ORIENT CERATECH LIMITED,9.611666666666666
+INE0543,control,Odigma Consultancy Solutions Limited,9.611666666666666
+INE09EO,control,Aarti Surfactants Limited,9.611666666666666
+INE405H,control,Centenial Surgical Suture Ltd.,9.611666666666666
+INE272C,control,Deepak Spinners Ltd.,9.611666666666666
+INE464D,control,VAPI ENTERPRISE LIMITED,9.611666666666666
+INE987S,control,KSH International Limited,9.611666666666666
+INE0PT1,control,Chavda Infra Limited,9.611666666666666
+INE958A,control,Eureka Industries Ltd.,9.611666666666666
+INE1CRP,control,Shyam Dhani Industries Limited,9.611666666666666
+INE965W,control,BMW Ventures Limited,9.611666666666666
+INE186B,control,SIP Industries Ltd,9.611666666666666
+INE460D,control,Super Tannery Limited,9.611666666666666
+INE366A,control,Dwarikesh Sugar Industries Limited,9.611666666666666
+INE561A,control,India Gypsum Ltd,9.611666666666666
+INE998B,control,Suryodaya Plastics Ltd.,9.611666666666666
+INE197B,control,D.R.Industries Ltd.,9.611666666666666
+INE0JSX,control,Global Surfaces Limited,9.611666666666666
+INE716M,control,Swadeshi Industries Leasing Co. Ltd,9.611666666666666
+INE701A,control,Vardhman Holdings Limited,9.611666666666666
+INE673C,control,AMERISE BIOSCIENCES LIMITED,9.611666666666666
+INE1A6Q,control,Ashwini Container Movers Limited,9.611666666666666
+INE100A,control,Atul Limited,9.611666666666666
+INE382Z,control,Garden Reach Shipbuilders & Engineers Limited,9.611666666666666
+INE0VA6,control,HP Telecom India Limited,9.611666666666666
+INE227G,control,Indowind Energy Limited,9.611666666666666
+INE654A,control,State Bank of Travancore,9.611666666666666
+INE415G,control,Rail Vikas Nigam Limited,9.611666666666666
+INE793C,control,Sequel Soft India Ltd.,9.611666666666666
+INE442U,control,Varun Mercantile Ltd.,9.611666666666666
+INE278C,control,Shetron Ltd.,9.611666666666666
+INE927D,control,JBM Auto Limited,9.611666666666666
+INE0RWQ,control,Tolins Tyres Limited,9.611666666666666
+INE406H,control,DHANUS TECHNOLOGIES LIMITED,9.611666666666666
+INE283D,control,Anjani Finance Ltd,9.611666666666666
+INE177A,control,Ingersoll Rand (India) Limited,9.611666666666666
+INE1R2M,control,ABH Healthcare Limited,9.611666666666666
+INE0S7E,control,GP Eco Solutions India Limited,9.611666666666666
+INE047D,control,Mercury Fund Management Co. Ltd.,9.611666666666666
+INE660A,control,Sundaram Finance Limited,9.611666666666666
+INE689M,control,Polo Queen Industrial and Fintech Limited,9.611666666666666
+INE819S,control,Zeal Aqua Limited,9.611666666666666
+INE165B,control,R. S. Software (India) Limited,9.611666666666666
+INE227D,control,Volex Finance & Industries Ltd,9.611666666666666
+INE327C,control,Golkonda Aluminium Extrusions Ltd,9.611666666666666
+INE528A,control,GKW Limited,9.611666666666666
+INE533A,control,Goodyear India Limited,9.611666666666666
+INE810M,control,Asian Petroproducts & Exports Ltd.,9.611666666666666
+INE442V,control,PRIME FRESH LIMITED,9.611666666666666
+INE10VL,control,TNA SOLUTIONS LIMITED,9.611666666666666
+INE198N,control,JUJHAR LOGISTICS  LIMITED,9.611666666666666
+INE670O,control,One Global Service Provider Limited,9.611666666666666
+INE933X,control,Shanti Overseas (India) Limited,9.611666666666666
+INE173B,control,Kanika Infotech Ltd.,9.611666666666666
+INE655C,control,Kilburn Chemicals Ltd.,9.611666666666666
+INE1GUJ,control,GAME CHANGERS TEXFAB LIMITED,9.611666666666666
+INE515A,control,John Cockerill India Limited,9.611666666666666
+INE412J,control,Samrat Forgings Limited,9.611666666666666
+INE962P,control,Boston Leasing and Finance Ltd.,9.611666666666666
+INE968B,control,Goplee Infotech Ltd.,9.611666666666666
+INE130I,control,Remi Sales & Engineering Ltd.,9.611666666666666
+INE074H,control,Sarthak Industries Ltd.,9.611666666666666
+INE529A,control,Federal-Mogul Goetze (India) Limited.,9.611666666666666
+INE253N,control,Max Earth Resources Limited,9.611666666666666
+INE0OKG,control,PROSPECT CONSUMER PRODUCTS LIMITED,9.611666666666666
+INE761Q,control,Vibrant Global Capital Limited,9.611666666666666
+INE11Z0,control,Sumax Engineering Limited,9.611666666666666
+INE904E,control,Valley Abresives Ltd.,9.611666666666666
+INE457B,control,Indo Bonito Multinational Limited,9.611666666666666
+INE287Z,control,Gayatri Highways Limited,9.611666666666666
+INE264B,control,JCT Electronics Ltd.,9.611666666666666
+INE0MGA,control,Karnika Industries Limited,9.611666666666666
+INE840I,control,Real Touch Finance Limited,9.611666666666666
+INE073G,control,Associated Alcohols & Breweries Ltd.,9.611666666666666
+INE937C,control,Nila Infrastructures Limited,9.611666666666666
+INE1ZGR,control,G V ELECTRICALS LTD,9.611666666666666
+INE336G,control,Kojam Fininvest Limited,9.611666666666666
+INE0S3X,control,Enfuse Solutions Limited,9.611666666666666
+INE567C,control,Haryana Steel & Alloys Ltd.,9.611666666666666
+INE0DEZ,control,K2 Infragen Limited,9.611666666666666
+INE1B7I,control,Himalayan Solar Limited,9.611666666666666
+INE574C,control,MFL Housing Finance Ltd.,9.611666666666666
+INE461Y,control,India Radiators Ltd.,9.611666666666666
+INE0P4R,control,Swadha Nature Limited,9.611666666666666
+INE453S,control,KANUNGO FINANCIERS LIMITED,9.611666666666666
+INE407E,control,MONIND LIMITED,9.611666666666666
+INE0CPQ,control,Nirmitee Robotics India Limited,9.611666666666666
+INE590D,control,DHP India Ltd.,9.611666666666666
+INE054C,control,Waterbase Limited,9.611666666666666
+INE0JSJ,control,Maruti Interior Products Limited,9.611666666666666
+INE473I,control,Teledata Marine Solutions Ltd.,9.611666666666666
+INE180B,control,Nexcen Softech Ltd.,9.611666666666666
+INE550D,control,WORLDWIDE ALUMINIUM LIMITED,9.611666666666666
+INE0NDX,control,Inspire Films Limited,9.611666666666666
+INE820B,control,RATNAKAR SECURITIES LIMITED,9.611666666666666
+INE336A,control,Hind Lever Chemicals Ltd,9.611666666666666
+INE492H,control,Mounteverest Trading & Investment Ltd.,9.611666666666666
+INE0QU5,control,SODHANI CAPITAL LIMITED,9.611666666666666
+INE333B,control,Lyons Industrial Enterprises Ltd,9.611666666666666
+INE212S,control,Fractal Analytics Limited,9.611666666666666
+INE430R,control,AAYUSH WELLNESS LIMITED,9.611666666666666
+INE1SPP,control,KSR Footwear Limited,9.611666666666666
+INE023B,control,IFGL Refractories Ltd,9.611666666666666
+INE841D,control,Amal Limited,9.611666666666666
+INE2L0V,control,Susan Electricals India Limited,9.611666666666666
+INE140C,control,Siddha Ventures Limited,9.611666666666666
+INE0R6Z,control,SRM Contractors Limited,9.611666666666666
+INE809I,control,OnMobile Global Limited,9.611666666666666
+INE01FR,control,Baazar Style Retail Limited,9.611666666666666
+INE0V0W,control,Gujarat Kidney And Super Speciality Limited,9.611666666666666
+INE488A,control,Chemplast Sanmar Limited,9.611666666666666
+INE244A,control,De Nora India Limited,9.611666666666666
+INE231D,control,Skol Breweries Ltd.,9.611666666666666
+INE781D,control,Alacrity Housing Limited,9.611666666666666
+INE0N0Y,control,Udayshivakumar Infra Limited,9.611666666666666
+INE0P1P,control,Marinetrans India Limited,9.611666666666666
+INE217Q,control,Nishtha Finance And Investment (India) Limited,9.611666666666666
+INE707D,control,ABL Bio-Technologies Ltd.,9.611666666666666
+INE328A,control,Kirloskar Pneumatic Co. Ltd.,9.611666666666666
+INE787E,control,Integrated Finance Company Ltd.,9.611666666666666
+INE089T,control,Bombay Wire Ropes Ltd.,9.611666666666666
+INE175E,control,Supreme Oriented Films Ltd,9.611666666666666
+INE0O7P,control,Greenchef Appliances Limited,9.611666666666666
+INE139D,control,YUVRAAJ HYGIENE PRODUCTS LTD,9.611666666666666
+INE615R,control,TruCap Finance Limited,9.611666666666666
+INE435C,control,Texmaco Infrastructure & Holdings Limited,9.611666666666666
+INE475E,control,Caplin Point Laboratories Limited,9.611666666666666
+INE825D,control,Shahi Shipping Limited,9.611666666666666
+INE261B,control,Gujarat Telephone Cables Ltd.,9.611666666666666
+INE010J,control,Tejas Networks Limited,9.611666666666666
+INE249U,control,Sueryaa Knitwear Limited,9.611666666666666
+INE731F,control,Welspun Specialty Solutions Limited,9.611666666666666
+INE0JVO,control,Garuda Construction and Engineering Limited,9.611666666666666
+INE24H3,control,Vivid Electromech Limited,9.611666666666666
+INE0MSS,control,Jay Kailash Namkeen Limited,9.611666666666666
+INE020A,control,Jindal Iron & Steel Co Ltd.,9.611666666666666
+INE211A,control,Bishnauth Tea Co. Ltd,9.611666666666666
+INE0RIQ,control,Associated Coaters Limited,9.611666666666666
+INE130F,control,Key Corp Ltd,9.611666666666666
+INE107D,control,C.T. Cotton Yarn Ltd.,9.611666666666666
+INE0UMC,control,Glen Industries Limited,9.611666666666666
+INE491N,control,Raja Bahadur International Ltd,9.611666666666666
+INE0P47,control,Sahaj Solar Limited,9.611666666666666
+INE344E,control,Shukra Jewellers Limited,9.611666666666666
+INE791H,control,IRONWOOD EDUCATION LIMITED,9.611666666666666
+INE208A,control,Ashok Leyland Limited,9.611666666666666
+INE17QZ,control,Knack Packaging Limited,9.611666666666666
+INE0V0Q,control,ATC Energies System Limited,9.611666666666666
+INE492D,control,Castron Technologies Ltd.,9.611666666666666
+INE280H,control,Sahyadri Industries Limited,9.611666666666666
+INE487D,control,Arora Fibres Ltd.,9.611666666666666
+INE09A8,control,Galaxy Medicare Limited,9.611666666666666
+INE760L,control,Tribhovandas Bhimji Zaveri Limited,9.611666666666666
+INE395A,control,BSEL ALGO LIMITED,9.611666666666666
+INE0OUT,control,Oriana Power Limited,9.611666666666666
+INE718P,control,James Warren Tea Limited,9.611666666666666
+INE982F,control,Hathway Cable & Datacom Limited,9.611666666666666
+INE301N,control,Milk Partners India Limited,9.611666666666666
+INE684D,control,RGF Capital Markets Limited,9.611666666666666
+INE085J,control,Thangamayil Jewellery Limited,9.611666666666666
+INE895C,control,Tayo Rolls Ltd.,9.611666666666666
+INE1DRH,control,JAY AMBE SUPERMARKETS LIMITED,9.611666666666666
+INE18PB,control,BHAVIK ENTERPRISES LIMITED,9.611666666666666
+INE718I,control,JSW Cement Limited,9.611666666666666
+INE189I,control,Nelcast Limited,9.611666666666666
+INE1241,control,Samay Project Services Limited,9.611666666666666
+INE1ITY,control,Global Ocean Logistics India Limited,9.611666666666666
+INE641R,control,Quint Digital Limited,9.611666666666666
+INE677H,control,DEEP ENERGY RESOURCES LIMITED,9.611666666666666
+INE246D,control,JAYATMA ENTERPRISES LIMITED,9.611666666666666
+INE336C,control,Rathi Steel & Power Ltd,9.611666666666666
+INE816D,control,Prakash Leasing Ltd.,9.611666666666666
+INE481D,control,Willard India Ltd.,9.611666666666666
+INE0TGG,control,Desco Infratech Limited,9.611666666666666
+INE016Q,control,Ceinsys Tech Limited,9.611666666666666
+INE995B,control,Terrygold (India) Ltd.,9.611666666666666
+INE299A,control,PSI Data Systems Ltd.,9.611666666666666
+INE324L,control,R.P.P. Infra Projects Limited,9.611666666666666
+INE952D,control,Bilpower Ltd.,9.611666666666666
+INE317C,control,Essar Teleholdings Ltd.,9.611666666666666
+INE450E,control,Sukhjit Starch & Chemicals Limited,9.611666666666666
+INE0K9O,control,Lalithaa Jewellery Mart Limited,9.611666666666666
+INE583D,control,Ugro Capital Limited,9.611666666666666
+INE281M,control,LWS Knitwear Ltd,9.611666666666666
+INE641D,control,Mahanivesh (India) Ltd.,9.611666666666666
+INE087C,control,Satellite Engineering Ltd.,9.611666666666666
+INE699D,control,Jumbo Bag ltd.,9.611666666666666
+INE828C,control,Savitri Overseas Ltd.,9.611666666666666
+INE0SRI,control,Veritaas Advertising Limited,9.611666666666666
+INE508K,control,Robust Hotels Limited,9.611666666666666
+INE955S,control,Arco Leasing Ltd.,9.611666666666666
+INE292C,control,Auro Laboratories Ltd.,9.611666666666666
+INE038E,control,Bee Electronic Machines Ltd,9.611666666666666
+INE0PSJ,control,Sahara Maritime Limited,9.611666666666666
+INE00ST,control,B.R.GOYAL INFRASTRUCTURE LIMITED,9.611666666666666
+INE115A,control,LIC Housing Finance Limited,9.611666666666666
+INE983C,control,Ludlow Jute & Specialities Ltd,9.611666666666666
+INE372E,control,Birla Precision Technologies Limited,9.611666666666666
+INE0LAA,control,Ashapura Logistics Limited,9.611666666666666
+INE294D,control,Bosch Rexroth (India) Ltd.,9.611666666666666
+INE191P,control,GCM Capital Advisors Limited,9.611666666666666
+INE268X,control,Sophia Traexpo Limited,9.611666666666666
+INE07L5,control,DMR ENGINEERING LIMITED,9.611666666666666
+INE0GSL,control,HP Adhesives Limited,9.611666666666666
+INE360D,control,Trans-Freight Containers Ltd.,9.611666666666666
+INE0N6U,control,Kalyani Cast-Tech Limited,9.611666666666666
+INE804H,control,Transwarranty Finance Limited,9.611666666666666
+INE674A,control,TATA STEEL LONG PRODUCTS LIMITED,9.611666666666666
+INE096A,control,UTIQUE ENTERPRISES LIMITED,9.611666666666666
+INE037Z,control,Concord Enviro Systems Limited,9.611666666666666
+INE0HQI,control,BEW Engineering Limited,9.611666666666666
+INE444D,control,Natraj Proteins Ltd.,9.611666666666666
+INE0KLO,control,Active Infrastructures Limited,9.611666666666666
+INE672B,control,Munjal Auto Industries Limited,9.611666666666666
+INE158C,control,City Online Services Limited,9.611666666666666
+INE506D,control,Haldyn Glass Limited,9.611666666666666
+INE291W,control,Global Education Limited,9.611666666666666
+INE0BLY,control,Shine Fashions (India) Limited,9.611666666666666
+INE694E,control,Kanpur Plastipack Limited,9.611666666666666
+INE924H,control,Tarmat Limited,9.611666666666666
+INE092H,control,Shivagrico Implements Ltd.,9.611666666666666
+INE17D6,control,Safe Enterprises Retail Fixtures Limited,9.611666666666666
+INE13VU,control,Beezaasan Explotech Limited,9.611666666666666
+INE0Z9N,control,Sham Foam Limited,9.611666666666666
+INE722N,control,Jattashankar Industries Limited,9.611666666666666
+INE878A,control,GE Power India Limited,9.611666666666666
+INE693B,control,Narmada Chematur Petrochemicals Ltd,9.611666666666666
+INE1041,control,N R Vandana Tex Industries Limited,9.611666666666666
+INE962A,control,Labh Construction Ltd.,9.611666666666666
+INE965E,control,Aesculapius Remedies Ltd.,9.611666666666666
+INE0J1P,control,Richa Info Systems Limited,9.611666666666666
+INE0ZHT,control,TECHNICHEM ORGANICS LIMITED,9.611666666666666
+INE0QZR,control,Methodhub Software Limited,9.611666666666666
+INE183U,control,Pulsar International Limited,9.611666666666666
+INE549A,control,Hindustan Construction Company Limited,9.611666666666666
+INE613C,control,Magellanic Cloud Limited,9.611666666666666
+INE725A,control,NAVA LIMITED,9.611666666666666
+INE692B,control,Murudeshwar Ceramics Limited,9.611666666666666
+INE531A,control,Kansai Nerolac Paints Limited,9.611666666666666
+INE168P,control,Emcure Pharmaceuticals Limited,9.611666666666666
+INE806J,control,Hindustan Flurocarbons Ltd.,9.611666666666666
+INE291A,control,Garware Hi-Tech Films Limited,9.611666666666666
+INE947A,control,Sunflag Iron And Steel Company Limited,9.611666666666666
+INE500A,control,DCW Limited,9.611666666666666
+INE0TFB,control,Avi Ansh Textile Limited,9.611666666666666
+INE465F,control,Continental Valve Ltd,9.611666666666666
+INE1VXE,control,STL Networks Limited,9.611666666666666
+INE520Y,control,Ice Make Refrigeration Limited,9.611666666666666
+INE220J,control,Future Consumer Limited,9.611666666666666
+INE874D,control,Neha International Ltd.,9.611666666666666
+INE440B,control,DOT COM Global Ltd,9.611666666666666
+INE850B,control,ABM Knowledgeware Limited,9.611666666666666
+INE0PX3,control,Skyways Air Services Limited,9.611666666666666
+INE20M2,control,Eventions Limited,9.611666666666666
+INE677A,control,Textool Company Ltd,9.611666666666666
+INE223G,control,Excel Crop Care Ltd.,9.611666666666666
+INE425F,control,BEFOUND MOVEMENT LIMITED,9.611666666666666
+INE2HJL,control,Dhara Rail Projects Limited,9.611666666666666
+INE939A,control,Strides Pharma Science Limited,9.611666666666666
+INE003F,control,Muller & Phipps (India) Ltd.,9.611666666666666
+INE855A,control,WH Brady & Company Limited,9.611666666666666
+INE109C,control,Arman Financial Services Limited,9.611666666666666
+INE203C,control,Odissi Securities Ltd.,9.611666666666666
+INE0U25,control,Forcas Studio Limited,9.611666666666666
+INE0JRD,control,Diensten Tech Limited,9.611666666666666
+INE517D,control,Konark Synthetics  Ltd,9.611666666666666
+INE079L,control,Iykot Hitech Toolroom Ltd,9.611666666666666
+INE053A,control,The Indian Hotels Company Limited,9.611666666666666
+INE065A,control,Eicher Limited,9.611666666666666
+INE0QJL,control,Thaai Casting Limited,9.611666666666666
+INE320X,control,HALEOS LABS LIMITED,9.611666666666666
+INE0RFP,control,Sathlokhar Synergys E&C Global Limited,9.611666666666666
+INE463V,control,Anand Rathi Wealth Limited,9.611666666666666
+INE971L,control,Kemistar Corporation Limited,9.611666666666666
+INE0MEG,control,Viviana Power Tech Limited,9.611666666666666
+INE714D,control,Conart Engineers Ltd.,9.611666666666666
+INE285K,control,Techno Electric & Engineering Company Limited,9.611666666666666
+INE843C,control,Khodiyar Industries ltd.,9.611666666666666
+INE596B,control,Mukesh Babu Financial Services Limited,9.611666666666666
+INE113A,control,Gujarat Narmada Valley Fertilizers and Chemicals Limited,9.611666666666666
+INE396F,control,CES Limited,9.611666666666666
+INE534C,control,Vinay Cements Ltd.,9.611666666666666
+INE342A,control,Premier Limited,9.611666666666666
+INE1LLG,control,SAI URJA INDO VENTURES LIMITED,9.611666666666666
+INE384A,control,Rane Holdings Limited,9.611666666666666
+INE096D,control,Ponni Sugars (Orissa) Ltd.,9.611666666666666
+INE349A,control,NRB Bearing Limited,9.611666666666666
+INE940C,control,Dutron  Polymers Ltd.,9.611666666666666
+INE180D,control,Emkay Aromatics ltd.,9.611666666666666
+INE365I,control,N. B. I. Industrial Finance Company Limited,9.611666666666666
+INE218D,control,German Gardens Ltd.,9.611666666666666
+INE680C,control,Kengold (India) Ltd.,9.611666666666666
+INE00Z5,control,Kritika Wires Limited,9.611666666666666
+INE387A,control,Sundram Fasteners Limited,9.611666666666666
+INE1FJE,control,HELLOJI HOLIDAYS LIMITED,9.611666666666666
+INE0D9X,control,Artemis ADR Marketplace Limited,9.611666666666666
+INE037C,control,Phyto Chem (India) Ltd.,9.611666666666666
+INE380D,control,Modella Woollens Ltd.,9.611666666666666
+INE806D,control,Ishita Drugs & Industries Ltd.,9.611666666666666
+INE649G,control,Dina Iron & Steel Ltd.,9.611666666666666
+INE069C,control,Bhuwalka Steel Industries Ltd.,9.611666666666666
+INE0JO3,control,Yatharth Hospital & Trauma Care Services Limited,9.611666666666666
+INE976R,control,Agi Infra Limited,9.611666666666666
+INE1OTR,control,HIMALAYA NUTRAVEDICS INDIA LIMITED,9.611666666666666
+INE034S,control,Arvind SmartSpaces Limited,9.611666666666666
+INE364S,control,Novalum Materials Limited,9.611666666666666
+INE122V,control,Terraform Magnum Limited,9.611666666666666
+INE982V,control,Jet Freight Logistics Limited,9.611666666666666
+INE474C,control,Remsons Industries Limited,9.611666666666666
+INE07U7,control,IRM Energy Limited,9.611666666666666
+INE678D,control,"Nivena Estate And Finance, Ltd.,",9.611666666666666
+INE005I,control,AMD Industries Limited,9.611666666666666
+INE702Y,control,SMVD Poly Pack Limited,9.611666666666666
+INE919B,control,Laffans Petrochemicals Ltd.,9.611666666666666
+INE537U,control,Sprayking Limited,9.611666666666666
+INE216G,control,Sujana Universal Industries Ltd.,9.611666666666666
+INE760F,control,Indo Amines Limited,9.611666666666666
+INE696V,control,Nandani Creation Limited,9.611666666666666
+INE982C,control,HOMRE LIMITED,9.611666666666666
+INE095N,control,NBCC (India) Limited,9.611666666666666
+INE154D,control,Arihant Enterprise Ltd.,9.611666666666666
+INE464B,control,Universal Arts Ltd,9.611666666666666
+INE059G,control,Indo Rama Textiles Limited.,9.611666666666666
+INE450A,control,Autoriders Finance Ltd.,9.611666666666666
+INE882F,control,Neelkanth Motels & Hotels Ltd.,9.611666666666666
+INE050N,control,Kings Infra Ventures Limited,9.611666666666666
+INE989E,control,DATACIPHER LIMITED,9.611666666666666
+INE526D,control,Moonbeam Industries Ltd.,9.611666666666666
+INE0SII,control,Quality Power Electrical Equipments Limited,9.611666666666666
+INE855B,control,Rain Industries Limited,9.611666666666666
+INE409B,control,Swelect Energy Systems Limited,9.611666666666666
+INE909D,control,SHARP INVESTMENTS LTD,9.611666666666666
+INE0U41,control,Bluspring Enterprises Limited,9.611666666666666
+INE374E,control,BMW INDUSTRIES LIMITED,9.611666666666666
+INE995U,control,FRESITA PROTEINS LIMITED,9.611666666666666
+INE691G,control,Impex Ferro tech Ltd.,9.611666666666666
+INE389K,control,Welspun Investments and Commercials Limited,9.611666666666666
+INE190A,control,Malvika Steel Ltd.,9.611666666666666
+INE836D,control,REAL GROWTH CORPORATION LIMITED,9.611666666666666
+INE461B,control,Repro India Limited,9.611666666666666
+INE184O,control,Diffusion Engineers Limited,9.611666666666666
+INE278A,control,EPIC Enzymes Pharmac. & Industrial,9.611666666666666
+INE451C,control,Automobile Corporation of Goa Limited,9.611666666666666
+INE215A,control,"Merind Ltd.,",9.611666666666666
+INE481A,control,CFL Capital Financial Services Ltd.,9.611666666666666
+INE726C,control,Mintage  Electro Equipments Ltd.,9.611666666666666
+INE808D,control,Linear Industries Ltd,9.611666666666666
+INE933B,control,SIGMA ADVANCED SYSTEMS LIMITED,9.611666666666666
+INE694B,control,Shree Neelachal Laboratories Ltd.,9.611666666666666
+INE531C,control,"Coastal Papers Ltd.,",9.611666666666666
+INE398H,control,Trustedge Capital Limited,9.611666666666666
+INE521D,control,Mafatlal Lubricants Ltd.,9.611666666666666
+INE875B,control,Nimbus Projects Limited,9.611666666666666
+INE887C,control,Rishiroop Rubber (International) Lt,9.611666666666666
+INE092O,control,Rekvina Laboratories Ltd,9.611666666666666
+INE353C,control,Assambrook Limited,9.611666666666666
+INE0JZS,control,S.V.J.ENTERPRISES LIMITED,9.611666666666666
+INE403A,control,Bell Ceramics Ltd,9.611666666666666
+INE1K4J,control,Simca Advertising Limited,9.611666666666666
+INE327F,control,Siemens VDO Automotive Ltd.,9.611666666666666
+INE270D,control,REVATI MEDIA LIMITED,9.611666666666666
+INE761C,control,Amrapali Developers (India) Ltd.,9.611666666666666
+INE403B,control,GALAXY SUPERMARKET LIMITED,9.611666666666666
+INE375D,control,Kaira Can Co. Ltd.,9.611666666666666
+INE254N,control,Hindustan Foods Limited,9.611666666666666
+INE374C,control,Rajasthan Petro Synthetics Ltd.,9.611666666666666
+INE117D,control,Pharmaids Pharmaceuticals Ltd.,9.611666666666666
+INE508G,control,Time Technoplast Limited,9.611666666666666
+INE028L,control,Standard Chartered PLC,9.611666666666666
+INE917B,control,Nicco-Uco Alliance Credit Ltd.,9.611666666666666
+INE513H,control,Remi Process Plant & Machinery Ltd,9.611666666666666
+INE153A,control,Mahanagar Telephone Nigam Limited,9.611666666666666
+INE0OPS,control,Oneclick Logistics India Limited,9.611666666666666
+INE898B,control,Integrated Financial Services Ltd.,9.611666666666666
+INE916G,control,GeeCee Ventures Limited,9.611666666666666
+INE1111,control,Eastern Gases Ltd.,9.611666666666666
+INE959A,control,Privi Speciality Chemicals Limited,9.611666666666666
+INE845B,control,Lippi Systems Ltd.,9.611666666666666
+INE670K,control,Lodha Developers Limited,9.611666666666666
+INE0NNS,control,NMDC Steel Limited,9.611666666666666
+INE465H,control,Sharma East India Hospitals And Res,9.611666666666666
+INE820M,control,Kairosoft AI Solutions Limited,9.611666666666666
+INE807C,control,JMDE Packaging & Realties Limited,9.611666666666666
+INE0LA9,control,Jfl Life Sciences Limited,9.611666666666666
+INE0P3N,control,Kaka Industries Limited,9.611666666666666
+INE876S,control,Loyal Equipments Limited,9.611666666666666
+INE0R91,control,Eleganz Interiors Limited,9.611666666666666
+INE889B,control,KUNDAN MINERALS AND METALS LIMITED,9.611666666666666
+INE632W,control,GlobalSpace Technologies Limited,9.611666666666666
+INE904H,control,Tecpro Systems Ltd,9.611666666666666
+INE1K0V,control,MEHUL TELECOM LIMITED,9.611666666666666
+INE04Q9,control,Dar Credit & Capital Limited,9.611666666666666
+INE804L,control,Medplus Health Services Limited,9.611666666666666
+INE046B,control,Sierra Optima Ltd,9.611666666666666
+INE0ECC,control,Maxposure Limited,9.611666666666666
+INE388G,control,Twamev Construction and Infrastructure Limited,9.611666666666666
+INE041F,control,Dhanada Corporatin Limited,9.611666666666666
+INE864D,control,Rishabh Digha Steel And Allied Prod,9.611666666666666
+INE270F,control,Pariksha Fin-Invest-Lease Limited,9.611666666666666
+INE384H,control,Ellora Paper Mills Ltd.,9.611666666666666
+INE0P8B,control,Gaudium IVF and Women Health Limited,9.611666666666666
+INE101I,control,Afcons Infrastructure Limited,9.611666666666666
+INE698C,control,Vanasthali Textile Industries Ltd,9.611666666666666
+INE04TZ,control,Ethos Limited,9.611666666666666
+INE464C,control,HG INDUSTRIES LIMITED,9.611666666666666
+INE08KP,control,DCM Nouvelle Limited,9.611666666666666
+INE0L4V,control,Vilin Bio Med Limited,9.611666666666666
+INE274V,control,Shankara Building Products Limited,9.611666666666666
+INE745B,control,Khaitan Chemicals & Fertilizers Limited,9.611666666666666
+INE173D,control,Charminar Breweries Ltd,9.611666666666666
+INE052E,control,Gayatri BioOrganics Ltd,9.611666666666666
+INE0BSN,control,S A Tech Software India Limited,9.611666666666666
+INE0RQZ,control,Esconet Technologies Limited,9.611666666666666
+INE0YDV,control,ARC Insulation & Insulators Limited,9.611666666666666
+INE303A,control,DIC India Limited,9.611666666666666
+INE728C,control,Western Industries Ltd.,9.611666666666666
+INE0184,control,Suvidhaa Infoserve Limited,9.611666666666666
+INE624M,control,KROWNIQ LIMITED,9.611666666666666
+INE0MXP,control,Technopack Polymers Limited,9.611666666666666
+INE771A,control,Mirza International Limited,9.611666666666666
+INE786F,control,Uttam Sugar Mills Limited,9.611666666666666
+INE095R,control,Canopy Finance Limited,9.611666666666666
+INE03DD,control,JHS Svendgaard Retail Ventures Limited,9.611666666666666
+INE715F,control,ACE EDUTREND LIMITED,9.611666666666666
+INE609C,control,Orient Press Limited,9.611666666666666
+INE246B,control,Ramco Systems Limited,9.611666666666666
+INE317D,control,MEGAMONT LIMITED,9.611666666666666
+INE0U8P,control,GRE Renew Enertech Limited,9.611666666666666
+INE0RDJ,control,VANDAN FOODS LIMITED,9.611666666666666
+INE446D,control,NPR Finance Ltd.,9.611666666666666
+INE841C,control,Panasonic Appliances India Company Ltd,9.611666666666666
+INE219F,control,Trend Electronics Limited,9.611666666666666
+INE2MKZ,control,S.K. OFFSET LIMITED,9.611666666666666
+INE0L2Y,control,Arham Technologies Limited,9.611666666666666
+INE562E,control,Softrak Venture Investments Ltd.,9.611666666666666
+INE274E,control,India Home Loan Limited,9.611666666666666
+INE0Q6L,control,Brisk Technovision Limited,9.611666666666666
+INE014E,control,KOVILPATTI LAKSHMI ROLLER FLOUR MILLS  LTD,9.611666666666666
+INE978V,control,Tanvi Foods (India) Limited,9.611666666666666
+INE060X,control,Dev Information Technology Limited,9.611666666666666
+INE542C,control,NK Industries Limited,9.611666666666666
+INE0XRR,control,AJC Jewel Manufacturers Limited,9.611666666666666
+INE153T,control,BLS International Services Limited,9.611666666666666
+INE823B,control,Competent Automobiles Company Limited,9.611666666666666
+INE095F,control,Leasing Finance India Ltd.,9.611666666666666
+INE1D0M,control,FX Multitech Limited,9.611666666666666
+INE409H,control,Spectacle Ventures Limited,9.611666666666666
+INE355B,control,Scintilla Software Technology Ltd.,9.611666666666666
+INE065D,control,Aeroflex Enterprises Limited,9.611666666666666
+INE712Z,control,R.J. Shah & Co. Ltd.,9.611666666666666
+INE734C,control,CSJ Technologies Ltd,9.611666666666666
+INE351A,control,Unichem Laboratories Limited,9.611666666666666
+INE181U,control,Classic Filaments Limited,9.611666666666666
+INE571C,control,Mayank Hotels Ltd.,9.611666666666666
+INE076C,control,IFB Agro Industries Limited,9.611666666666666
+INE364A,control,Jayshree Tea & Industries Limited,9.611666666666666
+INE147P,control,Jindal Poly Investment and Finance Company Limited,9.611666666666666
+INE419H,control,Reliable Ventures India Ltd,9.611666666666666
+INE951M,control,RRIL Limited,9.611666666666666
+INE0WKY,control,INDO SMC Limited,9.611666666666666
+INE814D,control,Omnitex Industries (India) Ltd.,9.611666666666666
+INE0QWN,control,Zenith Drugs Limited,9.611666666666666
+INE118A,control,Bajaj Holdings & Investment Limited,9.611666666666666
