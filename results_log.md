@@ -487,3 +487,41 @@ to 5.9%; the totals are lower bounds. The blind sample does not cover sanctions.
 - Taksheel development note: of its 12 orders, three carry false channels (23397 INSPECTION: a noticee's inspection of
   documents; 24670 and 25585 MEDIA: a finding about media statements). None is in the blind sheet. Not fixed: fixes wait for the scoring.
 
+
+## 2026-11-17 — Week 3 checkpoint: validation scored and Gate 1 (B3–B4)
+
+`python -m src.score_validation --official` was run on the blind 150 on 2026-11-17 17:12 (`hand/validation_official.json`;
+fingerprints coding `a3c32d0309b5b825`, pipeline `c5f6f7c69211b896`). Full tables: `derived/validation_table.md`.
+Weighted figures estimate the corpus of 20,849 orders with text; intervals are bootstrap within stratum × ISO cells.
+
+| Field | Measure | n | Unweighted | Weighted | 95% CI |
+|---|---|---|---|---|---|
+| Window | Has a window: hand and pipeline agree | 150 | 120/150 (80.0%) | 72.6% | 66.6–79.1% |
+| Window | Exact, of the pipeline's windows | 110 | 85/110 (77.3%) | 89.5% | 84.2–93.9% |
+| Window | Within one month, of the pipeline's windows | 110 | 90/110 (81.8%) | 91.0% | 85.8–95.4% |
+| Window | Hand windows recovered within one month | 130 | 90/130 (69.2%) | 62.9% | 57.8–68.5% |
+| Window | Kind agrees | 105 | 91/105 (86.7%) | 93.3% | 88.5–96.9% |
+| Fraud category | Agreement · Cohen's κ | 150 | 114/150 (76.0%) · 0.69 | 80.1% · **0.74** | κ 0.64–0.83 |
+| Detection channel | Agreement · Cohen's κ | 150 | 114/150 (76.0%) · 0.60 | 77.3% · **0.63** | κ 0.47–0.77 |
+| Detection channel | κ with flagged SURVEILLANCE as UNCLEAR | 150 | 0.75 | 0.74 | 0.57–0.86 |
+| Primary issuer | Agreement | 150 | 115/150 (76.7%) | 75.5% | 67.9–82.6% |
+
+By method: regex windows 56/60 exact (93.3%); model windows 29/50 exact (58.0%), 34/50 within a month (68.0%).
+
+**Gate 1 (extraction rate 58.2% with the weaker κ, 0.63): proceed; report the drop-out and test whether missing cases
+differ systematically** (done: Cramér's V 0.34 by order type, 0.30 by year, Week 2 Day 3). Both κ are above 0.6, so
+the protocol is not rewritten and nothing is recoded. Channel κ is close to the line (unweighted 0.60, interval
+0.47–0.77), so the channel results carry that caveat.
+
+**Limits the paper must state.**
+- Windows: the pipeline's windows are right when it gives one (91% within a month, weighted), but it finds only
+  63% of the windows a human finds (25 of 150 missed, 5 spurious); the model path is the weak one.
+- Detection channel: SURVEILLANCE recall is 12 of 27 (15 read UNCLEAR), so surveillance shares are lower bounds.
+  H4 (surveillance share below 50%) leans on this; the strong-κ reading (flagged detail as UNCLEAR) is 0.74.
+- Fraud category: hand OTHER is over-assigned to MARKET_MANIPULATION (12) and DISCLOSURE_FAILURE (11) by the pipeline
+  (OTHER recall 0.44); medium-confidence category 10/27 (37%) right, high-confidence 83/95 (87%).
+- Rare classes (RPT, ACCOUNTING, FUND, INSIDER, SELF_DISCLOSURE, MEDIA) have 0–5 orders; per-class accuracy is not measurable.
+- Issuer: 35 of 150 disagree, mostly the pipeline giving no issuer where the hand coding has one (and the reverse
+  for exchange or intermediary compliance matters).
+
+B5 (fixes from `derived/validation_errors.csv`, 184 rows) is open; a second round needs a fresh draw.

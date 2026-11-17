@@ -1,0 +1,140 @@
+{
+  "scored_at": "2026-11-17T17:12:05",
+  "orders": 150,
+  "fingerprints": {
+    "coding": "a3c32d0309b5b825",
+    "pipeline": "c5f6f7c69211b896"
+  },
+  "extraction_rate": 0.5824,
+  "gate1": "Proceed; report drop-out and test whether missing cases differ systematically",
+  "headline": {
+    "win_present_agree": {
+      "n": 150,
+      "matches": 120,
+      "rate": 0.8,
+      "weighted": 0.7256,
+      "ci_low": 0.6664,
+      "ci_high": 0.7911
+    },
+    "win_exact_of_machine": {
+      "n": 110,
+      "matches": 85,
+      "rate": 0.7727,
+      "weighted": 0.895,
+      "ci_low": 0.8423,
+      "ci_high": 0.9392
+    },
+    "win_month_of_machine": {
+      "n": 110,
+      "matches": 90,
+      "rate": 0.8182,
+      "weighted": 0.9102,
+      "ci_low": 0.8575,
+      "ci_high": 0.9545
+    },
+    "win_exact_of_both": {
+      "n": 105,
+      "matches": 85,
+      "rate": 0.8095,
+      "weighted": 0.906,
+      "ci_low": 0.8561,
+      "ci_high": 0.9495
+    },
+    "win_month_of_both": {
+      "n": 105,
+      "matches": 90,
+      "rate": 0.8571,
+      "weighted": 0.9214,
+      "ci_low": 0.8682,
+      "ci_high": 0.9648
+    },
+    "win_exact_of_hand": {
+      "n": 130,
+      "matches": 85,
+      "rate": 0.6538,
+      "weighted": 0.6186,
+      "ci_low": 0.5667,
+      "ci_high": 0.6755
+    },
+    "win_month_of_hand": {
+      "n": 130,
+      "matches": 90,
+      "rate": 0.6923,
+      "weighted": 0.6291,
+      "ci_low": 0.5779,
+      "ci_high": 0.6853
+    },
+    "win_kind_agree": {
+      "n": 105,
+      "matches": 91,
+      "rate": 0.8667,
+      "weighted": 0.9333,
+      "ci_low": 0.8849,
+      "ci_high": 0.9692
+    },
+    "cat_agree": {
+      "n": 150,
+      "matches": 114,
+      "rate": 0.76,
+      "weighted": 0.8014,
+      "ci_low": 0.7286,
+      "ci_high": 0.8703
+    },
+    "cat_kappa": {
+      "n": 150,
+      "matches": 114,
+      "rate": 0.691,
+      "weighted": 0.738,
+      "ci_low": 0.6411,
+      "ci_high": 0.8261
+    },
+    "ch_agree": {
+      "n": 150,
+      "matches": 114,
+      "rate": 0.76,
+      "weighted": 0.7725,
+      "ci_low": 0.6848,
+      "ci_high": 0.8591
+    },
+    "ch_kappa": {
+      "n": 150,
+      "matches": 114,
+      "rate": 0.5976,
+      "weighted": 0.6312,
+      "ci_low": 0.4698,
+      "ci_high": 0.7709
+    },
+    "ch_stated_kappa": {
+      "n": 150,
+      "matches": 117,
+      "rate": 0.5476,
+      "weighted": 0.5715,
+      "ci_low": 0.3925,
+      "ci_high": 0.7346
+    },
+    "ch_flag_unclear_kappa": {
+      "n": 150,
+      "matches": 133,
+      "rate": 0.7471,
+      "weighted": 0.7395,
+      "ci_low": 0.5733,
+      "ci_high": 0.8608
+    },
+    "ch_detail_agree": {
+      "n": 112,
+      "matches": 100,
+      "rate": 0.8929,
+      "weighted": 0.9113,
+      "ci_low": 0.8517,
+      "ci_high": 0.9628
+    },
+    "issuer_agree": {
+      "n": 150,
+      "matches": 115,
+      "rate": 0.7667,
+      "weighted": 0.7545,
+      "ci_low": 0.6794,
+      "ci_high": 0.8258
+    }
+  }
+}
