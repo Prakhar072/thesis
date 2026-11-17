@@ -805,6 +805,59 @@ can narrow the label without re-drawing.
 
 ---
 
+## Stage 1 (Weeks 5–6)
+
+### `src/matters.py` — D1: orders grouped into matters (613 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.matters [--out DIR] [--tolerance-days 90]` (~1 min) |
+| **Reads** | orders, order_issuers, order_entities |
+| **Writes** | `derived/matters.parquet` (one row per matter), `derived/order_matters.parquet` (order → matter, and how it joined), `logs/matters.log` |
+
+**How it works.** The rules were fixed before any lag was read.
+1. Every Illiquid Stock Options order (BSE's wave; `ISO_RE`, NSE matters excluded) is one matter.
+2. Otherwise an order's keys are its matched firm, its normalised issuer name and its normalised matter heading.
+   Generic headings never link: `GENERIC_MATTER`, `GENERIC_WORDS` ("non-redressal of investor grievances",
+   "SCORES" …), and any name tied to more than one firm (`drop_shared_names`). Orders sharing a key are joined by
+   union–find.
+3. Within a linked group, windows within 90 days of each other form one matter (`merge_windows`).
+4. A windowless order joins the matter whose window started before it and ended last before it (`attached`). It
+   adds its order date, and recited actions dated after the window's start, to the first action.
+5. The matter's window runs from the earliest start to the latest end (`window_end_min` is kept for robustness).
+   The first action is the earliest order or recited SCN / interim / confirmatory date. The channel comes from
+   the earliest order stating one (rule before model). The category is the plurality, with ties broken by precedence.
+
+**Check when reviewing:** the generic-heading lists, the 90-day tolerance, the attachment rule.
+**Tests:** `test_matters.py`, 9.
+
+### `src/stage1.py` + `src/stage1.R` — Stage 1: detection lags (1,174 + 88 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.stage1 [--ownership] [--no-visibility] [--out DIR]` (~1 min; `--ownership` only after the shareholding download has finished) |
+| **Reads** | matters, order_matters, orders, universe, `prices/`, corporate_actions, market_index, `hand/validation_sample.csv` (and shareholding with `--ownership`) |
+| **Writes** | `derived/stage1/` (analysis frame, descriptives, cox, ph, aft, cause_specific, channel_shares, robustness, nonpositive, and R's truncation / CIF / Fine–Gray CSVs), `derived/stage1_numbers.json`, `paper/tables/stage1_{descriptive,models,channels,h4,finegray,robustness}.tex`, `paper/figures_stage1.pdf` (4 pages), `logs/stage1.log` |
+
+**How it works.**
+1. `T` = first action − window end, in months. Non-positive lags go to `nonpositive.csv` and are left out of the
+   models.
+2. Cohort = windows ending by 2018. Common horizon = lags up to 7.73 years (`HORIZON_MONTHS`), which gives every
+   cohort the same truncation bound. The regime test (H2) reads off the horizon model.
+3. Cox blocks are fraud, then + regime, then listed + visibility (prices in the window-end FY), then + ownership.
+   Errors are clustered by issuer firm. There are Schoenfeld tests, a category-stratified refit, and a Weibull
+   AFT (time ratios, robust errors).
+4. In R (`stage1.R`): `SurvTrunc::cdfDT` gives the truncation-adjusted distribution; `cmprsk::cuminc` and `crr` give
+   cumulative incidence and Fine–Gray by channel. Cause-specific Cox in Python is the check.
+5. H4 shares, with Wilson intervals, under three definitions of surveillance and three denominators.
+6. Robustness: window start, earliest window end, non-positive lags kept, no settlement-only matters,
+   regex/hand windows, stated periods, common horizon, the order as the unit, and the hand-coded orders.
+
+**Check when reviewing:** the cohort and horizon cut-offs, the covariate blocks, the H4 definitions.
+**Tests:** `test_stage1.py`, 8.
+
+---
+
 ## The thesis
 
 ### `src/paper_tables.py` — every table and figure in the thesis (1,024 lines)
@@ -832,7 +885,7 @@ them with `derived/paper_numbers.json` after a re-run.
 
 ---
 
-## Tests (`tests/`, 838 in all)
+## Tests (`tests/`, 855 in all)
 
 Each file tests the module of the same name.
 

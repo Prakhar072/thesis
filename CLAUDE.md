@@ -65,8 +65,11 @@ Keep it in step with the tables below when a task is done or added.
 **Scope and status (user decisions, 2026-11-17).** All three stages stay; Stage 2 or 3 is dropped only if time truly
 runs out (the runbook's Gate 2 cut rule is not applied). B5 (validation fixes) and B6 (intra-coder re-code) are skipped
 for time; the validation errors are reported as limitations. Agents build code and start downloads only when the user
-clears them; the user starts the ownership download (W4-7) themselves. Next to build, once cleared: matter grouping
-(D1), Stage 1, the finality classifier, Stage 3, then Stage 2.
+clears them; the user starts the ownership download (W4-7) themselves. **D1 decided 2026-11-17: the unit is the matter, with the order as a robustness check.** Next to build (cleared 2026-11-17): matter grouping
+(D1), Stage 1, the finality classifier, Stage 3, then Stage 2. **Built and run 2026-11-17: matter grouping
+(`src/matters.py`) and Stage 1 (`src/stage1.py` + `src/stage1.R`; first estimates in `results_log.md`).** Stage 1 is
+re-run with `--ownership` once the shareholding download (W4-7) has finished; never read `shareholding.parquet` while
+it runs (it checkpoints partial files).
 
 **Week 4 (W4-1 to W4-6 done: prices 2026-11-03, universe and matching 2026-11-04, review and freeze 2026-11-13, price
 check 2026-11-17; W4-7 and W4-8 pending), in order:**
@@ -276,7 +279,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (838 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (855 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -381,6 +384,8 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 | 15b check | `python -m src.prices --check <symbol>` | prices, corporate_actions, universe | `figures/price_check_<symbol>.png` | none |
 | 16 ownership | `python -m src.fetch_shareholding [--quarterly] [--role] [--limit]` | sample, prices (spans), BSE API (cache) | `derived/shareholding.parquet`, `logs/fetch_shareholding.log` | ≤ ~19,000 requests (~6–9 h) |
 | 17 panel | `python -m src.build_panel` | sample*, universe, prices, corporate_actions, market_index, shareholding | `derived/panel.parquet`, `derived/panel_coverage.csv`, `logs/build_panel.log` | none (~1 min) |
+| 18 matters | `python -m src.matters [--out DIR]` | orders, order_issuers, order_entities | `derived/matters.parquet`, `derived/order_matters.parquet`, `logs/matters.log` | none (~1 min) |
+| 19 stage 1 | `python -m src.stage1 [--ownership] [--out DIR]` (+ `src/stage1.R`, run by it) | matters, order_matters, orders, universe, prices, corporate_actions, market_index, `hand/validation_sample.csv` (shareholding with `--ownership`, only once its download has finished) | `derived/stage1/`, `derived/stage1_numbers.json`, `paper/tables/stage1_*.tex`, `paper/figures_stage1.pdf`, `logs/stage1.log` | none (~1 min) |
 | thesis | `python -m src.paper_tables [--sample DIR]` | orders, order_issuers, firms, universe, name_matches, price_days, prices, validation_key, sample* | `paper/tables/*.tex`, `paper/figures.pdf`, `derived/paper_numbers.json`, `logs/paper_tables.log` | none (~10 s); aggregates only, never a per-order result |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
@@ -666,6 +671,20 @@ holiday_confirmed, unreadable, missing, error`, `rows`, `url`. `derived/corporat
 `derived/shareholding.parquet` — one row per firm and quarter asked: `bse_code`, `quarter_end`, `qtrid`, `status` ∈
 `ok, empty, unparsed, error, not_cached`, `promoter_pct`, `promoter_shares`, `total_shares`, `pledged_shares`,
 `pledged_pct` (of the promoter holding), `pledge_answer`, `promoter_holders`.
+
+`derived/matters.parquet` — one row per matter (D1, 2026-11-17; 9,439, of which 4,221 with a window): `matter_id`
+(`M` + SHA-1 of the member stems), `component` (the grouping key: `ISO`, `F:<firm>`, `N:<name>`, `S:<stem>`), `key_kind`,
+`matter_name`, `issuer_firm_id`, `iso`, `n_orders`, `n_windowed`, `n_attached`, `n_wtm`/`n_ao`/`n_settlement`/`n_ed_cgm`,
+`window_start` (earliest), `window_end` (latest), `window_end_min`, `window_methods`, `window_kinds`,
+`first_action_date`, `first_action_kind` (`scn`, `interim`, `confirmatory`, `order:<type>`), `first_order_date`,
+`last_order_date`, `fraud_category` (plurality), `detection_channel`/`detection_detail` (earliest stated),
+`channel_stem`, `channels_stated` (JSON), `n_parties` (distinct names), `intermediary_noticee`, `penalty_total`,
+`settlement_total`, `debarred`, `text_stems` (JSON), `has_window`, `t_detect`/`t_resolve`/`window_years` (years).
+`derived/order_matters.parquet`: `text_stem`, `matter_id`, `link` ∈ `windowed, attached, windowless`, `component`.
+`derived/stage1/analysis.parquet` — the Stage 1 frame (one row per windowed matter): `t_months`, `t_years`, `r_years`,
+`trunc_months`, `positive`, `cohort`, `category_group`, `channel_group`, `cluster`, the covariates (`cat_*`,
+`log_parties`, `intermediary`, `log_window`, `listed`, `post_lodr`, `post_nfra`, visibility `log_turnover`,
+`log_amihud`, `nse_main`, `vis_fy`).
 
 `derived/panel.parquet` — one row per (sample firm, financial year) FY2010–2025 traded or in a window: `role`,
 `weight`, `fraud_year`, `overlap_days`, `categories`, `issuer_noticee`, `first_public_fy`, `post_public`,

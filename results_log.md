@@ -562,3 +562,55 @@ first; B5 was then skipped, so no window fix touches the sample).
 
 `python -m src.paper_tables` re-run on 2026-11-17 on the frozen sample. The funnel, corpus issuer column and cluster
 counts were refreshed, and the hand-typed numbers in `paper/paper.tex` §4 were updated to match.
+
+## 2026-11-17 — D1 decided; matter grouping; Stage 1 first estimates (`src/matters.py`, `src/stage1.py`, `src/stage1.R`)
+
+**D1 (user, 2026-11-17): the unit is the matter**, with the order as the robustness check. Rules were fixed before any
+lag was read (module docstring of `src/matters.py`). ISO is one matter. Otherwise orders are linked when they share a
+matched firm, a normalised issuer name or a normalised matter name. Generic headings are not links: 8 names tied to
+several firms, and violation-type headings such as "Non-redressal of investor grievances" (one such name had chained 278
+orders against unrelated companies), "SCORES" and "minimum public shareholding". Within a linked group, windows within
+90 days of each other form one matter, and a windowless order joins the matter whose window it follows. Two bugs were
+found and fixed before the run: an ISO pattern typo that matched only "ill-liquid", and an NSE illiquid-options matter
+(2021) swept into ISO.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders → matters | 20,861 orders: windowed 12,142 · attached 2,289 · windowless 6,430 → 9,439 matters, **4,221 with a window** | crude clusters were 4,533 |
+| Windowed matters | by key: name 1,771 · firm 1,580 · single order 869 · ISO 1; 1,664 hold more than one order | ISO = 2,436 orders in one matter |
+| First action kind | SCN 3,110 · interim 546 · an order itself 555 · confirmatory 10 | windowed matters |
+| Non-positive lags | 316 of 4,221 (7.5%); 111 turn positive with the earliest window end; most read are real (interim order on the window's last day) | `derived/stage1/nonpositive.csv`; out of the duration models |
+
+**Stage 1** (`python -m src.stage1`, 2026-11-17; `derived/stage1/`, `derived/stage1_numbers.json`,
+`paper/tables/stage1_*.tex`, `paper/figures_stage1.pdf`). Cohort = windows ending by 2018-12-31. Common horizon = lags
+up to 7.73 years (the last cohort's follow-up), so every cohort has the same truncation bound. Cox errors are clustered by
+issuer firm. The AFT has robust (not clustered) errors.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| **Median detection lag** | **all 2.54 y (IQR 1.31–4.12), n 3,905 · cohort 3.02 y (1.79–4.66), n 3,086** | positive lags |
+| Truncation-adjusted median (Efron–Petrosian, `SurvTrunc::cdfDT`) | all 2.54 → **2.82 y** (IQR 1.46–4.52) · cohort 3.02 → 3.03 y | the cohort restriction removes the bias at the median |
+| Median resolution lag (first action → latest order) | cohort 1.66 y (0.57–4.30) | no finality classifier yet: "latest order" stands in for the final order |
+| By category (cohort, median T) | MM 3.20 · disclosure 3.03 · intermediary 2.50 · insider 2.65 · diversion/accounting/RPT **4.26** · other 3.06 | |
+| By window end | to 2005 3.34 · 2006–10 2.86 · 2011–15 2.94 · 2016–18 2.39 · 2019–26 1.19 | the last two are truncated |
+| By first action (cohort) | SCN 3.20 · interim order **0.80** (26% non-positive) · an order itself 3.31 | |
+| Cox, fraud block (cohort) | diversion/accounting/RPT HR 0.63*** · intermediary misconduct 1.23*** · insider 1.21** · log parties 1.07*** · listed 0.98 | concordance 0.54 |
+| **H2: post-LODR, common horizon** | **HR 1.38 (1.24–1.54), p 2e-9; AFT time ratio 0.84; PH holds for it (p 0.46)**; n 2,887 | cohort only: HR 1.62; unrestricted: 2.52 (truncation bias, as expected); stratified by category: 1.58 |
+| Post-NFRA | HR 1.83 (1.20–2.79) on **19 matters**: not interpretable | as the paper says, the 2018 reform cannot be tested |
+| Visibility block (listed, prices in the window-end FY) | turnover HR 0.97, Amihud 0.97, NSE 1.02: all n.s.; post-LODR 1.30*** | n 878 (prices start 2004–06); market cap and ownership wait for A7 (`--ownership`) |
+| Proportional hazards | fails at 5% for most covariates in blocks 1–2 (n ≈ 3,000); in the horizon model post-LODR passes | AFT (Weibull, best AIC of Weibull 28,635 / log-logistic 29,254 / log-normal 29,856) carries the interpretation |
+| **H4: surveillance share (cohort)** | **34.2% of matters stating a channel (32.0–36.6)**; explicit alerts 9.3%; without observed patterns/filings 14.7%; bounds over all matters 16.9–67.6%; unclear 50.7% | listed-issuer issuer frauds: 39.3% of stated |
+| Cumulative incidence at 5 years (cohort) | surveillance 13.8% · inspection 12.5% · complaint 9.0% · referral 2.9% · other stated 1.3% · unclear 38.8% | `cmprsk::cuminc`, no censoring |
+| Fine–Gray, post-LODR | surveillance SHR **0.24** (p < 0.001) · complaint **1.83** (p < 0.001) · inspection 1.13 · referral 1.36 | cause-specific Cox agrees in sign (0.34 / 3.05 / 1.59 / 2.10) |
+| Robustness (cohort): median T and HR post-LODR | window start 3.91 / 1.58 · earliest window end 3.02 / 1.59 · non-positive kept 2.87 / 1.71 · no settlement-only 3.03 / 1.60 · regex/hand windows only 3.08 / 1.66 · stated periods only 3.07 / 1.68 · common horizon 2.89 / 1.38 · **order as unit 3.89 / 2.11** (n 9,651) | every variant: post-LODR HR > 1 |
+| Hand-coded check | 105 validation orders with both windows: median lag 3.33 y (hand window) vs 3.38 (pipeline); correlation 0.92; 90% within a month | same first action |
+
+**Reading (provisional).**
+- **H2 is rejected:** detection was faster for windows ending after December 2015. The indicator picks up everything
+  that changed after 2015, not LODR alone, including SEBI's 2014 powers and its data systems, so it says detection
+  sped up, not why.
+- **H4 holds** among matters that state a channel. The answer is open over all matters, because half state none, and
+  the validation found the pipeline reads surveillance as UNCLEAR (recall 12 of 27). That makes 34% a lower bound.
+- **Diversion, accounting and RPT** frauds take longest to come to light.
+
+Validation figures do not cover the lag model. 105 hand-coded orders back the window ends.

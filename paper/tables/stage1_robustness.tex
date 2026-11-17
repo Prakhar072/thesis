@@ -1,0 +1,22 @@
+\begin{tabular*}{\textwidth}[]{l@{\extracolsep\fill}rrrr}
+\toprule
+Variant & Matters & Median $T$ (IQR) & HR post-LODR & HR listed\\
+\midrule
+Main: matter, window end & 3,086 & 3.02 (1.79--4.66) & 1.62*** (1.47--1.78) & 0.94 (0.86--1.02)\\
+Window start instead of end & 3,300 & 3.91 (2.55--5.65) & 1.58*** (1.44--1.73) & 0.95 (0.87--1.04)\\
+Earliest window end of the matter's orders & 3,161 & 3.02 (1.79--4.65) & 1.59*** (1.44--1.75) & 0.93 (0.85--1.02)\\
+Non-positive lags set to one day & 3,309 & 2.87 (1.45--4.46) & 1.71*** (1.55--1.88) & 0.94 (0.86--1.03)\\
+No settlement-only matters & 2,933 & 3.03 (1.79--4.62) & 1.60*** (1.45--1.77) & 0.93 (0.85--1.02)\\
+Regex and hand windows only & 2,235 & 3.08 (1.89--4.64) & 1.66*** (1.48--1.86) & 0.93 (0.84--1.04)\\
+Stated periods only & 2,562 & 3.07 (1.88--4.64) & 1.68*** (1.51--1.87) & 0.95 (0.87--1.05)\\
+Common 7.7-year horizon & 2,887 & 2.89 (1.68--4.21) & 1.38*** (1.24--1.54) & 0.90** (0.82--0.99)\\
+Order as the unit (clustered by matter) & 9,651 & 3.89 (2.58--5.85) & 2.11*** (1.76--2.52) & 0.83*** (0.74--0.93)\\
+\midrule
+\multicolumn{5}{l}{Right truncation: naive and adjusted quantiles of $T$ (years)}\\
+All windowed matters & 3,905 & naive 1.31/2.54/4.12 & adjusted 1.46/2.82/4.52 & \\
+Cohort & 3,086 & naive 1.79/3.02/4.66 & adjusted 1.80/3.03/4.72 & \\
+\midrule
+\multicolumn{5}{l}{Hand-coded validation orders (order level)}\\
+Hand window vs pipeline window, same first action & 105 & 3.33 vs 3.38 & corr. 0.92 & 90\% within a month\\
+\bottomrule
+\end{tabular*}
