@@ -20,17 +20,24 @@ cd ~/projects/thesis && source .venv/bin/activate
 
 - **Built and run:** the corpus (20,861 orders, text for 20,849); windows, actions, parties, fraud category and
   detection channel for every order; `derived/orders.parquet` (20,861 × 71).
-- **Run by you since 2026-10-21:** prices (A1), the universe and the matcher (A2–A3), the blind sample (B1).
-- **Built, not yet run:** the scorer (needs the coding); the sample freeze, ownership and the panel.
-- **Thesis:** `paper/paper.tex` drafted on 2026-11-07 (37 pages): everything except the results. See E.
+- **Run by you since 2026-10-21:** prices (A1), the universe and the matcher (A2–A3), the match review (A4), the
+  sample freeze (A5, 13 Nov, fingerprint `342166281b7a65fa`), the blind sample, its coding and scoring (B1–B4, 17 Nov:
+  **Gate 1 = proceed**, category κ 0.74, channel κ 0.63). Price check (A6) done 17 Nov.
+- **Skipped by your decision (17 Nov, time):** B5 (validation fixes) and B6 (intra-coder re-code). The errors are
+  reported as limitations (`results_log.md`, 2026-11-17).
+- **Scope:** all three stages stay; Stage 2 or 3 is dropped only if time truly runs out (your decision, 17 Nov).
+- **Built, not yet run:** ownership (A7, you start it) and the panel (A8).
+- **Not built:** matter grouping (D1), the finality classifier, and all Stage 1–3 estimation code.
+- **Thesis:** `paper/paper.tex` drafted on 2026-11-07: everything except the results. §4 refreshed to the frozen sample
+  on 17 Nov. See E.
 - **Every function** in `src/` documents its inputs and output with their types. All 838 tests pass.
 
-**New since the draft (see `results_log.md`, 2026-11-07):**
+**Open since the draft (see `results_log.md`, 2026-11-07):**
 - **Fix the penalty reader.** 498 orders direct payment of a penalty that was not read; 14 of 14 read at random were
   real. `extract_actions` needs the fix and stages 7–11 a re-run. Sanctions are outside the blind sample, so this need not
   wait for the coding. Ask an agent.
-- **Decide Stage 2.** Gate 2 (2 November) has passed without Stage 1 results; the runbook's rule cuts Stage 2 in that case.
-  The draft keeps it in section 6.2, marked for cutting.
+- **Stage 2: decided 17 Nov: kept.** Gate 2 passed without Stage 1 results, but you chose not to apply the runbook's cut
+  rule; Stage 2 goes only if time runs out.
 - **Two steps the estimates need are not built:** matter grouping (D1) and the finality classifier (interim / final).
 - **Add the paper behind Damle and Zaveri Shah.** The thesis cites their blog post and dataset; SSRN 4198772 blocked
   automated reading, so its exact title is unconfirmed.
@@ -124,8 +131,8 @@ This takes about 35 seconds. The log should show about 8,600 orders with a match
 to `hand/match_review.csv` for your review.
 
 ### A4. Review the borderline matches
-- [ ] Reviewed
-- [ ] Re-ran the matcher
+- [x] Reviewed (all 564; 13 Nov)
+- [x] Re-ran the matcher
 
 **Why.** Names that score 80–92 against a listed company, or that look alike for other reasons, are neither
 accepted nor rejected automatically. Each decision can add or remove a fraud firm.
@@ -159,9 +166,9 @@ accepted nor rejected automatically. Each decision can add or remove a fraud fir
 can wait.
 
 ### A5. Freeze the analysis sample
-- [ ] D2 decided
-- [ ] Frozen
-- [ ] Recorded
+- [x] D2 decided (froze first)
+- [x] Frozen (13 Nov, fingerprint `342166281b7a65fa`)
+- [x] Recorded (`results_log.md`, 17 Nov)
 
 **Why.** The sample (fraud firms, their firm-years, 600 weighted control firms, enforcement events) decides which
 firms get ownership data. The runbook says it must not change afterwards.
@@ -179,7 +186,7 @@ This runs once. It refuses to overwrite a frozen sample.
 Then commit `hand/sample_frozen.csv`.
 
 ### A6. Sanity-check the prices
-- [ ] Done
+- [x] Done (17 Nov: TATASTEEL and 532532 clean; `results_log.md`)
 
 The runbook asks you to "plot one well-known scrip over ten years and look at it". After A1 has finished:
 
@@ -253,8 +260,8 @@ From now until B3, don't browse `derived/orders.parquet` or the `order_*` tables
 coding must be blind to the pipeline's answers.
 
 ### B2. Hand-code the 150 orders
-- [ ] Sitting 1 (rows 1–75)
-- [ ] Sitting 2 (rows 76–150)
+- [x] Sitting 1 (rows 1–75)
+- [x] Sitting 2 (rows 76–150)
 
 **Set-up.** Open `hand/coding_protocol.md` and the folder of copies:
 `explorer.exe "$(wslpath -w hand/validation_pdfs)"`. Each row's `local_file` names its copy, and the copies are
@@ -286,7 +293,7 @@ dates never count.
 - Do the two sittings on different days.
 
 ### B3. Score the coding
-- [ ] Done
+- [x] Done (17 Nov, `hand/validation_official.json`)
 
 ```bash
 python -m src.score_validation --official
@@ -305,7 +312,7 @@ This writes:
 If it refuses, it says why. Either rows are still uncoded, or the sheet has errors that `--check` lists.
 
 ### B4. Record the Week 3 checkpoint
-- [ ] Done
+- [x] Done (17 Nov: Gate 1 = proceed)
 
 1. Copy the headline table and the Gate 1 line from `derived/validation_table.md` into `results_log.md`.
 2. Write the Gate 1 decision in your own words. The runbook's table:
@@ -317,7 +324,7 @@ If it refuses, it says why. Either rows are still uncoded, or the sheet has erro
 3. Commit `hand/validation_sample.csv` and `hand/validation_official.json`.
 
 ### B5. Fix the systematic errors
-- [ ] Done
+- [ ] Skipped (your decision, 17 Nov: time). Errors reported as limitations
 
 1. Open `derived/validation_errors.csv` and sort by `field` and `error`.
 2. Look for patterns: three or more disagreements of one kind (a phrasing the regex misreads, a category rule that
@@ -329,7 +336,7 @@ If it refuses, it says why. Either rows are still uncoded, or the sheet has erro
 second round, a fresh sample has to be drawn (an agent can build that draw).
 
 ### B6. Later, in Week 6: intra-coder reliability
-- [ ] Done
+- [ ] Skipped (your decision, 17 Nov: time)
 
 Re-code 30 of the 150 orders without looking at your first coding, then report agreement and κ between your two
 codings. An agent can build the re-code sheet.
@@ -388,7 +395,7 @@ regulatory action". SEBI issues one order per noticee in mass matters, so:
 matters from dominating. It needs a matter-grouping step, which an agent can build in about a day.
 
 ### D2. When to freeze the sample
-- [ ] Decided
+- [x] Decided: froze right after A4
 
 | Option | What happens |
 |---|---|
@@ -427,8 +434,8 @@ The runbook wants event-study controls matched on industry, size and pre-event r
 
 - [x] Data: sources and corpus (drafted 2026-11-07)
 - [x] Data: extraction and coding (drafted 2026-11-07)
-- [ ] Data: validation (design drafted; results wait for B3)
-- [ ] Data: sample, matching and coverage (drafted from the dry run; refresh after A5 and A8)
+- [ ] Data: validation (design drafted; results in `derived/validation_table.md` and `results_log.md`, 17 Nov, to write in)
+- [ ] Data: sample, matching and coverage (refreshed to the frozen sample 17 Nov; coverage after A8)
 - [x] Introduction and framework (drafted 2026-11-07; tighten at the end)
 - [ ] Stage 1 results (by Gate 2, 2 November)
 - [ ] Stage 3 results (Week 7)

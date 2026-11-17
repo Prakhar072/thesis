@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.25)  7 NOV 2026 10:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.25)  17 NOV 2026 17:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1516,32 +1516,32 @@ live/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolD.enc}]
 <figures.pdf, id=456, page=1, 426.39299pt x 195.129pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 1>
-Package pdftex.def Info: figures.pdf , page1 used on input line 327.
+Package pdftex.def Info: figures.pdf , page1 used on input line 325.
 (pdftex.def)             Requested size: 426.39194pt x 195.12851pt.
 
 (./tables/categories.tex) [18 <./figures.pdf>]
 <figures.pdf, id=528, page=5, 426.39299pt x 231.26399pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 5>
-Package pdftex.def Info: figures.pdf , page5 used on input line 345.
+Package pdftex.def Info: figures.pdf , page5 used on input line 343.
 (pdftex.def)             Requested size: 426.39194pt x 231.26341pt.
  (./tables/sanctions.tex)
 (./tables/lags.tex) [19]
 <figures.pdf, id=543, page=2, 205.9695pt x 169.8345pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 2>
-Package pdftex.def Info: figures.pdf , page2 used on input line 371.
+Package pdftex.def Info: figures.pdf , page2 used on input line 369.
 (pdftex.def)             Requested size: 205.96898pt x 169.83408pt.
 <figures.pdf, id=544, page=3, 205.9695pt x 169.8345pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 3>
-Package pdftex.def Info: figures.pdf , page3 used on input line 372.
+Package pdftex.def Info: figures.pdf , page3 used on input line 370.
 (pdftex.def)             Requested size: 205.96898pt x 169.83408pt.
  [20 <./figures.pdf>]
 <figures.pdf, id=616, page=4, 426.39299pt x 195.129pt>
 File: figures.pdf Graphic file (type pdf)
 <use figures.pdf, page 4>
-Package pdftex.def Info: figures.pdf , page4 used on input line 384.
+Package pdftex.def Info: figures.pdf , page4 used on input line 382.
 (pdftex.def)             Requested size: 426.39194pt x 195.12851pt.
  (./tables/channels.tex) [21]
 [22] [23 <./figures.pdf> <./figures.pdf>] [24 <./figures.pdf>] [25] [26{/usr/sh
@@ -1566,11 +1566,11 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: A78534D123C59509D99766D4924448C0;7982.
  ) 
 Here is how much of TeX's memory you used:
- 33097 strings out of 467533
- 603859 string characters out of 5422138
+ 33103 strings out of 467533
+ 604054 string characters out of 5422138
  1002792 words of memory out of 5000000
  60752 multiletter control sequences out of 15000+600000
- 1365046 words of font info for 480 fonts, out of 8000000 for 9000
+ 1365720 words of font info for 484 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  89i,12n,131p,1309b,789s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/mnsymbol/MnSymbol10.pfb></u
@@ -1584,7 +1584,7 @@ urceserifpro/SourceSerifPro-Regular.pfb></usr/share/texlive/texmf-dist/fonts/ty
 pe1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/pub
 lic/amsfonts/euler/eurb10.pfb></usr/share/texlive/texmf-dist/fonts/type1/public
 /amsfonts/euler/eurm10.pfb>
-Output written on paper.pdf (37 pages, 438292 bytes).
+Output written on paper.pdf (37 pages, 438412 bytes).
 PDF statistics:
  906 PDF objects out of 1000 (max. 8388607)
  723 compressed objects within 8 object streams

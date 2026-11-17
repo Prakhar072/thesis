@@ -1,8 +1,7 @@
 # CLAUDE.md — briefing for AI agents working on this repository
 
-Last updated: 2026-11-07 (thesis drafted in `paper/paper.tex`, results still to come; prices, universe, matching and the
-blind draw are run; the Week 3 hand coding and the rest of Week 4 are the user's). Read this before touching
-code or data.
+Last updated: 2026-11-17 (Week 3 validation coded and scored, Gate 1 = proceed; sample frozen 2026-11-13; price check
+done; ownership and panel pending; no Stage 1–3 estimation code yet). Read this before touching code or data.
 Companion docs: `TASKS.md` (**the user's remaining tasks, in order, with instructions**), `CODE_GUIDE.md` (every file:
 what it does, inputs/outputs, key functions, what to check), `timeline.md` (the thesis runbook: weekly plan, 8 rules,
 target schema), `technical_plan.md` (the thesis design: stages, estimators, hypotheses),
@@ -51,7 +50,7 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
   "SEBI examined the matter" without dates must be kept distinct from a stated
   examination period.
 
-## 2. Status (thesis drafted; Week 3 hand coding and the Week 4 freeze pending)
+## 2. Status (thesis drafted; validation scored, sample frozen; ownership, panel and Stages 1–3 pending)
 
 **Thesis (2026-11-07):** `paper/paper.tex` holds everything except the results. `python -m src.paper_tables` writes
 `paper/tables/*.tex`, `paper/figures.pdf` and `derived/paper_numbers.json`; `grep -n UPDATE paper/paper.tex` lists what
@@ -63,16 +62,23 @@ changes as results arrive. It has no Stage 1–3 estimates and no validation fig
 match and review, freeze, code the 150, score, ownership download, panel; decisions D1–D5; code review; writing).
 Keep it in step with the tables below when a task is done or added.
 
-**Pending on the user (Week 4; W4-1 to W4-3 are done, run 2026-11-03/04; the rest are not), in order:**
+**Scope and status (user decisions, 2026-11-17).** All three stages stay; Stage 2 or 3 is dropped only if time truly
+runs out (the runbook's Gate 2 cut rule is not applied). B5 (validation fixes) and B6 (intra-coder re-code) are skipped
+for time; the validation errors are reported as limitations. Agents build code and start downloads only when the user
+clears them; the user starts the ownership download (W4-7) themselves. Next to build, once cleared: matter grouping
+(D1), Stage 1, the finality classifier, Stage 3, then Stage 2.
+
+**Week 4 (W4-1 to W4-6 done: prices 2026-11-03, universe and matching 2026-11-04, review and freeze 2026-11-13, price
+check 2026-11-17; W4-7 and W4-8 pending), in order:**
 
 | # | Step | Command | Time | Needs |
 |---|---|---|---|---|
 | W4-1 ✓ | Prices — start first, it is the longest and depends on nothing else | `setsid nohup .venv/bin/python -m src.fetch_prices > logs/fetch_prices.out 2>&1 &` | ~7–8 h (≈12,200 requests, 2004-01-01 → yesterday; resumable: re-run reads the cache) | network (NSE, BSE) |
 | W4-2 ✓ | Listed universe | `python -m src.universe` | seconds (its 7 snapshots are already cached, 2026-10-14) | — |
 | W4-3 ✓ | Matching | `python -m src.match_entities` | ~35 s; writes `hand/match_review.csv` (564 names) | W4-2 |
-| W4-4 | **Hand review** of the 80–92 band | fill `decision` in `hand/match_review.csv` (`accept` / `reject` / a `firm_id` from the candidates), most-used names first; then re-run W4-3 | ~2 h (runbook) | W4-3 |
-| W4-5 | Freeze the sample | `python -m src.build_sample` (once; refuses to overwrite) | ~15 s | W4-4 |
-| W4-6 | Price sanity check | `python -m src.prices --check TATASTEEL` → `figures/price_check_TATASTEEL.png`; look at it | seconds | W4-1, W4-2 |
+| W4-4 ✓ | **Hand review** of the 80–92 band (all 564 decided: accept 251, reject 296, other `firm_id` 17) | fill `decision` in `hand/match_review.csv` (`accept` / `reject` / a `firm_id` from the candidates), most-used names first; then re-run W4-3 | ~2 h (runbook) | W4-3 |
+| W4-5 ✓ | Freeze the sample (2026-11-13, fingerprint `342166281b7a65fa`: 1,254 fraud firms, 3,424 fraud firm-years, 2,430 in FY2010–2025, 600 controls of 5,767, weight 9.61, 7,461 events) | `python -m src.build_sample` (once; refuses to overwrite) | ~15 s | W4-4 |
+| W4-6 ✓ | Price sanity check (TATASTEEL and 532532 clean) | `python -m src.prices --check TATASTEEL` → `figures/price_check_TATASTEEL.png`; look at it | seconds | W4-1, W4-2 |
 | W4-7 | Ownership | `setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholding.out 2>&1 &` | ~6–9 h (≤ 11 March quarters × 1,732 firms; fewer once prices exist) | W4-1, W4-5 |
 | W4-8 | Merge, coverage table | `python -m src.build_panel` → record `derived/panel_coverage.csv` in `results_log.md` | ~1 min | all |
 
@@ -81,19 +87,18 @@ repeat SEBI's titles, which the blind validation sheet shows anyway, so the anch
 small. A frozen sample is not changed by later Week 3 window fixes: re-label fraud years from fixed windows as a
 documented robustness check, or wait to freeze until the validation fixes are in (user's call).
 
-**Pending on the user (Week 3; deferred by their choice on 2026-10-14; nothing here has been run):**
+**Week 3 validation (done 2026-11-17; `results_log.md`, Week 3 checkpoint):**
 
 | # | Step | Command / file | State |
 |---|---|---|---|
-| 1 | Draw the blind sample (Days 3–4) | `python -m src.validation_sample` (seconds; once — refuses to overwrite a started sheet) | done 2026-11-04; the sheet is uncoded |
-| 2 | Hand-code the 150 (Days 3–4, ~7 h, two sittings) | `hand/validation_sample.csv`, from the copies, with `hand/coding_protocol.md` open; `python -m src.validation_sample --check` as you go | not started |
-| 3 | Score (Day 5) | `python -m src.score_validation --official` | not run (needs 1–2) |
-| 4 | Record the figures and the Gate 1 decision | `results_log.md` (Week 3 checkpoint) | open |
-| 5 | Fix systematic errors from `derived/validation_errors.csv`, re-run; a second round needs a fresh draw | — | open |
+| 1 | Draw the blind sample | `python -m src.validation_sample` | done 2026-11-04 |
+| 2 | Hand-code the 150 | `hand/validation_sample.csv` | done 2026-11-17 |
+| 3 | Score | `python -m src.score_validation --official` | done 2026-11-17 (`hand/validation_official.json`, coding `a3c32d0309b5b825`, pipeline `c5f6f7c69211b896`) |
+| 4 | Figures and Gate 1 | `results_log.md` | **Gate 1 = proceed** (extraction 58.2%; weighted κ category 0.74, channel 0.63) |
+| 5 | Fix systematic errors | `derived/validation_errors.csv` (184 rows) | **skipped** (user, time); reported as limitations |
 
-**Agents must not show the pipeline's answer for any sampled order** (the coding is blind until it is scored): no
-per-order output from `derived/` for ids in the sheet or the key. Until the coding is scored, Day 5's numbers, its
-fixes and the Gate 1 decision are open; work that does not depend on them (Week 4) goes ahead.
+The coding is scored, so the blind rule is lifted. Any later scoring after a pipeline change is labelled NOT THE
+VALIDATION, and a second validation round would need a fresh draw.
 
 **Week 4 (built 2026-10-14; scratch figures in `results_log.md`):**
 - **Day 1, `src/universe.py` + `src/names.py`.** BSE scrip lists (active, delisted, suspended), NSE equity and SME

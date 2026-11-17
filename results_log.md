@@ -525,3 +525,40 @@ the protocol is not rewritten and nothing is recoded. Channel κ is close to the
   for exchange or intermediary compliance matters).
 
 B5 (fixes from `derived/validation_errors.csv`, 184 rows) is open; a second round needs a fresh draw.
+
+## 2026-11-13 / 2026-11-17 — Week 4: matcher after hand review, sample frozen (A4–A5), price check (A6)
+
+**Hand review (A4) and matcher re-run** (`python -m src.match_entities`, 2026-11-13 10:45; `logs/match_entities.log`).
+All 564 review names decided: accept 251 · reject 296 · another candidate's `firm_id` 17.
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Orders matched to a listed firm | 8,862 (42.5% of orders with text) | was 8,599 (41.2%) before the review |
+| Windowed orders matched | 5,758 of 12,142 | was 5,613 |
+| Issuer methods | exact 8,101 · auto 443 · hand 263 · code 55 · hand_reject 319 · private 771 · none 10,909 | 13,314 orders name an issuer |
+| Distinct issuer firms | 2,286 (windowed orders: 1,254) | |
+| Company parties | 16,936: exact 3,218 · hand 202 · auto 162 · hand_reject 330 · private 7,503 · none 5,521 | |
+
+**Sample frozen (A5)** (`python -m src.build_sample`, 2026-11-13 10:47; `logs/build_sample.log`; committed `hand/sample_frozen.csv`
+in `ec9e478`). **Fingerprint `342166281b7a65fa`.** Frozen after the hand review and before any validation fix (D2: freeze
+first; B5 was then skipped, so no window fix touches the sample).
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| Fraud firms | 1,254 (Active 692 · Delisted 426 · Suspended 136); 958 with a firm-year in FY2010–2025 | dry run: 1,221 |
+| Fraud firm-years | 3,424; in FY2010–2025 2,430; issuer a noticee 1,514 (in period 1,126); stated period only 2,058 | dry run: 3,357 / 2,387 |
+| Controls | 600 of 5,767 eligible, weight 9.61 (Active 432 · Delisted 142 · Suspended 26) | dry run: 5,709, 9.52 |
+| Events | 7,461 (orders 7,075 · interim recited 386), 1997-02-04 to 2026-09-22 | dry run: 7,243 |
+| In-period fraud firm-years before FY2016 (no ownership) | 1,310 of 2,430 | `sample_fraud_years`, `fy < 2016` |
+| Firms with at least one price | fraud 93.6% · control 88.2% | `derived/paper_numbers.json` |
+| Matter clusters (crude) | 4,533, 1,417 with more than one order; cohort (window end ≤ 2018) 3,602; matched excl. ISO 5,255 | `paper_tables`; were 4,558 / 1,416 / 3,627 / 5,113 |
+
+**Price check (A6)** (`python -m src.prices --check`, 2026-11-17; `figures/price_check_*.png`, looked at).
+- TATASTEEL (NSE, 2014–2024), 2,711 days: the raw −89.5% on the 28 Jul 2022 1:10 split adjusts to +4.6%. The adjusted
+  series has no cliff. Next largest raw moves are ±12–14% (13 Mar 2020, 15 Feb 2016, 24 Aug 2015, 23 May 2022).
+- Jaiprakash Associates (BSE 532532, 2014–2024), 2,641 days, no splits or bonuses in range; largest move +28.0% (5 Jul 2016).
+  Trading thins out in late 2024 (insolvency).
+- Days beyond +100% / −50% after adjustment: 0 for both.
+
+`python -m src.paper_tables` re-run on 2026-11-17 on the frozen sample. The funnel, corpus issuer column and cluster
+counts were refreshed, and the hand-typed numbers in `paper/paper.tex` §4 were updated to match.

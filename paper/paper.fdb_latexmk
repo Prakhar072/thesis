@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex paper"] 1794046773.1411 "paper.aux" "paper.bbl" "paper" 1794046774.88653 0
+["bibtex paper"] 1794936426.27432 "paper.aux" "paper.bbl" "paper" 1794936427.86617 0
   "./paper.bib" 1794045892.50361 8832 f394eb92f355cf117fb6420d1eaa55b2 ""
   "./paper.bst" 1790333073.85076 30065 f0c12868970347fc92f221b0f6417720 ""
-  "paper.aux" 1794046774.52334 19977 9fa660c789c8909377b0361991c46d76 "pdflatex"
+  "paper.aux" 1794936427.51814 19977 0c849935a3cfc780c7214a67338db4e9 "pdflatex"
   (generated)
   "paper.bbl"
   "paper.blg"
   (rewritten before read)
-["pdflatex"] 1794046773.26772 "paper.tex" "paper.pdf" "paper" 1794046774.88673 0
+["pdflatex"] 1794936426.39572 "paper.tex" "paper.pdf" "paper" 1794936427.86638 0
   "/etc/texmf/web2c/texmf.cnf" 1790331341.47242 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolC.enc" 1177804218 3275 8d7166dfdbc31ffdc8aba0c31b3bd5c8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/mnsymbol/MnSymbolD.enc" 1177804218 3375 808c88761dbdc66fc653d18f42765b64 ""
@@ -298,21 +298,21 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1769369718 41603 27f93b3067076450172040dcd57ca8b3 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1790331376 5541477 3118940318599480888143717dd32d64 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1790331417 3640185 24f505f026c55d78c38e9fb19bdb5ec8 ""
-  "figures.pdf" 1794046463.88344 38046 d868217b4d64bb12000de3c205dc3e1f ""
-  "paper.aux" 1794046774.52334 19977 9fa660c789c8909377b0361991c46d76 "pdflatex"
-  "paper.bbl" 1794046773.25934 8279 6d4ae413713693f96d1d8eef93387f5f "bibtex paper"
-  "paper.out" 1794046774.52334 7982 a78534d123c59509d99766d4924448c0 "pdflatex"
+  "figures.pdf" 1794936351.67016 38046 a2774cc7a48fa7f5ecb8f02506880b9e ""
+  "paper.aux" 1794936427.51814 19977 0c849935a3cfc780c7214a67338db4e9 "pdflatex"
+  "paper.bbl" 1794936426.38214 8279 6d4ae413713693f96d1d8eef93387f5f "bibtex paper"
+  "paper.out" 1794936427.52214 7982 a78534d123c59509d99766d4924448c0 "pdflatex"
   "paper.sty" 1790333073.86446 7692 852fa0936ab43d2ff1534f0a13fbdbd9 ""
-  "paper.tex" 1794046773.05534 84349 88cd91027b86bf2595900a23558020d7 ""
-  "paper.toc" 1794046774.52334 6343 54254a41e035bd6adb1fb9cf240a7ece "pdflatex"
-  "tables/categories.tex" 1794046462.97544 693 22f827f970fa8a5d49ded99e0995fb92 ""
-  "tables/channels.tex" 1794046462.97544 852 3d83a4bfbf3e6bc8f68fdabcc6807d57 ""
-  "tables/corpus.tex" 1794046462.97544 558 1ef122a03c8c683ca9ee49b5373b209a ""
-  "tables/funnel.tex" 1794046462.97944 635 21eb8e4d9c2577f295fe1cea4c10b5cd ""
-  "tables/lags.tex" 1794046462.97544 1467 2217e7b65de27fb36214ec9bd96fff5e ""
-  "tables/sanctions.tex" 1794046462.97544 635 d6d1e15bf73dbf366f61261057ab0259 ""
-  "tables/validation.tex" 1794046462.97544 544 9450dc6622a639fb56365061d2adbb73 ""
-  "tables/windows.tex" 1794046462.97544 1056 dc6c16d575d023e5007f76a52309e61f ""
+  "paper.tex" 1794936417.74215 84194 e5081a6750671cd028e7f556394938d9 ""
+  "paper.toc" 1794936427.52214 6343 54254a41e035bd6adb1fb9cf240a7ece "pdflatex"
+  "tables/categories.tex" 1794936350.77016 693 22f827f970fa8a5d49ded99e0995fb92 ""
+  "tables/channels.tex" 1794936350.77016 852 3d83a4bfbf3e6bc8f68fdabcc6807d57 ""
+  "tables/corpus.tex" 1794936350.77016 558 c096d7c85a4d936e9f0407ae12070546 ""
+  "tables/funnel.tex" 1794936350.77416 635 ef1c9bf40c6aef8a99dbad5211fddd3b ""
+  "tables/lags.tex" 1794936350.77416 1467 d7ba7baa777baaee0eb92bbb36a2fc0c ""
+  "tables/sanctions.tex" 1794936350.77416 635 d6d1e15bf73dbf366f61261057ab0259 ""
+  "tables/validation.tex" 1794936350.77016 544 9450dc6622a639fb56365061d2adbb73 ""
+  "tables/windows.tex" 1794936350.77016 1056 dc6c16d575d023e5007f76a52309e61f ""
   (generated)
   "paper.aux"
   "paper.log"
