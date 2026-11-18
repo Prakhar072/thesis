@@ -54,7 +54,7 @@ and fraud prediction (Stage 2) — see `timeline.md` and `technical_plan.md`.
 
 **Thesis (2026-11-07):** `paper/paper.tex` holds everything except the results. `python -m src.paper_tables` writes
 `paper/tables/*.tex`, `paper/figures.pdf` and `derived/paper_numbers.json`; `grep -n UPDATE paper/paper.tex` lists what
-changes as results arrive. It has no Stage 1–3 estimates and no validation figures: never add one that is not in
+changes as results arrive. It now reports Stage 1–3 estimates and the validation (§7, §4.8): never add a figure that is not in
 `results_log.md`. Prior work exists (`results_log.md`, 2026-11-07): do not reuse `technical_plan.md`'s "no dataset exists" or
 "first evidence" claims, or its Taksheel "two and a half years to first action" (the interim order came in the window's last days).
 
@@ -66,7 +66,10 @@ Keep it in step with the tables below when a task is done or added.
 runs out (the runbook's Gate 2 cut rule is not applied). B5 (validation fixes) and B6 (intra-coder re-code) are skipped
 for time; the validation errors are reported as limitations. Agents build code and start downloads only when the user
 clears them; the user starts the ownership download (W4-7) themselves. **D1 decided 2026-11-17: the unit is the matter, with the order as a robustness check.** Next to build (cleared 2026-11-17): matter grouping
-(D1), Stage 1, the finality classifier, Stage 3, then Stage 2. **Built and run 2026-11-17: matter grouping
+(D1), Stage 1, the finality classifier, Stage 3, then Stage 2. **2026-11-18: A7 and A8 done (ownership, panel); Stage 1
+re-run with `--ownership`; finality classifier, Stage 3, Stage 2 and the synthesis (S*) built and run (results in
+`results_log.md`). Results, abstract, discussion and conclusion written into `paper/paper.tex` (18 Nov). Next: the
+coverage table in §4, the user's cold read, revision and final checks (runbook Week 10).** **Built and run 2026-11-17: matter grouping
 (`src/matters.py`) and Stage 1 (`src/stage1.py` + `src/stage1.R`; first estimates in `results_log.md`).** Stage 1 is
 re-run with `--ownership` once the shareholding download (W4-7) has finished; never read `shareholding.parquet` while
 it runs (it checkpoints partial files).
@@ -82,8 +85,8 @@ check 2026-11-17; W4-7 and W4-8 pending), in order:**
 | W4-4 ✓ | **Hand review** of the 80–92 band (all 564 decided: accept 251, reject 296, other `firm_id` 17) | fill `decision` in `hand/match_review.csv` (`accept` / `reject` / a `firm_id` from the candidates), most-used names first; then re-run W4-3 | ~2 h (runbook) | W4-3 |
 | W4-5 ✓ | Freeze the sample (2026-11-13, fingerprint `342166281b7a65fa`: 1,254 fraud firms, 3,424 fraud firm-years, 2,430 in FY2010–2025, 600 controls of 5,767, weight 9.61, 7,461 events) | `python -m src.build_sample` (once; refuses to overwrite) | ~15 s | W4-4 |
 | W4-6 ✓ | Price sanity check (TATASTEEL and 532532 clean) | `python -m src.prices --check TATASTEEL` → `figures/price_check_TATASTEEL.png`; look at it | seconds | W4-1, W4-2 |
-| W4-7 | Ownership | `setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholding.out 2>&1 &` | ~6–9 h (≤ 11 March quarters × 1,732 firms; fewer once prices exist) | W4-1, W4-5 |
-| W4-8 | Merge, coverage table | `python -m src.build_panel` → record `derived/panel_coverage.csv` in `results_log.md` | ~1 min | all |
+| W4-7 ✓ | Ownership | `setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholding.out 2>&1 &` | ~6–9 h (≤ 11 March quarters × 1,732 firms; fewer once prices exist) | W4-1, W4-5 |
+| W4-8 ✓ | Merge, coverage table | `python -m src.build_panel` → record `derived/panel_coverage.csv` in `results_log.md` | ~1 min | all |
 
 Run the fetches one at a time (both hit BSE). The review sheet shows the issuer names the pipeline read; they mostly
 repeat SEBI's titles, which the blind validation sheet shows anyway, so the anchoring risk for `primary_issuer` is
@@ -279,7 +282,7 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
    and long-running commands themselves and commits manually. Agents build,
    test, and dry-run into a scratch directory (`extract_text --scratch DIR`),
    then hand over exact commands. Ask before any run that hits SEBI's servers.
-8. Keep `python -m pytest tests -q` green (855 tests at time of writing).
+8. Keep `python -m pytest tests -q` green (872 tests at time of writing).
 9. Record any new figure in `results_log.md` with date, script and scope.
 10. **`hand/coding_protocol.md` changes only through its change log** (date, section, change, reason,
     orders already coded that are affected). Once validation coding starts, a rule change means
@@ -386,6 +389,11 @@ Agent review (not blind): party lists right in 15 of 18 random orders with parti
 | 17 panel | `python -m src.build_panel` | sample*, universe, prices, corporate_actions, market_index, shareholding | `derived/panel.parquet`, `derived/panel_coverage.csv`, `logs/build_panel.log` | none (~1 min) |
 | 18 matters | `python -m src.matters [--out DIR]` | orders, order_issuers, order_entities | `derived/matters.parquet`, `derived/order_matters.parquet`, `logs/matters.log` | none (~1 min) |
 | 19 stage 1 | `python -m src.stage1 [--ownership] [--out DIR]` (+ `src/stage1.R`, run by it) | matters, order_matters, orders, universe, prices, corporate_actions, market_index, `hand/validation_sample.csv` (shareholding with `--ownership`, only once its download has finished) | `derived/stage1/`, `derived/stage1_numbers.json`, `paper/tables/stage1_*.tex`, `paper/figures_stage1.pdf`, `logs/stage1.log` | none (~1 min) |
+| 20 finality | `python -m src.classify_finality [--out DIR]` | orders, `derived/text/` | `derived/order_finality.parquet`, `logs/classify_finality.log` | none (seconds) |
+| 21 stage 3 | `python -m src.stage3 [--out DIR]` | sample_events, order_finality, orders, order_entities, entity_matches, universe, prices, corporate_actions, market_index, panel | `derived/stage3/`, `derived/stage3_numbers.json`, `paper/tables/stage3_*.tex`, `paper/figures_stage3.pdf`, `logs/stage3.log` | none (~1 min) |
+| 22 stage 2 | `python -m src.stage2 [--out DIR]` | panel | `derived/stage2/`, `derived/stage2_numbers.json`, `paper/tables/stage2_*.tex`, `paper/figures_stage2.pdf`, `logs/stage2.log` | none (seconds) |
+| 22b partial obs. | `python -m src.partial_observability` | stage2/frame, panel | `paper/tables/stage2_partial.tex`, `derived/partial_observability.json` | none (seconds) |
+| 23 synthesis | `python -m src.synthesis` | stage1_numbers, stage3 outputs, panel, orders | `paper/tables/synthesis.tex`, `derived/synthesis_numbers.json`, `logs/synthesis.log` | none (seconds) |
 | thesis | `python -m src.paper_tables [--sample DIR]` | orders, order_issuers, firms, universe, name_matches, price_days, prices, validation_key, sample* | `paper/tables/*.tex`, `paper/figures.pdf`, `derived/paper_numbers.json`, `logs/paper_tables.log` | none (~10 s); aggregates only, never a per-order result |
 
 Full offline rebuild of `derived/` from `raw/` (no network):
@@ -685,6 +693,17 @@ holiday_confirmed, unreadable, missing, error`, `rows`, `url`. `derived/corporat
 `trunc_months`, `positive`, `cohort`, `category_group`, `channel_group`, `cluster`, the covariates (`cat_*`,
 `log_parties`, `intermediary`, `log_window`, `listed`, `post_lodr`, `post_nfra`, visibility `log_turnover`,
 `log_amihud`, `nse_main`, `vis_fy`).
+
+`derived/order_finality.parquet` — one row per order (`finality-v1`): `finality` ∈ `INTERIM, CONFIRMATION_OR_EXTENSION,
+FINAL, SETTLEMENT_FINAL, OTHER` (takeover exemptions, corrigenda), `UNKNOWN`; `finality_source` ∈ `type, title, text,
+none`; `finality_rule`; `finality_confidence`; `finality_raw` (the phrase); `title_label`; `text_label` (WTM, for the
+silver check); `rules_version`.
+`derived/stage3/events.parquet` — one row per typed event: `firm_id`, `event_date`, `kind`, `event_type` ∈ `INTERIM,
+CONFIRMATION, FINAL, SETTLEMENT`, `text_stems`, `first_public`, `first_of_type`, `penalty`, `issuer_penalty`, `debarred`,
+`promoter_named`, `issuer_noticee`, `category`, `firm_penalty_total`, `firm_issuer_penalty_total`.
+`derived/stage3/estimation.parquet` (per event: `status` ∈ `ok, thin, no_prices, suspended, price_jump, out_of_range`,
+`traded_share`, `alpha`, `beta` (Dimson), `beta_ols`, `sigma`, `day0`) and `derived/stage3/cars.parquet` (`event_id` =
+row of `events`, `window`, `car`, `scar`).
 
 `derived/panel.parquet` — one row per (sample firm, financial year) FY2010–2025 traded or in a window: `role`,
 `weight`, `fraud_year`, `overlap_days`, `categories`, `issuer_noticee`, `first_public_fy`, `post_public`,

@@ -1,0 +1,25 @@
+\begin{tabular*}{\textwidth}[]{l@{\extracolsep\fill}rrrrrrr}
+\toprule
+ & AUC & AUPRC & Base rate & Recall@402 (\%) & Random (\%) & Lift & $p$ vs random\\
+\midrule
+\multicolumn{8}{l}{Market, split 2018: train 6,807 firm-years (1,418 fraud), test 3,777 (397)}\\
+Logit & 0.650 & 0.036 & 0.017 & 26.7 & 12.2 & 2.18 & $<$0.001\\
+LASSO logit & 0.650 & 0.036 & 0.017 & 26.7 & 12.2 & 2.18 & $<$0.001\\
+Gradient boosting & 0.665 & 0.038 & 0.017 & 25.1 & 12.2 & 2.05 & $<$0.001\\
+\midrule
+\multicolumn{8}{l}{Market, split 2020: train 8,086 firm-years (1,584 fraud), test 2,498 (231)}\\
+Logit & 0.634 & 0.030 & 0.014 & 24.8 & 12.1 & 2.06 & $<$0.001\\
+LASSO logit & 0.629 & 0.030 & 0.014 & 24.8 & 12.1 & 2.05 & $<$0.001\\
+Gradient boosting & 0.645 & 0.032 & 0.014 & 22.2 & 12.1 & 1.84 & $<$0.001\\
+\midrule
+\multicolumn{8}{l}{Market + ownership, split 2020: train 2,850 firm-years (457 fraud), test 2,498 (231)}\\
+Logit & 0.601 & 0.026 & 0.014 & 20.7 & 12.1 & 1.71 & $<$0.001\\
+LASSO logit & 0.608 & 0.022 & 0.014 & 21.0 & 12.1 & 1.74 & $<$0.001\\
+Gradient boosting & 0.664 & 0.043 & 0.014 & 27.0 & 12.1 & 2.23 & $<$0.001\\
+\midrule
+\multicolumn{8}{l}{Market, split 2018, issuer a noticee: train 6,807 firm-years (635 fraud), test 3,777 (218)}\\
+Logit & 0.604 & 0.020 & 0.009 & 26.5 & 12.2 & 2.17 & $<$0.001\\
+LASSO logit & 0.603 & 0.023 & 0.009 & 28.5 & 12.2 & 2.33 & $<$0.001\\
+Gradient boosting & 0.615 & 0.019 & 0.009 & 28.1 & 12.2 & 2.30 & $<$0.001\\
+\bottomrule
+\end{tabular*}

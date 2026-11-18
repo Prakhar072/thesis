@@ -858,6 +858,102 @@ can narrow the label without re-drawing.
 
 ---
 
+## Stages 3 and 2 (Weeks 7–8)
+
+### `src/classify_finality.py` — interim, confirmatory, final, settlement (257 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.classify_finality [--out DIR]` (seconds) |
+| **Reads** | orders, `derived/text/` |
+| **Writes** | `derived/order_finality.parquet`, `logs/classify_finality.log` |
+
+**How it works.**
+- Order type decides AO and ED/CGM orders (FINAL) and settlement orders (SETTLEMENT_FINAL).
+- WTM orders take SEBI's title where it states the kind.
+- Otherwise text rules decide, in this order:
+  1. "final order" in the opening;
+  2. a takeover exemption in the opening (OTHER);
+  3. operative confirm, extend or revoke (CONFIRMATION);
+  4. operative "until further orders", "pending investigation", objections invited, or treated as a show-cause
+     notice (INTERIM);
+  5. "for a period of …" or disposal of the SCN (FINAL);
+  6. any operative direction (FINAL, low confidence).
+- `silver_check` scores the text rules on the titled orders with the title hidden: 94.1%.
+
+**Check when reviewing:** the order of the rules (confirmation before interim, since confirmations also say "pending
+investigation").
+**Tests:** `test_classify_finality.py`, 4.
+
+### `src/stage3.py` — Stage 3: the event study (804 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.stage3 [--out DIR]` (~1 min) |
+| **Reads** | sample_events, order_finality, orders, order_entities, entity_matches, universe, `prices/`, corporate_actions, market_index, panel |
+| **Writes** | `derived/stage3/` (events, estimation, cars, tests, cross_section, gap, suspension_bounds), `derived/stage3_numbers.json`, `paper/tables/stage3_{cars,cross,gap,suspension}.tex`, `paper/figures_stage3.pdf`, `logs/stage3.log` |
+
+**How it works.**
+1. Events are typed by the finality of their orders (interim beats confirmation, which beats final, which beats
+   settlement); recited interim orders count as interim. The primary sample is each firm's first public action.
+2. Returns are adjusted closes on the main exchange, on the BSE 500 calendar. The market model uses a Dimson beta
+   over days −250 to −30, with the OLS beta as a check.
+3. Exclusions: fewer than 60% of estimation days traded (thin); no trade on days 0 to +10 (suspended, used for
+   bounds); a raw daily return above +200% or below −80% (a broken series).
+4. Tests: cross-sectional *t* and BMP on CARs winsorised at 1/99%, and the generalised rank test.
+5. Cross-section by OLS with HC1 errors. The value lost is −CAR(0,+10) × the previous March's market cap, set
+   against all sanctions and against sanctions on the firm itself.
+
+**Check when reviewing:** the event typing, the exclusion rules, the winsorising.
+**Tests:** `test_stage3.py`, 5.
+
+---
+
+### `src/stage2.py` — Stage 2: prediction at SEBI's capacity (529 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.stage2 [--out DIR]` (seconds) |
+| **Reads** | panel |
+| **Writes** | `derived/stage2/` (frame, metrics, recall_curves, coefficients), `derived/stage2_numbers.json`, `paper/tables/stage2_{metrics,coefficients}.tex`, `paper/figures_stage2.pdf`, `logs/stage2.log` |
+
+**How it works.**
+1. Firm-years before the first public action, labelled by the violation year, with predictors from the previous FY.
+2. `Prepared` fits the winsorising limits, medians and scales on the training years only.
+3. Logit, L1 logit and LightGBM, with population weights × class weights. Tuning uses the last two training years.
+4. Specifications: market only with a 2018 or 2020 split; market + ownership with a 2020 split; and an
+   issuer-a-noticee label.
+5. `recall_at_k` ranks each test year with controls counting at their weight. `permutation_test` shuffles scores
+   within year for H1.
+
+**Check when reviewing:** the one-year lag, `post_public`, and that nothing in the predictors is recorded after the fact.
+**Tests:** `test_stage2.py`, 5.
+
+### `src/partial_observability.py` — Stage 2 robustness: commission vs detection (301 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.partial_observability` (seconds; after Stage 2) |
+| **Writes** | `paper/tables/stage2_partial.tex`, `derived/partial_observability.json`, `derived/stage2/partial_observability.csv`, `logs/partial_observability.log` |
+
+P(y) = Φ(x'β_C)·Φ(w'β_D) with ρ = 0, using weighted pseudo-likelihood (BFGS) and finite-difference standard errors. The
+commission equation takes the market predictors (constant and duplicate columns dropped); detection takes turnover and
+main exchange NSE, which is the exclusion. On the real data the detection equation is not identified (SE ≈ 210); the
+commission ranking matches the probit. **Tests:** `test_partial_observability.py`, 2 (one recovers a simulated model).
+
+### `src/synthesis.py` — the implied optimal penalty (183 lines)
+
+| | |
+|---|---|
+| **Run** | `python -m src.synthesis` (seconds; after Stages 1 and 3) |
+| **Writes** | `paper/tables/synthesis.tex`, `derived/synthesis_numbers.json`, `logs/synthesis.log` |
+
+S* = (H / p) · e^{rτ}. H comes from Stage 3's interim first actions, τ from Stage 1's cohort median, r is 8 or 12%,
+and p is a grid of 0.20, 0.33 (the US benchmark) and 0.50. Observed sanctions are set beside S*. **Tests:**
+`test_synthesis.py`, 1.
+
+---
+
 ## The thesis
 
 ### `src/paper_tables.py` — every table and figure in the thesis (1,024 lines)
@@ -885,7 +981,7 @@ them with `derived/paper_numbers.json` after a re-run.
 
 ---
 
-## Tests (`tests/`, 855 in all)
+## Tests (`tests/`, 872 in all)
 
 Each file tests the module of the same name.
 

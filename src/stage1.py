@@ -94,10 +94,10 @@ COVARIATE_LABELS = {
     "cat_DISCLOSURE_FAILURE": "Disclosure failure", "cat_INTERMEDIARY_MISCONDUCT": "Intermediary misconduct",
     "cat_INSIDER_TRADING": "Insider trading", "cat_FINANCIAL": "Diversion, accounting, RPT",
     "cat_OTHER": "Other category", "log_parties": "Log(1 + parties)", "intermediary": "Intermediary a noticee",
-    "log_window": "Log window length (months)", "listed": "Listed issuer", "post_lodr": "Window ends after LODR",
-    "post_nfra": "Window ends after NFRA", "log_turnover": "Log median daily turnover",
+    "log_window": "Log window (months)", "listed": "Listed issuer", "post_lodr": "Window ends after LODR",
+    "post_nfra": "Window ends after NFRA", "log_turnover": "Log median turnover",
     "log_amihud": "Log Amihud illiquidity", "nse_main": "Main exchange NSE", "log_market_cap": "Log market cap",
-    "promoter_pct": "Promoter holding (\\%)", "pledged_pct": "Promoter shares pledged (\\%)"}
+    "promoter_pct": "Promoter holding (\\%)", "pledged_pct": "Pledged (\\%)"}
 PERIODS = ((1990, 2005, "to 2005"), (2006, 2010, "2006--10"), (2011, 2015, "2011--15"), (2016, 2018, "2016--18"),
            (2019, 2026, "2019--26"))
 
@@ -669,19 +669,19 @@ def robustness(frame: pd.DataFrame, derived: pathlib.Path) -> tuple[pd.DataFrame
     cohort = frame[frame.cohort].copy()
     variants = [("Main: matter, window end", cohort, "t_months")]
     cohort["t_start_months"] = (cohort.first_action_date - cohort.window_start).dt.days / MONTH_DAYS
-    variants.append(("Window start instead of end", cohort, "t_start_months"))
+    variants.append(("Window start", cohort, "t_start_months"))
     cohort["t_min_end_months"] = (cohort.first_action_date - cohort.window_end_min).dt.days / MONTH_DAYS
-    variants.append(("Earliest window end of the matter's orders", cohort, "t_min_end_months"))
+    variants.append(("Earliest window end", cohort, "t_min_end_months"))
     cohort["t_floor_months"] = cohort.t_months.clip(lower=1 / MONTH_DAYS)
-    variants.append(("Non-positive lags set to one day", cohort, "t_floor_months"))
+    variants.append(("Non-positive lags as one day", cohort, "t_floor_months"))
     variants.append(("No settlement-only matters", cohort[cohort.n_settlement < cohort.n_orders], "t_months"))
     no_model = ~cohort.window_methods.fillna("").str.contains("model")
-    variants.append(("Regex and hand windows only", cohort[no_model], "t_months"))
+    variants.append(("Regex and hand windows", cohort[no_model], "t_months"))
     variants.append(("Stated periods only", cohort[cohort.window_kinds == "stated_period"], "t_months"))
     variants.append(("Common 7.7-year horizon", cohort[cohort.t_months <= HORIZON_MONTHS], "t_months"))
     rows = [robustness_row(label, rows_of, duration) for label, rows_of, duration in variants]
     orders = order_level_frame(derived, frame)
-    rows.append(robustness_row("Order as the unit (clustered by matter)", orders, "t_order_months"))
+    rows.append(robustness_row("Order as the unit", orders, "t_order_months"))
     hand = hand_check(derived)
     summary = {"n": len(hand), "median_hand": hand.t_hand_years.median(),
                "median_machine": hand.t_machine_years.median(),
@@ -759,6 +759,24 @@ def ratio_cell(value: float, low: float, high: float, p: float) -> str:
     return f"{value:.2f}{stars} ({low:.2f}--{high:.2f})"
 
 
+def ratio_pair(value: float, low: float, high: float, p: float) -> tuple[str, str]:
+    """A ratio with stars, and its interval for the line below (keeps wide tables within the page).
+
+    Args:
+        value (float): the ratio.
+        low (float): lower bound.
+        high (float): upper bound.
+        p (float): p-value.
+
+    Returns:
+        tuple[str, str]: ``("0.82**", "(0.71--0.95)")``, or two empty strings when missing.
+    """
+    if pd.isna(value):
+        return "", ""
+    stars = "***" if p < 0.01 else "**" if p < 0.05 else "*" if p < 0.1 else ""
+    return f"{value:.2f}{stars}", f"({low:.2f}--{high:.2f})"
+
+
 def table_descriptive(desc: pd.DataFrame) -> str:
     """LaTeX: the lag descriptives.
 
@@ -798,13 +816,17 @@ def table_models(cox: pd.DataFrame, aft: pd.DataFrame) -> str:
     header = [""] + [m.split(" ", 1)[0] for m in blocks] + ["AFT (2h)"]
     rows: list[list[str] | str] = []
     for covariate in covariates:
-        line = [COVARIATE_LABELS[covariate]]
+        line, interval = [COVARIATE_LABELS[covariate]], [""]
         for block in blocks:
             hit = cox[(cox.model == block) & (cox.covariate == covariate)]
-            line.append("" if hit.empty else ratio_cell(*hit[["hr", "hr_low", "hr_high", "p"]].iloc[0]))
+            pair = ("", "") if hit.empty else ratio_pair(*hit[["hr", "hr_low", "hr_high", "p"]].iloc[0])
+            line.append(pair[0])
+            interval.append(pair[1])
         hit = aft[(aft.model == aft_model) & (aft.covariate == covariate)]
-        line.append("" if hit.empty else ratio_cell(*hit[["tr", "tr_low", "tr_high", "p"]].iloc[0]))
-        rows.append(line)
+        pair = ("", "") if hit.empty else ratio_pair(*hit[["tr", "tr_low", "tr_high", "p"]].iloc[0])
+        line.append(pair[0])
+        interval.append(pair[1])
+        rows += [line, interval]
     rows.append("Sample")
     n_row, c_row = ["Matters"], ["Concordance"]
     for block in blocks:
@@ -877,20 +899,20 @@ def table_robustness(robust: pd.DataFrame, trunc: pd.DataFrame, hand: dict) -> s
     rows: list[list[str] | str] = []
     for row in robust.itertuples(index=False):
         rows.append([row.variant, n(row.n), years_cell(row.median_years, row.q25, row.q75),
-                     ratio_cell(row.post_lodr_hr, row.post_lodr_low, row.post_lodr_high, row.post_lodr_p),
-                     ratio_cell(row.listed_hr, row.listed_low, row.listed_high, row.listed_p)])
-    rows.append("Right truncation: naive and adjusted quantiles of $T$ (years)")
+                     ratio_pair(row.post_lodr_hr, row.post_lodr_low, row.post_lodr_high, row.post_lodr_p)[0],
+                     ratio_pair(row.listed_hr, row.listed_low, row.listed_high, row.listed_p)[0]])
+    rows.append("Right truncation: quartiles of $T$ in years, naive (third column) and adjusted (fourth)")
     for sample in ("full", "cohort"):
         part = trunc[trunc["sample"] == sample].set_index("quantile")
         label = "All windowed matters" if sample == "full" else "Cohort"
         naive = "/".join(f"{part.loc[q, 'naive'] / 12:.2f}" for q in (0.25, 0.5, 0.75))
         adjusted = "/".join(f"{part.loc[q, 'adjusted'] / 12:.2f}" for q in (0.25, 0.5, 0.75))
-        rows.append([label, n(part.n.iloc[0]), f"naive {naive}", f"adjusted {adjusted}", ""])
+        rows.append([label, n(part.n.iloc[0]), naive, adjusted, ""])
     if hand.get("n"):
         rows.append("Hand-coded validation orders (order level)")
-        rows.append([f"Hand window vs pipeline window, same first action", n(hand["n"]),
+        rows.append(["Hand vs pipeline window", n(hand["n"]),
                      f"{hand['median_hand']:.2f} vs {hand['median_machine']:.2f}",
-                     f"corr. {hand['correlation']:.2f}", f"{100 * hand['within_month']:.0f}\\% within a month"])
+                     f"corr. {hand['correlation']:.2f}", f"{100 * hand['within_month']:.0f}\\% within 31 days"])
     return tabular("rrrr", ["Variant", "Matters", "Median $T$ (IQR)", "HR post-LODR", "HR listed"], rows)
 
 
@@ -910,23 +932,27 @@ def table_finegray(finegray: pd.DataFrame, cause: pd.DataFrame) -> str:
         part = finegray[finegray.covariate == f"x_{covariate}"]
         if part.empty:
             continue
-        line = [COVARIATE_LABELS[covariate]]
+        line, interval = [COVARIATE_LABELS[covariate]], [""]
         for channel in channels:
             hit = part[part.channel == channel]
             if hit.empty:
                 line.append("--")
+                interval.append("")
                 continue
             se = hit.se.iloc[0]
             coef = hit.coef.iloc[0]
-            line.append(ratio_cell(hit.shr.iloc[0], math.exp(coef - 1.96 * se), math.exp(coef + 1.96 * se),
-                                   hit.p.iloc[0]))
-        rows.append(line)
+            pair = ratio_pair(hit.shr.iloc[0], math.exp(coef - 1.96 * se), math.exp(coef + 1.96 * se), hit.p.iloc[0])
+            line.append(pair[0])
+            interval.append(pair[1])
+        rows += [line, interval]
     rows.append("Check: cause-specific Cox")
-    line = ["Window ends after LODR"]
+    line, interval = ["Window ends after LODR"], [""]
     for channel in channels:
         hit = cause[(cause.model == channel) & (cause.covariate == "post_lodr")]
-        line.append("--" if hit.empty else ratio_cell(*hit[["hr", "hr_low", "hr_high", "p"]].iloc[0]))
-    rows.append(line)
+        pair = ("--", "") if hit.empty else ratio_pair(*hit[["hr", "hr_low", "hr_high", "p"]].iloc[0])
+        line.append(pair[0])
+        interval.append(pair[1])
+    rows += [line, interval]
     events = ["First detections"] + [n(finegray[finegray.channel == c].n_events.iloc[0]) for c in channels]
     rows.append(events)
     return tabular("r" * len(channels), ["", *[CHANNEL_GROUP_LABELS[c] for c in channels]], rows)

@@ -26,13 +26,16 @@ cd ~/projects/thesis && source .venv/bin/activate
 - **Skipped by your decision (17 Nov, time):** B5 (validation fixes) and B6 (intra-coder re-code). The errors are
   reported as limitations (`results_log.md`, 2026-11-17).
 - **Scope:** all three stages stay; Stage 2 or 3 is dropped only if time truly runs out (your decision, 17 Nov).
-- **Built, not yet run:** ownership (A7, you start it) and the panel (A8).
+- **Run 18 Nov:** ownership (A7, by you), the panel and coverage table (A8), Stage 1 with ownership, the finality
+  classifier and Stage 3 (event study). Figures in `results_log.md`; tables in `paper/tables/stage3_*.tex`.
 - **Built and run 17 Nov:** matter grouping (D1 = matter) and Stage 1 (`python -m src.stage1`): first estimates in
   `results_log.md`, tables in `paper/tables/stage1_*.tex`, figures in `paper/figures_stage1.pdf`.
 - **After the ownership download (A7) finishes:** run `python -m src.build_panel` (A8), then
   `python -m src.stage1 --ownership` to add market cap and ownership to Stage 1's model (4). Don't run `--ownership`
   while the download is still going: it writes partial checkpoints.
-- **Not built:** the finality classifier, Stage 3 and Stage 2 estimation code.
+- **Run 18 Nov (agent):** Stage 2 (`python -m src.stage2`) and the synthesis table (`python -m src.synthesis`).
+- **Run 18 Nov (agent):** the partial-observability robustness (§6.5): ranking unchanged, detection not identified.
+- **Left for you:** a cold read of the thesis (runbook Week 9 Day 5), revision, and the Week 10 final checks.
 - **Thesis:** `paper/paper.tex` drafted on 2026-11-07: everything except the results. §4 refreshed to the frozen sample
   on 17 Nov. See E.
 - **Every function** in `src/` documents its inputs and output with their types. All 838 tests pass.
@@ -213,8 +216,8 @@ count should be zero.
 **Record** a line in `results_log.md`.
 
 ### A7. Download ownership
-- [ ] Started
-- [ ] Finished
+- [x] Started
+- [x] Finished (18 Nov 00:33; 1,354 of 1,763 firms with data)
 
 Promoter holding and promoter pledging for each sample firm, from BSE's shareholding filings. This runs after A1
 (it uses each firm's trading dates to skip quarters) and after A5 (it reads the frozen sample).
@@ -230,8 +233,8 @@ setsid nohup .venv/bin/python -m src.fetch_shareholding > logs/fetch_shareholdin
   onward.
 
 ### A8. Merge the panel and record coverage
-- [ ] Merged
-- [ ] Recorded
+- [x] Merged (18 Nov)
+- [x] Recorded (`results_log.md`, 18 Nov)
 
 ```bash
 python -m src.build_panel
@@ -439,13 +442,13 @@ The runbook wants event-study controls matched on industry, size and pre-event r
 
 - [x] Data: sources and corpus (drafted 2026-11-07)
 - [x] Data: extraction and coding (drafted 2026-11-07)
-- [ ] Data: validation (design drafted; results in `derived/validation_table.md` and `results_log.md`, 17 Nov, to write in)
-- [ ] Data: sample, matching and coverage (refreshed to the frozen sample 17 Nov; coverage after A8)
+- [x] Data: validation (results and Gate 1 written in 18 Nov)
+- [x] Data: sample, matching and coverage (frozen sample 17 Nov; coverage table added 18 Nov)
 - [x] Introduction and framework (drafted 2026-11-07; tighten at the end)
-- [ ] Stage 1 results (estimates and tables done 17 Nov; prose to write; re-run with `--ownership` after A7–A8)
-- [ ] Stage 3 results (Week 7)
-- [ ] Stage 2 results (Week 8; Gate 3, 16 November)
-- [ ] Synthesis, policy, conclusion, abstract (Week 9; interim versions drafted 2026-11-07)
+- [x] Stage 1 results (drafted 18 Nov, §7.1; with ownership)
+- [x] Stage 3 results (drafted 18 Nov, §7.3)
+- [x] Stage 2 results (drafted 18 Nov, §7.2)
+- [x] Synthesis, policy, conclusion, abstract (drafted 18 Nov from the estimates; your cold read next)
 - [ ] Revision and final checks (Week 10)
 
 **Where.** `paper/paper.tex`, with `paper/paper.bib`. The tables and figures are generated: after any pipeline change run

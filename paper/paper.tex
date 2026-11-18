@@ -48,8 +48,7 @@
 \maketitle
 
 % Enter abstract:
-% UPDATE: rewrite last, around the three headline estimates, once Stages 1 and 3 exist.
-Indian securities enforcement is often called reactive, but the claim has not been given a magnitude. This thesis divides enforcement into three links (whether a fraud was predictable, how long it stayed unaddressed, and whether the eventual sanction cost anything) and builds the data to measure each. I assemble every order in the four enforcement categories of the Securities and Exchange Board of India: 20,861 orders from December 2000 to September 2026, with text for 20,849. From each order I extract the period of activity SEBI examined, earlier notices and interim orders, sanctions, parties, the provisions violated, the type of misconduct and how the matter reached SEBI. Among the 12,142 orders that state an examined period, the median time from its end to SEBI's first public action is 3.15 years, or 2.59 years when the orders of one matter are grouped, and a further 1.2 to 1.3 years pass before the order. Only 41.3\% of orders say how the matter reached SEBI, and the share attributed to surveillance runs from 25.6\% to 54.9\% depending on the population counted. These figures are descriptive and await hand validation. The thesis fixes, before any estimate has been seen, the duration, prediction and event-study models that will test where the chain fails.
+Indian securities enforcement is often called reactive, but the claim has not been given a magnitude. This thesis divides enforcement into three links, whether a fraud was predictable, how long it stayed unaddressed and whether the eventual sanction cost anything, and measures each. I assemble every order in the four enforcement categories of the Securities and Exchange Board of India, 20,861 orders from 2000 to 2026, and extract from each the period of activity SEBI examined, earlier notices and interim orders, sanctions, parties, the type of misconduct and how the matter reached SEBI, checked against a blind hand coding of 150 orders. Grouped into 4,221 matters, the median time from the end of the examined period to SEBI's first public action is 3.0 years for periods that ended by 2018, a figure the correction for right truncation leaves unchanged. Lags were about 16\% shorter for periods ending after the 2015 listing reforms. Ranking listed firms on the previous year's market signals and investigating 402 a year, SEBI's capacity, would have reached 27\% of the frauds SEBI later acted on, twice the rate of random selection. When SEBI's first action is an interim order, the firm's shares lose 7.8\% over eleven trading days, more than all monetary sanctions for most firms; final orders do not move prices. Monetary penalties fall short of a deterrence benchmark by two orders of magnitude under any assumed detection probability. The binding link is the time between visible signals and SEBI's first public move.
 \end{titlepage}
 
 \setcounter{tocdepth}{2}
@@ -67,7 +66,7 @@ Indian securities enforcement is often called reactive, but the claim has not be
 
 \paragraph{What this thesis does} SEBI's orders usually state the period of business activity it examined. That institutional habit makes the chain measurable: an order that gives the examined period, the date of the earliest notice or interim order, and the sanction places one matter on a time line. I build a structured corpus of every order in SEBI's four enforcement listing categories and extract those fields from the text of each order, keeping the source sentence for every value. The corpus feeds three stages that correspond to the three terms of the deterrence condition. Stage~1 measures the lag from the end of the examined period to SEBI's first public action, its determinants, and the channel through which matters reach SEBI. Stage~2 asks whether fraud was visible in public market and ownership data before anyone acted, at a screening capacity SEBI could actually use. Stage~3 asks whether SEBI's orders impose a cost on the firm that exceeds the monetary penalty.
 
-\paragraph{What the corpus already shows} Four descriptive facts emerge before any model is estimated. First, the delay sits mostly before the first public action. Among 12,142 orders stating an examined period, the median time from its end to the first public action is 3.15 years, and the median time from that action to the order is 1.19 years. Grouping the orders of a matter gives 2.59 and 1.29 years. Second, the unit of analysis is not a detail. One mass matter, Illiquid Stock Options at BSE, accounts for 2,375 orders; it moves the surveillance share of stated detection channels from 25.6\% to 41.9\%, and it explains most of the fall in orders between 2023 and 2024. Third, the record says little about how matters begin: 58.7\% of orders state no trigger, and only 415 orders cite an explicit surveillance alert. Fourth, the conduct at the centre of the Indian debate is rare in the record. Fund diversion, related-party tunnelling and accounting misstatement together make up 720 of 20,849 orders (3.5\%). Each of these facts is conditional on detection, and none has yet been validated by hand.
+\paragraph{What the corpus already shows} Four descriptive facts emerge before any model is estimated. First, the delay sits mostly before the first public action. Among 12,142 orders stating an examined period, the median time from its end to the first public action is 3.15 years, and the median time from that action to the order is 1.19 years. Grouping the orders of a matter gives 2.59 and 1.29 years. Second, the unit of analysis is not a detail. One mass matter, Illiquid Stock Options at BSE, accounts for 2,375 orders; it moves the surveillance share of stated detection channels from 25.6\% to 41.9\%, and it explains most of the fall in orders between 2023 and 2024. Third, the record says little about how matters begin: 58.7\% of orders state no trigger, and only 415 orders cite an explicit surveillance alert. Fourth, the conduct at the centre of the Indian debate is rare in the record. Fund diversion, related-party tunnelling and accounting misstatement together make up 720 of 20,849 orders (3.5\%). Each of these facts is conditional on detection, and section~\ref{s:validation} reports how far the extraction agrees with a blind hand coding.
 
 \paragraph{Positioning in the literature} This thesis draws on four literatures. Work on fraud prediction \citep{B99,DGLS11,BKLYZ20} asks whether misstatement is detectable from accounts and reports classification accuracy, but not how long detection took. \citet{DMZ10} show who blows the whistle on US corporate fraud, and \citet{KKLM17} show how far conclusions depend on the database and on the dates used to measure misconduct. \citet{KLM08} find that for US firms the reputational loss from misconduct far exceeds the legal penalty. Cross-country work disagrees on whether public enforcement matters at all: \citet{LLS06} find little evidence that it does, while \citet{JR09}, measuring enforcement by regulators' resources, find that it does.
 
@@ -75,10 +74,9 @@ For India, \citet{BMM02} document tunnelling in business groups, and \citet{DK13
 
 \paragraph{Contribution} Against that background, the thesis makes four contributions. It extends the corpus to every order in the four categories from 2000 to 2026 and extracts the examined period, prior actions and sanctions from all of them, rather than from a coded sample, with a blind validation design and a link to listed firms and daily prices. It separates the delay into a detection lag and a resolution lag and treats right truncation directly, which, as far as I can find, no study of SEBI enforcement has done. It codes the detection channel from the orders under a protocol fixed in advance, which I have not found for India; \citet{DMZ10} is the nearest counterpart. And it places detection, prediction and deterrence in one condition, so that the answer is a diagnosis of the binding link and not three separate findings.
 
-\paragraph{Status of this draft} % UPDATE: delete this paragraph when the estimates are in.
-This draft reports the corpus, its extraction and the descriptive evidence. The blind validation sample of 150 orders has been drawn but not yet coded, so every extracted figure below is a pipeline figure. The firm sample is not yet frozen, ownership data have not been collected, and Stages 1 to 3 have not been estimated. Section~\ref{s:strategy} therefore fixes the models without reporting results, and section~\ref{s:discussion} confines itself to what description can support.
+\paragraph{Main findings} The estimates locate the leak. At the level of the matter, the median time from the end of the examined period to SEBI's first public action is 3.0 years, and it was about 16\% shorter for periods ending after the 2015 reforms once right truncation is handled. Fraud was partly visible beforehand: ranking firms on public market signals reaches twice as many of the frauds SEBI later caught as random selection would, at SEBI's own investigation capacity. When SEBI moves first with an interim order, the market marks the firm down by 7.8\% within eleven trading days, which exceeds the monetary sanctions most such firms ever face, while final orders carry no news. Surveillance accounts for about a third of the first detections that orders state, and half of all matters state none. The monetary penalties are far below any deterrence benchmark. Section~\ref{s:results} reports the estimates and table~\ref{t:verdicts} the verdict on each hypothesis.
 
-\paragraph{Roadmap} Section~\ref{s:institutions} describes how a SEBI matter proceeds. Section~\ref{s:framework} sets out the framework and the hypotheses. Section~\ref{s:data} describes the data. Section~\ref{s:descriptive} reports the descriptive evidence. Section~\ref{s:strategy} specifies the empirical strategy. Section~\ref{s:discussion} discusses what the evidence does and does not show, section~\ref{s:limitations} sets out the limitations and section~\ref{s:ccl} concludes.
+\paragraph{Roadmap} Section~\ref{s:institutions} describes how a SEBI matter proceeds. Section~\ref{s:framework} sets out the framework and the hypotheses. Section~\ref{s:data} describes the data. Section~\ref{s:descriptive} reports the descriptive evidence. Section~\ref{s:strategy} specifies the empirical strategy and section~\ref{s:results} reports the estimates. Section~\ref{s:discussion} discusses what the evidence does and does not show, section~\ref{s:limitations} sets out the limitations and section~\ref{s:ccl} concludes.
 
 \section{Institutional setting}\label{s:institutions}
 
@@ -181,7 +179,7 @@ The stages close on one calculation. The standard deterrence result sets the pen
 \begin{equation}
 S^{*} = \frac{H}{p} \cdot e^{r\tau}.
 \label{e:optimal}\end{equation}
-Stage~3 gives $H$ as market value lost around revelation, which measures shareholder loss and not total social harm. Stage~1 gives $\tau$. The probability $p$ is the weak term: it needs the number of frauds committed, which is what enforcement data cannot show. I therefore plan to report $S^{*}$ as a sensitivity table over $p \in \{0.20, 0.33, 0.50\}$ and $r \in \{8\%, 12\%\}$, with $p = 0.33$ marked as a benchmark imported from \citet{DMZ24} and not an Indian estimate, and to compare the range with penalties observed in the corpus.
+Stage~3 gives $H$ as market value lost around revelation, which measures shareholder loss and not total social harm. Stage~1 gives $\tau$. The probability $p$ is the weak term: it needs the number of frauds committed, which is what enforcement data cannot show. I therefore report $S^{*}$ as a sensitivity table over $p \in \{0.20, 0.33, 0.50\}$ and $r \in \{8\%, 12\%\}$, with $p = 0.33$ marked as a benchmark imported from \citet{DMZ24} and not an Indian estimate, and compare the range with penalties observed in the corpus (section~\ref{s:r4}).
 
 \subsection{Hypotheses}\label{s:hypotheses}
 
@@ -274,8 +272,7 @@ Two definitional choices affect the results. An order in which SEBI or an exchan
 
 \subsection{Validation design}\label{s:validation}
 
-% UPDATE: replace this subsection's future tense with the scored results and the Gate 1 decision.
-The extraction will be validated against a blind hand coding of 150 orders, drawn on 4 November 2026 and not yet coded. Table~\ref{t:validation} gives the design. The sample is stratified by how the window was obtained and, within strata, systematically by listing category and date. The ISO matter is capped, so that one window does not fill the sample. The 539 orders recorded as seen while building the pipeline are excluded: development sets, protocol examples, flagged windows and orders quoted in project notes. A few early spot-check samples were not recorded and cannot be excluded; at random they would place about three seen orders in the sample. The coder sees only SEBI's title and the document. Weights per cell undo the over-sampling of small strata and sum to the 20,849 orders with text. Weighted shares by listing category match the corpus closely (58.2\%, 30.3\%, 9.8\% and 1.7\% against 57.5\%, 30.8\%, 9.6\% and 2.1\%).
+The extraction was validated against a blind hand coding of 150 orders, drawn on 4 November 2026 and coded before any pipeline output for them was seen. Table~\ref{t:validation} gives the design. The sample is stratified by how the window was obtained and, within strata, systematically by listing category and date. The ISO matter is capped, so that one window does not fill the sample. The 539 orders recorded as seen while building the pipeline are excluded: development sets, protocol examples, flagged windows and orders quoted in project notes. A few early spot-check samples were not recorded and cannot be excluded; at random they would place about three seen orders in the sample. The coder sees only SEBI's title and the document. Weights per cell undo the over-sampling of small strata and sum to the 20,849 orders with text. Weighted shares by listing category match the corpus closely (58.2\%, 30.3\%, 9.8\% and 1.7\% against 57.5\%, 30.8\%, 9.6\% and 2.1\%).
 
 \begin{table}[t]
 \caption{Design of the blind validation sample}
@@ -283,7 +280,30 @@ The extraction will be validated against a blind hand coding of 150 orders, draw
 \note{$N$ = 150 orders from a population of 20,849 orders with text. \emph{Weight}: cell population divided by orders sampled. There are no ISO orders among the model's conduct-date windows, so that cell does not exist. Random seed 20261006.}
 \label{t:validation}\end{table}
 
-The coder records the window, how it is stated, the fraud category, the detection channel and the primary issuer. Scoring compares these with the pipeline. For the window it reports agreement on whether a window exists, and exact and within-31-day rates over the pipeline's windows, the hand windows and the orders where both give one. For category and channel it reports weighted agreement and Cohen's $\kappa$ \citep{C60}, with 95\% intervals from a bootstrap within sampling cells. The rule for proceeding was fixed in advance: with extraction between 50\% and 70\% and $\kappa$ above 0.6 the work proceeds and reports the drop-out; with $\kappa$ below 0.6 the protocol is rewritten through its change log and the affected orders recoded. Errors found will be fixed and the pipeline re-run, but a second measurement will need a fresh draw. Re-coding 30 orders will give intra-coder reliability. At corpus proportions the rare classes receive few orders each, so accuracy is measurable overall and for the large classes only. Sanctions, prior actions and parties are outside the sample.
+The coder recorded the window, how it is stated, the fraud category, the detection channel and the primary issuer, under the protocol written before coding. Scoring compares these with the pipeline, weighted to the 20,849 orders with text, with 95\% intervals from a bootstrap within sampling cells (table~\ref{t:valresults}). For category and channel it reports Cohen's $\kappa$ \citep{C60}.
+
+\begin{table}[htb]
+\caption{Pipeline against the blind hand coding}
+\begin{tabular*}{\textwidth}[]{l@{\extracolsep\fill}rrr}
+\toprule
+Measure & Orders & Weighted & 95\% interval \\
+\midrule
+Window: hand and pipeline agree whether one exists & 150 & 72.6\% & 66.6--79.1 \\
+Window: pipeline's windows exact & 110 & 89.5\% & 84.2--93.9 \\
+Window: pipeline's windows within one month & 110 & 91.0\% & 85.8--95.4 \\
+Window: hand windows recovered within one month & 130 & 62.9\% & 57.8--68.5 \\
+Window: kind (stated period or conduct dates) agrees & 105 & 93.3\% & 88.5--96.9 \\
+Fraud category: agreement & 150 & 80.1\% & 72.9--87.0 \\
+Fraud category: Cohen's $\kappa$ & 150 & 0.74 & 0.64--0.83 \\
+Detection channel: agreement & 150 & 77.3\% & 68.5--85.9 \\
+Detection channel: Cohen's $\kappa$ & 150 & 0.63 & 0.47--0.77 \\
+Primary issuer: agreement & 150 & 75.5\% & 67.9--82.6 \\
+\bottomrule
+\end{tabular*}
+\note{Weights per sampling cell estimate the population of 20,849 orders with text; intervals from a bootstrap within cells. \emph{Within one month}: both ends within 31 days. Regex windows are exact in 56 of 60 sampled orders; model windows in 29 of 50.}
+\label{t:valresults}\end{table}
+
+When the pipeline gives a window, it is usually right: 89.5\% of its windows match exactly and 91.0\% within a month. Regex windows are exact in 56 of 60 sampled orders, model windows in 29 of 50. The weakness is coverage. The pipeline recovers 62.9\% of the windows a reader finds, so the windowed sample is a selected subset, as the drop-out analysis already showed. Category agreement is 80.1\% ($\kappa$ = 0.74) and channel agreement 77.3\% ($\kappa$ = 0.63). Two errors are systematic. The pipeline reads 15 of the 27 orders a reader codes as surveillance as unclear, so surveillance shares are understated. It also assigns market manipulation or disclosure failure to 23 orders a reader codes as other. The decision rule fixed in advance applies: with extraction at 58.2\% and both $\kappa$ above 0.6, the work proceeds and reports the drop-out. For lack of time, the errors found were not fixed, no second sample was drawn, and the planned intra-coder re-coding was not done. The errors are carried into the limitations instead. Sanctions, prior actions and parties are outside the sample.
 
 \subsection{Listed firms and entity matching}\label{s:matching}
 
@@ -305,13 +325,28 @@ Fraud firms are the listed firms matched to a windowed order. A firm-year is a \
 
 Prices come from the exchanges' daily bhavcopy files: 5,642 trading days on NSE from 1 January 2004 and 5,075 on BSE from 1 March 2006, the first day BSE's archive serves, up to 2 November 2026. The files hold 25.3 million security-days. Their format changes on 8 July 2024, and the 2004--06 gap means that older events on BSE-only firms have no prices. Bhavcopy prices are not adjusted for splits or bonuses, including the previous close, so a raw return on Tata Steel's split of 28 July 2022 reads $-89.5\%$; adjusted with BSE's corporate-action records it is $+4.6\%$. The action file holds 36,935 records, including 1,109 splits and 1,305 bonuses. The 151 consolidations carry no ratio and are flagged, not adjusted. Returns are price returns, without dividends. The market return is the BSE 500 index. In the frozen sample, 93.6\% of fraud firms and 88.2\% of controls have at least one price.
 
-Ownership will come from BSE's quarterly shareholding summaries: promoter holding, pledged shares and shares outstanding. Their current format begins in December 2015, so ownership covers FY2016 onward, and just over half of the fraud firm-years in the study period (1,310 of 2,430) have none. These data have not yet been collected. The firm-year panel merges the sample, prices and ownership, with row counts asserted at each join, and its coverage table will be reported here.
+Ownership comes from BSE's quarterly shareholding summaries: promoter holding, pledged shares and shares outstanding. Their current format begins in December 2015, so ownership covers FY2016 onward, and just over half of the fraud firm-years in the study period (1,310 of 2,430) have none. They were collected for 1,354 of the 1,763 sample firms listed on BSE (11,938 firm-quarters). The firm-year panel merges the sample, prices and ownership, with row counts asserted at each join: 18,149 firm-years from FY2010 to FY2025. Table~\ref{t:coverage} gives its coverage.
+
+\begin{table}[htb]
+\caption{Coverage of the firm-year panel}
+\begin{tabular*}{\textwidth}[]{l@{\extracolsep\fill}rrrr}
+\toprule
+Unit & $N$ & With prices & With ownership & With both \\
+\midrule
+Fraud firms & 1,254 & 91.3\% & 76.2\% & 76.2\% \\
+Control firms & 600 & 76.2\% & 61.3\% & 61.3\% \\
+Fraud firm-years, FY2010--FY2025 & 2,430 & 91.9\% & 39.5\% & 39.3\% \\
+Fraud firm-years, FY2016--FY2025 & 1,120 & 92.1\% & 85.6\% & 85.3\% \\
+\bottomrule
+\end{tabular*}
+\note{Prices: at least one trading day in the period (firms) or the year (firm-years). Ownership: a BSE shareholding summary for the March quarter; the source begins in December 2015.}
+\label{t:coverage}\end{table}
 
 The planned accrual-based predictors (Beneish and Dechow scores) are not available, because no database of financial statements could be confirmed for the project, and the audit variables were dropped because they require parsing annual reports. Stage~2 is therefore a test of market and ownership signals only.
 
 \subsection{The unit of analysis}\label{s:unit}
 
-The pipeline has one row per order, but the quantity of interest is per fraud. SEBI issues one order per noticee in mass matters. The 12,142 windowed orders contain only about 3,400 distinct windows, and the ISO matter alone contributes 2,363 windowed orders sharing a single window of 1 April 2014 to 30 September 2015, with order dates from 2018 to 2026. Order-level lags in that matter measure SEBI's adjudication queue, not detection. In what follows I report orders, orders excluding ISO, and \emph{matter clusters}: orders sharing an issuer and an identical window, with all ISO orders treated as one. This gives 4,533 clusters, of which 1,417 hold more than one order. The clustering is crude. It splits a matter whose orders state slightly different windows and cannot place orders with no window. A proper matter-grouping step remains to be built, and the choice of unit for Stage~1 is open.
+The pipeline has one row per order, but the quantity of interest is per fraud. SEBI issues one order per noticee in mass matters. The 12,142 windowed orders contain only about 3,400 distinct windows, and the ISO matter alone contributes 2,363 windowed orders sharing a single window of 1 April 2014 to 30 September 2015, with order dates from 2018 to 2026. Order-level lags in that matter measure SEBI's adjudication queue, not detection. The descriptive tables below report orders, orders excluding ISO, and crude \emph{matter clusters}: orders sharing an issuer and an identical window, with all ISO orders treated as one (4,533 clusters, 1,417 with more than one order). For the estimates, the unit is the \emph{matter}, with the order as a robustness check. The grouping rules were fixed before any lag was read. All ISO orders form one matter. Otherwise orders are linked when they share a matched listed firm, an issuer name or a matter heading. Headings that name a kind of violation committed by many companies, such as ``non-redressal of investor grievances'', never link, and nor does any name tied to more than one firm. Within a linked group, windows within 90 days of each other form one matter, and an order without a window joins the matter whose window it follows. A matter's window runs from the earliest start to the latest end of its orders' windows. Its first public action is the earliest of its orders and of every notice or interim order they recite. This gives 4,221 matters with a window.
 
 \section{Descriptive evidence}\label{s:descriptive}
 
@@ -416,36 +451,35 @@ h_i(t \mid \bm{x}_i) = h_0(t) \exp(\bm{x}_i'\bm{\beta}).
 \label{e:cox}\end{equation}
 Covariates enter in blocks. \emph{Visibility}: log market capitalisation, turnover and illiquidity. \emph{Ownership}: promoter holding and pledging, from FY2016. \emph{Fraud characteristics}: category, number of parties, whether an intermediary is a noticee. \emph{Regime}: indicators for windows ending after December 2015 and after November 2018. Proportional hazards are tested with Schoenfeld residuals; a covariate that fails is stratified or moved to the accelerated failure time model. A Weibull accelerated failure time model, $\ln T_i = \bm{x}_i'\bm{\gamma} + \sigma\varepsilon_i$, is estimated alongside it, since its coefficients read as proportional changes in time, and agreement between the two serves as a specification check. Both models estimate conditional associations and not causal effects.
 
-\paragraph{Right truncation} The sample holds only matters acted on by the corpus date $C$. A matter whose window ended at $e_i$ is observed only if $T_i \le C - e_i$. This is right truncation, not censoring: the undetected matters are absent, not partly observed. It biases lags downward, and most strongly for recent cohorts, which is exactly the pattern in figure~\ref{f:cohort}. Three treatments are reported together. The primary sample keeps windows ending by 2018, which holds 10,837 orders (8,475 excluding ISO) and 3,602 clusters. A reverse-time estimator for right-truncated data \citep{LBD88} gives a non-parametric distribution on the full sample, shown beside the naive one so that the size of the distortion is visible. And regime effects are read only on the restricted sample.
+\paragraph{Right truncation} The sample holds only matters acted on by the corpus date $C$. A matter whose window ended at $e_i$ is observed only if $T_i \le C - e_i$. This is right truncation, not censoring: the undetected matters are absent, not partly observed. It biases lags downward, and most strongly for recent cohorts, which is exactly the pattern in figure~\ref{f:cohort}. Three treatments are reported together. The primary sample keeps windows ending by 2018, which holds 10,837 orders (8,475 excluding ISO) and 3,602 clusters. A nonparametric estimator for truncated data \citep{EP99}, related to the reverse-time approach of \citet{LBD88}, gives the distribution on the full sample, shown beside the naive one so that the size of the distortion is visible. Inside the cohort, recent windows still have less follow-up than old ones, so regime effects are also estimated on a common horizon: lags up to 7.73 years, the follow-up of the last cohort, for every cohort. And regime effects are read only on the restricted sample.
 
-The restriction is not a complete cure. The last cohort has 7.7 years of follow-up, and 10.8\% of lags among windows ending by 2010 are longer than that. It also limits H2: inside the restricted sample and excluding ISO, 836 orders fall after the 2015 reform but only 29 (22 clusters) after the 2018 one. The 2015 reform can be examined. The 2018 reform effectively cannot, and I will say so instead of reporting a coefficient that rests on two months of windows.
+The restriction is not a complete cure. The last cohort has 7.7 years of follow-up, and 10.8\% of lags among windows ending by 2010 are longer than that. It also limits H2: inside the restricted sample and excluding ISO, 836 orders fall after the 2015 reform but only 29 (22 clusters) after the 2018 one. The 2015 reform can be examined. The 2018 reform effectively cannot, and I say so instead of reporting a coefficient that rests on two months of windows.
 
-\paragraph{Competing risks} Channels are modelled as competing causes of first action, with cause-specific Cox hazards and Fine--Gray subdistribution hazards \citep{FG99} for the cumulative incidence of each channel. Unclear stays as its own category, since dropping it would distort every other share. H4 is read at matter level, under the broad definition of surveillance and under the alert-only definition. A matter's channel will be the earliest stated across its orders, under a rule set before the counts are seen.
+\paragraph{Competing risks} Channels are modelled as competing causes of first action, with cause-specific Cox hazards and Fine--Gray subdistribution hazards \citep{FG99} for the cumulative incidence of each channel. Unclear stays as its own category, since dropping it would distort every other share. H4 is read at matter level, under the broad definition of surveillance and under the alert-only definition. A matter's channel is the earliest stated across its orders, under a rule set before the counts are seen.
 
-\paragraph{Robustness} I will repeat the main results using window start in place of window end, excluding settlement orders, excluding model-extracted windows, with stated periods only, at the alternative unit of analysis, and on the hand-coded orders.
+\paragraph{Robustness} I repeat the main results using window start in place of window end, excluding settlement orders, excluding model-extracted windows, with stated periods only, at the alternative unit of analysis, and on the hand-coded orders.
 
 \subsection{Stage 2: ex-ante predictability}\label{s:stage2}
 
-% UPDATE: Stage 2 is first in line to be cut if time runs short; if cut, reduce this subsection to a paragraph and move H1 to the conclusion as an open question.
 The unit is the firm-year, labelled by the violation year and never the order year. Years after a firm's first public action are dropped, since predictors there reflect detection. Predictors are promoter holding and pledging and their changes, twelve-month return, volatility, turnover, illiquidity, the share of zero-volume days and log market capitalisation, each lagged to a date on which it was public. The models are a logit, a penalised logit and gradient-boosted trees, with class weights for imbalance. Scalers and imputers are fitted inside the training period, and no predictor may encode the future, such as a delisting flag.
 
-Validation is out of time: models are trained on violation years up to 2018 and evaluated from 2019. Ownership begins in FY2016, so ownership predictors have only three training years, and I will report market-only and market-plus-ownership models separately. Fraud is rare, so accuracy is uninformative and the area under the ROC curve flatters. The headline measure follows from SEBI's constraint. SEBI took up 402 investigations in 2025--26 \citep{SEBI26a}, so the question is how many of a year's frauds a ranked list would reach at that capacity:
+Validation is out of time: models are trained on violation years up to 2018 and evaluated from 2019. Ownership begins in FY2016, so ownership predictors have only three training years, and I report market-only and market-plus-ownership models separately. Fraud is rare, so accuracy is uninformative and the area under the ROC curve flatters. The headline measure follows from SEBI's constraint. SEBI took up 402 investigations in 2025--26 \citep{SEBI26a}, so the question is how many of a year's frauds a ranked list would reach at that capacity:
 \begin{equation}
 \text{Recall}_{y}(k) = \frac{\sum_{i \in \text{top } k \text{ in year } y} \text{fraud}_{iy}}{\sum_{i} \text{fraud}_{iy}}.
 \label{e:recall}\end{equation}
 I sweep $k$ from 50 to 1,000, mark $k = 402$, and compare with random ranking; control firms count with their weight in the ranking. The area under the precision-recall curve is reported alongside. Because of the labels, this measures the prediction of fraud that SEBI caught, not fraud.
 
-That selection is addressed, as a robustness exercise, by modelling commission and detection as separate latent processes with the fraud label observed only when both occur \citep{WWY10}. Identification needs variables that affect detection but not commission, which is contestable, so the exercise bounds sensitivity and is not a headline result.
+That selection could be addressed by modelling commission and detection as separate latent processes, with the fraud label observed only when both occur \citep{WWY10}. Identification needs variables that affect detection but not commission, which is contestable. I use the exchange on which a firm mainly trades, since surveillance differs between exchanges, and estimate the model with independent errors as a robustness check.
 
 \subsection{Stage 3: sanctions and market value}\label{s:stage3}
 
-\paragraph{Events} Each firm contributes its earliest public action, with later orders kept for a robustness cut because the first contaminates them. Interim orders, final orders and settlement orders are treated separately, since their news content differs: interim orders are usually the first public signal, final orders are partly anticipated, and settlements resolve uncertainty. This requires a finality label that has not yet been built. Only 15.5\% of Chairperson/Members titles name the order's type, so it must be read from the text.
+\paragraph{Events} Each firm contributes its earliest public action, with later orders kept for a robustness cut because the first contaminates them. Interim orders, final orders and settlement orders are treated separately, since their news content differs: interim orders are usually the first public signal, final orders are partly anticipated, and settlements resolve uncertainty. This needs a finality label. Only 15.5\% of Chairperson/Members titles name the order's type, so a rule-based classifier reads it from the operative part of the text: directions kept ``until further orders'' or objections invited mark an interim order, and directions confirmed or revoked mark a confirmation. It is checked against the orders whose titles do name the type.
 
 \paragraph{Abnormal returns} Returns are measured against a market model estimated over trading days $-250$ to $-30$, with the BSE 500 as the market:
 \begin{equation}
 AR_{it} = R_{it} - (\hat{\alpha}_i + \hat{\beta}_i R_{mt}), \qquad CAR_i(\tau_1, \tau_2) = \sum_{t=\tau_1}^{\tau_2} AR_{it}.
 \label{e:car}\end{equation}
-Event windows are $(-1,+1)$, $(-5,+5)$ and $(0,+10)$. Firms must have traded on at least 60\% of estimation days, and those that fail are logged. Sanctioned firms are often thinly traded, which biases market-model betas, so I use the corrected betas of \citet{D79} and \citet{SW77} and report a liquid subsample separately. An event can raise return variance, which makes a simple $t$-test over-reject, so inference uses the standardised cross-sectional test of \citet{BMP91} and the rank test of \citet{C89}.
+Event windows are $(-1,+1)$, $(-5,+5)$ and $(0,+10)$. Firms must have traded on at least 60\% of estimation days, and those that fail are logged. Sanctioned firms are often thinly traded, which biases market-model betas, so I use the corrected beta of \citet{D79}, with ordinary betas as a check, and report a liquid subsample separately. Price series with a raw daily return above $+200\%$ or below $-80\%$ are set aside as data errors, and means are taken over CARs winsorised at 1\% and 99\%. An event can raise return variance, which makes a simple $t$-test over-reject, so inference uses the standardised cross-sectional test of \citet{BMP91} and the rank test of \citet{C89} in its multi-day form \citep{C92}.
 
 \paragraph{Cross-section and the reputational gap} Cumulative abnormal returns are related to the sanction and the firm:
 \begin{equation}
@@ -453,46 +487,223 @@ CAR_i = \gamma_0 + \gamma_1 \ln(\text{Penalty}_i) + \gamma_2 \text{Debarment}_i 
 \label{e:cross}\end{equation}
 The quantity of interest is the gap between market value lost, $|CAR_i|$ times pre-event market capitalisation, and the monetary penalty: the component that \citet{KLM08} find to dominate in the United States. Whether it exists where promoters keep control regardless of market discipline is open, and the existing Indian evidence conflicts \citep{J22,GPS26}. The design here can help to reconcile it. \citet{GPS26} study final orders in insider-trading matters, where news may already be out, while interim orders in all categories are the sharper test.
 
-\paragraph{Suspended firms} Some firms stop trading exactly when an order lands, and dropping them silently would remove the most severe cases. I will report them, treat suspension as an outcome with its own determinants, and bound the main estimate under assumptions about the returns that would have been observed.
+\paragraph{Suspended firms} Some firms stop trading exactly when an order lands, and dropping them silently would remove the most severe cases. I report them and bound the main estimate under assumptions about the returns that would have been observed. Only 15 first actions are suspended in this way, too few to model the determinants of suspension.
 
 \subsection{Synthesis}
 
 The three stages close on equation~\eqref{e:optimal}. Stage~3 supplies $H$, the cohort-restricted Stage~1 estimate supplies $\tau$, and $r$ and $p$ vary over the grid in section~\ref{s:optimal}. The comparison with observed penalties gives a direct answer: if observed penalties fall short in every cell, the case for penalty reform does not depend on any single assumption about $p$.
 
+\section{Results}\label{s:results}
+
+This section reports the estimates stage by stage and then puts them together. Every figure is recorded in the project's results log with the script and date that produced it. Tables and figures are generated by the stage scripts, not typed.
+
+\subsection{Stage 1: how long matters stay unaddressed}\label{s:r1}
+
+\paragraph{From orders to matters} Grouping the orders (section~\ref{s:unit}) turns 12,142 windowed orders into 4,221 matters with a window, of which 1,664 hold more than one order. Illiquid Stock Options becomes one matter of 2,436 orders. That is more than the 2,375 flagged in the descriptive tables, because the grouping also catches spellings such as ``illiquid stocks options''. In 316 matters (7.5\%) the first public action falls on or before the end of the window. The ones I read are mostly real: an interim order dated on the last day of the examined period, as in the case of Anil Dave. They are left out of the duration models and brought back in a robustness check.
+
+\paragraph{The distribution} Table~\ref{t:s1desc} and figure~\ref{f:s1dist} give the central number. Over all matters the median detection lag is 2.54 years, with the middle half between 1.31 and 4.12 years. In the cohort whose windows ended by 2018, the primary sample, it is 3.02 years (1.79 to 4.66). The median resolution lag in the cohort is 1.66 years. Correcting for right truncation with the estimator of \citet{EP99} raises the median over all matters from 2.54 to 2.82 years and leaves the cohort's median unchanged (3.03), which is what the cohort restriction is meant to achieve (table~\ref{t:s1robust}, figure~\ref{f:s1trunc}). The way a matter first becomes public matters a great deal. Where the first action is an interim order, the median lag is 0.80 years and a quarter of lags are non-positive. Where it is a show-cause notice, the median is 3.20 years. Of the categories, diversion, accounting and related-party matters take longest, with a median of 4.26 years.
+
+\begin{table}[htb]
+\caption{Detection and resolution lags by matter, in years}
+\input{tables/stage1_descriptive}
+\note{Median, with the interquartile range in parentheses. \emph{Detection lag}: window end to first public action, over positive lags. \emph{Resolution lag}: first public action to the matter's latest order. \emph{Non-positive}: first action on or before the window's end. \emph{Cohort}: windows ending by 31 December 2018. Lags for recent windows are truncated and not comparable with earlier ones.}
+\label{t:s1desc}\end{table}
+
+\begin{figure}[htb]
+\includegraphics[page=1,width=\textwidth]{figures_stage1.pdf}
+\caption{Detection lags by matter}
+\note{Left: distribution of positive lags, all matters ($N$ = 3,905) and the cohort ($N$ = 3,086), in half-year bins, lags beyond 16 years in the last bin. Right: share of matters acted on by each lag. Every matter here was acted on, so the curves are empirical distributions, not survival curves under censoring.}
+\label{f:s1dist}\end{figure}
+
+\paragraph{What predicts a faster first action} Table~\ref{t:s1models} reports hazard ratios: above 1 means a faster first action. Concordance is between 0.54 and 0.60, so observable features explain little of why one matter waits longer than another. Three associations hold across blocks. Diversion, accounting and related-party matters are slower (hazard ratio 0.63 in blocks 1 and 2, 0.78 on the common horizon). Intermediary misconduct is faster (1.14 to 1.23), which fits its route through inspections below. Matters with more parties are faster (1.07 per log point). The market-visibility measures (turnover, illiquidity, the main exchange) show no association. Ownership is available only for windows ending from FY2016, which leaves 225 matters in block~4. In those, larger firms are acted on sooner (1.12 per log point of market capitalisation), and so are firms whose promoters have pledged more of their shares (1.010 per percentage point). Promoter holding points weakly the other way. Proportional hazards fail for most covariates in the pooled models, which with some three thousand matters is not surprising. The Weibull accelerated failure time model therefore carries the interpretation, and it agrees in sign with the Cox estimates throughout. Its shape parameter of 1.60 means the rate of first action rises over the first years after a window closes.
+
+\begin{table}[htb]
+\caption{Hazard models of the detection lag}
+{\footnotesize\input{tables/stage1_models}}
+\note{Hazard ratios from Cox models, with 95\% intervals on the line below; standard errors clustered by issuer firm. The last column gives time ratios from a Weibull accelerated failure time model on the sample of column (2h), with robust errors; below 1 means a shorter lag. (1)--(2): cohort matters with positive lags. (2h): the same, keeping lags up to 7.73 years, the follow-up of the last cohort, so that every cohort has the same truncation bound. (3): listed issuers with prices in the financial year the window ends. (4): (3) with ownership, windows ending FY2016--FY2019. The omitted category is market manipulation. *** $p<0.01$, ** $p<0.05$, * $p<0.1$.}
+\label{t:s1models}\end{table}
+
+\paragraph{H2: did detection speed up after 2015?} The answer depends entirely on how truncation is handled, and the estimates show this directly. On all matters, windows ending after December 2015 have a hazard ratio of 2.52, but much of that is truncation: recent windows can only show short lags. On the cohort it falls to 1.62. Even inside the cohort, windows ending in 2016--18 have less follow-up than older ones. Keeping only lags within the 7.73 years every cohort can show gives 1.38 (95\% interval 1.24--1.54), with a time ratio of 0.84. The indicator passes the proportional-hazards test in that model. By the criterion fixed in advance, H2 is rejected: detection was faster for windows that closed after the 2015 reform, by about 16\% in time. The indicator measures everything that changed around 2015, not LODR alone, so the result says that SEBI became faster, not why. The 2018 reform cannot be tested: 19 cohort matters have windows ending after it.
+
+\paragraph{Who catches fraud, and H4} Table~\ref{t:s1channels} and figure~\ref{f:s1cif} show first detections at matter level. Half the cohort's matters (50.7\%) state no channel. Among those that state one, surveillance accounts for 34.2\% (95\% interval 32.0--36.6\%), and explicit alerts for 9.3\% (table~\ref{t:s1h4}). On the matters that state a channel, H4 is not rejected: surveillance is not the dominant first-detection channel. Over all matters the answer stays open, because the surveillance share could lie anywhere between 16.9\% and 67.6\% depending on what the unclear matters conceal. The validation adds a further caution. The pipeline found 12 of the 27 sampled orders that a reader codes as surveillance, so 34.2\% is more likely an underestimate than an overestimate. Five years after the window closes, the cumulative incidence is 13.8\% for surveillance, 12.5\% for inspection, 9.0\% for complaints and 2.9\% for referrals. The Fine--Gray models (table~\ref{t:s1fg}) show the mix shifting. After 2015, surveillance's subdistribution hazard falls to 0.24 of its earlier level and complaints' rises to 1.83, and the cause-specific models agree in sign. Inspections are the route for intermediary misconduct (subdistribution hazard ratio 14.0).
+
+\begin{table}[htb]
+\caption{First-detection channels by matter, cohort}
+\input{tables/stage1_channels}
+\note{$N$ = 3,309 cohort matters. A matter's channel is that of its earliest order stating one. \emph{CIF}: cumulative incidence of first action through each channel by 2 and 5 years after the window's end \citep[\texttt{cmprsk};][]{FG99}; there is no censoring, so the cumulative incidence at the end equals the share.}
+\label{t:s1channels}\end{table}
+
+\begin{table}[htb]
+\caption{H4: the surveillance share of first detections}
+\input{tables/stage1_h4}
+\note{\emph{Of}: the denominator. \emph{Without observed patterns or filings}: surveillance codes that rest on SEBI or an exchange observing a pattern or filing are moved out. \emph{Lower} and \emph{upper bound}: no unclear matter, or every unclear matter, was detected by surveillance. Wilson 95\% intervals. \emph{Issuer frauds}: matters of listed issuers in categories with an issuer at their centre.}
+\label{t:s1h4}\end{table}
+
+\begin{table}[htb]
+\caption{Competing risks: Fine--Gray subdistribution hazard ratios by channel}
+{\footnotesize\input{tables/stage1_finegray}}
+\note{Cohort matters with positive lags ($N$ = 3,086), each channel against all other channels including unclear \citep{FG99}. The last block repeats the post-LODR coefficient from cause-specific Cox models. 95\% intervals on the line below; *** $p<0.01$, ** $p<0.05$, * $p<0.1$.}
+\label{t:s1fg}\end{table}
+
+\begin{figure}[htb]
+\includegraphics[page=4,width=\textwidth]{figures_stage1.pdf}
+\caption{Cumulative incidence of first action by channel, cohort}
+\note{$N$ = 3,086 cohort matters with positive lags.}
+\label{f:s1cif}\end{figure}
+
+\paragraph{Robustness} Table~\ref{t:s1robust} repeats the median and the main hazard ratios under each alternative fixed in advance. The median runs from 2.87 to 3.91 years, and the post-LODR hazard ratio stays above 1 in every variant. The order as the unit gives a longer median, 3.89 years, because the many later orders of mass matters each count. On the 105 hand-coded orders with a window from both sources, the lag computed from the hand window and from the pipeline's window agree closely: medians of 3.33 and 3.38 years, correlation 0.92.
+
+\begin{table}[htb]
+\caption{Stage 1 robustness}
+{\footnotesize\input{tables/stage1_robustness}}
+\note{Cohort matters, Cox model (2) re-estimated on each variant; hazard ratios with stars as in table~\ref{t:s1models}. The truncation panel gives the 25th, 50th and 75th percentiles of the naive distribution and of the \citet{EP99} estimate. The hand-coded panel is at order level: the same first action, with the window end from the hand coding and from the pipeline.}
+\label{t:s1robust}\end{table}
+
+\begin{figure}[htb]
+\includegraphics[page=3,width=\textwidth]{figures_stage1.pdf}
+\caption{Naive and truncation-adjusted distributions of the detection lag}
+\note{All windowed matters with positive lags ($N$ = 3,905). The adjusted curve weights each matter by the inverse probability of being observed by 23 September 2026 \citep{EP99}.}
+\label{f:s1trunc}\end{figure}
+
+\subsection{Stage 2: was fraud visible beforehand?}\label{s:r2}
+
+The prediction frame holds 11,466 firm-years before each firm's first public action, of which 1,980 are fraud years. Models are trained on FY2011--2018 and tested on FY2019--2025, which hold 397 fraud years. Table~\ref{t:s2} and figure~\ref{f:s2} give the result. Ranking each test year's firms on the previous year's market signals and taking the top 402, SEBI's investigation capacity, reaches 26.7\% of that year's detected frauds with a logit and 25.1\% with gradient-boosted trees \citep{KMFWCMYL17}. Random ranking reaches 12.2\%, and none of 1,000 random rankings matches the models ($p$ = 0.001). AUC is 0.65 to 0.67, and the area under the precision--recall curve is about twice the base rate of 1.7\%. The penalised logit \citep{T96} selects the weakest penalty offered and matches the logit. H1 is not rejected: public market data carried information about fraud before anyone acted on it.
+
+Ownership adds little. On the 2021--2025 test years, trees with ownership reach 27.0\% against 22.2\% for market signals alone, while the logits do worse with ownership, because its training years are only FY2017--2020. A narrower label, years in which the issuer itself was a noticee, gives 26.5--28.5\%. Recall varies by year from 13\% to 35\%. It is lowest in 2024 and 2025, when few of the frauds committed have yet been acted on. The predictors that matter are prior-year turnover, excess return and illiquidity, the profile of an actively traded, volatile small company (table~\ref{t:s2coef}). With ownership, lower promoter holding and more pledging mark a fraud year.
+
+The gain is real but modest. At SEBI's capacity, a screen of this kind would still miss three in four of the frauds that SEBI later caught. The labels are frauds that SEBI caught and acted on, so the exercise predicts detected fraud.
+
+Table~\ref{t:s2partial} reports the partial-observability model of section~\ref{s:stage2} on the same training years. Commission takes the market predictors and detection takes visibility: turnover, and whether the firm trades mainly on NSE, which is excluded from commission. The commission equation reproduces the single probit almost exactly. Ranking the test years by the probability of commission reaches 27.6\% of detected frauds at 402, against 26.2\% for the probit, and the two rankings correlate at 0.96. The detection equation, however, is not identified: the coefficient on the excluded variable has a standard error of 210. The implied detection rate of 83\% therefore reflects the functional form, not the data, and is not an estimate. The exercise shows that Stage~2's ranking is insensitive to modelling detection separately under this restriction. It cannot say how much fraud goes undetected.
+
+\begin{table}[htb]
+\caption{Partial observability: commission and detection}
+{\footnotesize\input{tables/stage2_partial}}
+\note{Bivariate probit with partial observability \citep{WWY10}, errors independent; training years FY2011--2018 ($N$ = 6,778 firm-years with an exchange, 1,389 fraud years), weighted pseudo-likelihood. The main-exchange indicator enters detection only. Missing-value indicators are included and not shown. *** $p<0.01$, ** $p<0.05$, * $p<0.1$; the detection equation's standard errors are 0.17 for turnover and about 210 for the constant and the NSE indicator.}
+\label{t:s2partial}\end{table}
+
+\begin{table}[htb]
+\caption{Out-of-time prediction of fraud years}
+{\footnotesize\input{tables/stage2_metrics}}
+\note{Firm-years before the firm's first public action; predictors from the previous financial year; control firms weighted by 9.61. \emph{Recall@402}: share of each test year's fraud firm-years among the top 402 firms by score, controls counting with their weight, averaged over test years. \emph{Random}: expected recall of a random ranking. \emph{$p$ vs random}: share of 1,000 within-year permutations of the scores reaching the model's recall.}
+\label{t:s2}\end{table}
+
+\begin{figure}[htb]
+\includegraphics[page=1,width=\textwidth]{figures_stage2.pdf}
+\caption{Share of a year's detected frauds reached by investigating the top $k$ firms}
+\note{Market signals, trained on FY2011--2018, tested on FY2019--2025 (397 fraud years). The vertical line marks SEBI's 402 investigations taken up in 2025--26 \citep{SEBI26a}.}
+\label{f:s2}\end{figure}
+
+\begin{table}[htb]
+\caption{What the screens use}
+{\footnotesize\input{tables/stage2_coefficients}}
+\note{LASSO: coefficients on standardised predictors (a missing-value indicator is also included for each). Trees: share of total split gain. The zero-volume share carries nothing because the exchange files list only days with trades.}
+\label{t:s2coef}\end{table}
+
+\subsection{Stage 3: what an order costs the firm}\label{s:r3}
+
+\paragraph{Events} The finality classifier labels interim, confirmatory, final and settlement orders. On the 981 Chairperson/Member orders whose titles state the kind, the text rules agree with the title in 94.1\% of cases with the title hidden. The frozen sample's fraud firms have 2,120 first public actions: 1,487 final orders, 334 settlements, 290 interim orders and 9 confirmations. Of these, 1,049 have usable returns. The rest traded on less than 60\% of estimation days (614), have no prices (363), lie outside the price data (47) or have a broken price series (32). Fifteen firms stopped trading at the event.
+
+\paragraph{The market reaction} Table~\ref{t:s3cars} and figure~\ref{f:s3}. Interim orders carry the news. Where an interim order is a firm's first public action, its abnormal return is $-2.95\%$ over days $-1$ to $+1$ and $-7.81\%$ over days 0 to $+10$ (median $-6.05\%$; 70\% negative). The standardised test of \citet{BMP91} and the rank test of \citet{C89} and \citet{C92} both reject at 1\%. The estimate holds on the liquid subsample ($-8.04\%$), with ordinary betas ($-7.90\%$) and for each firm's first interim order whenever it came ($-7.72\%$). Bounding the five suspended firms at a loss of 50\% moves it to $-9.30\%$. Final orders carry no news: $-0.26\%$ over $(-1,+1)$, insignificant. That is unsurprising, since they arrive a median of 1.66 years after a first action already public. Settlements fall by 1.47\% over $(0,+10)$, significant only by the rank test and only at 10\%. Before the event, all first actions drift down by 1.46\% over days $-30$ to $-2$, and interim orders by 1.80\% (by the rank test). That is some leakage or decline before SEBI acts, but small against the reaction.
+
+\begin{table}[htb]
+\caption{Abnormal returns around SEBI's orders}
+{\footnotesize\input{tables/stage3_cars}}
+\note{Mean cumulative abnormal return in percent, from a market model with a \citet{D79} beta estimated over days $-250$ to $-30$ against the BSE 500. Stars: the standardised cross-sectional test \citep{BMP91} (*** $p<0.01$, ** $p<0.05$, * $p<0.1$); daggers: the generalised rank test \citep{C89,C92}, at the same levels. Means and the standardised test use CARs winsorised at 1\% and 99\%. The $(-5,+5)$ window, not shown, gives $-6.56\%$ for interim orders. Firms must have traded on 60\% of estimation days; \emph{liquid}: 90\%.}
+\label{t:s3cars}\end{table}
+
+\begin{figure}[htb]
+\includegraphics[page=1,width=\textwidth]{figures_stage3.pdf}
+\caption{Cumulative average abnormal return around a firm's first public action}
+\note{Daily abnormal returns clipped at the 0.5th and 99.5th percentiles. Confirmations (two events) are omitted.}
+\label{f:s3}\end{figure}
+
+\paragraph{What moves the reaction} In the cross-section (table~\ref{t:s3cross}), interim orders lose 6.4 percentage points more than final orders over $(0,+10)$, and settlements 3.1 points more. Debarment goes with a further 3.2 points, and the issuer being a noticee with 2.1 points. The size of the monetary sanction has no association with the reaction. These cross-sectional associations fit a market that prices the revelation and the restraint, not the fine.
+
+\begin{table}[htb]
+\caption{Cross-section of abnormal returns at the first public action}
+{\footnotesize\input{tables/stage3_cross}}
+\note{OLS in percentage points with HC1 standard errors in parentheses. The omitted event type is a final order; the omitted categories are all others. (2) adds log market capitalisation at the previous March, available from FY2016. *** $p<0.01$, ** $p<0.05$, * $p<0.1$.}
+\label{t:s3cross}\end{table}
+
+\paragraph{H6 and the reputational gap} Table~\ref{t:s3gap} compares value lost, $-\text{CAR}(0,+10)$ times market capitalisation at the previous March, with monetary sanctions. Market capitalisation needs the ownership data, so this covers events from FY2016 only. For the 41 interim orders, the median firm loses Rs~4.44 crore of market value. The median of all monetary sanctions in the same firms' orders is Rs~0.07 crore. Value lost exceeds all those sanctions for 63\% of firms, and exceeds the sanctions imposed on the company itself for 73\%; most companies are never fined at all. H6 is not rejected for interim orders: the market cost exceeds the monetary penalty, as \citet{KLM08} find for the United States. It is rejected for final orders. This also suggests why the Indian evidence conflicts. \citet{GPS26} study final orders, which carry no news, while \citet{J22} count earlier actions. Totals of value lost are dominated by a few large firms whose prices rose after final orders, and are not interpreted.
+
+\begin{table}[htb]
+\caption{Market value lost and monetary sanctions, Rs crore}
+{\footnotesize\input{tables/stage3_gap}}
+\note{First public actions from FY2016 with a market capitalisation. \emph{Loss}: $-$CAR(0,+10) times market capitalisation at the previous March. \emph{Sanctions}: penalties, settlement amounts and disgorgement in all the firm's orders. \emph{Loss $>$ all}: share of firms whose loss exceeds those sanctions. \emph{Firm fined}: share of firms with any penalty imposed on the company itself as a party; \emph{Loss $>$ firm's}: share whose loss exceeds that penalty.}
+\label{t:s3gap}\end{table}
+
+\begin{table}[htb]
+\caption{Firms suspended at the event: bounds on the mean CAR(0,+10), percent}
+\input{tables/stage3_suspension}
+\note{First public actions. \emph{Suspended}: traded in the estimation window but on none of days 0 to $+10$. The last three columns set their CAR to zero, to the 10th percentile of the same type's observed CARs, or to $-50\%$.}
+\label{t:s3susp}\end{table}
+
+\subsection{Synthesis: the implied penalty}\label{s:r4}
+
+Table~\ref{t:synthesis} evaluates equation~\eqref{e:optimal}. $H$ comes from Stage~3, as the median value lost at a first interim order (Rs~4.44 crore) or the mean abnormal return times the median market capitalisation (Rs~9.09 crore). $\tau$ is Stage~1's cohort median of 3.02 years; the truncation-adjusted 2.82 changes $S^{*}$ by less than 2\%. Across the grid, $S^{*}$ runs from Rs~11 crore to Rs~65 crore. The median of all sanctions in the same firms' orders is Rs~0.07 crore, and the median penalty in the corpus is Rs~5 lakh. Observed sanctions fall short in every cell, by a factor of 160 to 930. The case for larger penalties does not rest on any one assumption about $p$. Two cautions bound this. $H$ is the loss to shareholders and not to society. And the comparison holds the sanction fixed, while the market itself imposes most of the cost through revelation.
+
+\begin{table}[htb]
+\caption{The implied optimal penalty $S^{*} = (H/p)\,e^{r\tau}$, Rs crore}
+\input{tables/synthesis}
+\note{$H$ from the 41 interim first actions with a market capitalisation; $\tau$ = 3.02 years (Stage~1 cohort median). $p$ = 0.33 is the US estimate of \citet{DMZ24}, imported as a benchmark. \emph{vs observed}: $S^{*}$ divided by the median of all monetary sanctions in the same firms' orders.}
+\label{t:synthesis}\end{table}
+
+\subsection{The hypotheses}\label{s:verdicts}
+
+Table~\ref{t:verdicts} sets each hypothesis against its rejection criterion. In the terms of table~\ref{t:joint}, the evidence matches the second pattern. Fraud was partly predictable from public data, at about twice the rate of random ranking at SEBI's capacity, yet the first public action came a median of three years after the conduct ended. The binding link is the time between visible signals and SEBI's first public move. The sanction leg adds a second finding. When SEBI does move with an interim order, the market imposes a cost many times the fine. The monetary penalties themselves are small against any deterrence benchmark.
+
+\begin{table}[htb]
+\caption{The hypotheses and what the estimates say}
+\begin{tabular*}{\textwidth}[]{L{0.6cm}@{\extracolsep\fill}L{4.5cm}L{8.2cm}}
+\toprule
+& Hypothesis & Result \\
+\midrule
+H1 & Fraud is predictable from public information & Not rejected: recall at 402 of 26.7\% against 12.2\% at random ($p$ = 0.001); AUC 0.65 \\
+H2 & Detection has not accelerated after the reforms & Rejected for 2015: hazard ratio 1.38 (1.24--1.54) on the common horizon; 2018 not testable (19 matters) \\
+H3 & Audit signals carry detection information & Not testable: no audit data \\
+H4 & Surveillance is not the dominant first-detection channel & Not rejected among matters stating a channel (34.2\%, 32.0--36.6); open over all matters (16.9--67.6\%) \\
+H5 & Ownership opacity predicts fraud and slower detection & Mixed: lower promoter holding and more pledging mark fraud years in Stage~2, but pledging goes with faster detection in Stage~1 ($N$ = 225) \\
+H6 & Sanctions impose market costs exceeding the penalty & Not rejected for interim orders ($-7.81\%$ over 11 days; value lost exceeds sanctions for 63\%); rejected for final orders \\
+H7 & Sanctions transmit through networks & Future work \\
+\bottomrule
+\end{tabular*}
+\label{t:verdicts}\end{table}
+
+\FloatBarrier
 \section{Discussion}\label{s:discussion}
 
-% UPDATE: rewrite from the estimates when Stages 1 and 3 exist; recommendations must follow findings.
-The estimates are still to come, so this section does not answer the research question. It sets out what the descriptive record already suggests, what it cannot show, and how the corpus changes the questions the estimates must answer.
+The estimates answer the research question in the terms of table~\ref{t:joint}. Fraud was partly predictable, detection was slow, and the market's response to an interim order is large while the monetary sanction is small. This section interprets those results, says what they cannot show, and draws the recommendations that follow from them.
 
 \subsection{Where the delay sits}
 
-The clearest pattern is that delay before the first public action is two to three times the delay after it, under each unit of analysis. If that pattern survives truncation adjustment, the common focus on adjudication backlogs addresses the smaller part of the delay. Two cautions apply. The first lag is a composite: a matter SEBI noticed at once and investigated for three years looks the same as one that went unnoticed for three years, and these call for different remedies. The resolution lag is also understated, since it stops at the order in hand while remands and appeals continue; in Taksheel the first adjudication order came 2.5 years after the first action, and a fresh one came 7.1 years after that.
+The clearest pattern is that delay before the first public action is about twice the delay after it, under each unit of analysis. It survives the truncation adjustment and the matter as unit: in the cohort the median detection lag is 3.02 years and the median resolution lag 1.66 years. The common focus on adjudication backlogs therefore addresses the smaller part of the delay. The lag shortened after 2015, by about 16\% in time on a common horizon, which is a real improvement but leaves the median near three years. The model explains little of why one matter waits longer than another. Diversion, accounting and related-party cases wait longest, which fits their reliance on documents that surface late. Two cautions apply. The first lag is a composite: a matter SEBI noticed at once and investigated for three years looks the same as one that went unnoticed for three years, and these call for different remedies. The resolution lag is also understated, since it stops at the order in hand while remands and appeals continue; in Taksheel the first adjudication order came 2.5 years after the first action, and a fresh one came 7.1 years after that.
 
 The deterrence framework gives the delay a scale. A penalty paid 5.50 years after the window ends, the median in these data, is worth 64\% of its face value to a promoter discounting at 8\%, and 52\% at 12\%. In the terms of equation~\eqref{e:deterrence}, delay alone removes a third to a half of the sanction. This is an illustration and not an estimate. It treats the promoter's gain as arriving at the end of the window and uses an assumed discount rate, and the median is taken over orders, not matters. Its use is to put delay on the same scale as the sanction itself.
 
 \subsection{What the sanctions show}
 
-The typical order imposes a few lakh rupees, and a handful of orders dominate the total. A median of Rs~5 lakh sits at the statutory floor for fraudulent and unfair trade practices, though many penalties fall under other sections with lower floors. Any statement about the average penalty is largely a statement about PACL. Whether Rs~5 lakh is low cannot be judged without the gain it responds to, and the record often lacks that: \citet{DZ22} find that the size of the violation went uncalculated in 90\% of their sampled cases. This matters for the implied penalty of section~\ref{s:optimal}, because comparing $S^{*}$ with a median penalty will be persuasive only if the matters compared are of similar size. The corpus records imposed amounts. Recovery rates and reversals on appeal would lower the effective $S$ further, and \citet{AKPPS25} report that about half of appealed insider-trading sanctions were modified.
+The typical order imposes a few lakh rupees, and a handful of orders dominate the total. A median of Rs~5 lakh sits at the statutory floor for fraudulent and unfair trade practices, though many penalties fall under other sections with lower floors. Any statement about the average penalty is largely a statement about PACL. Stage~3 shows that the market does much of the punishing, and does it early. An interim order costs the median firm Rs~4.44 crore of market value within eleven trading days, while the median of all monetary sanctions in the same firms' orders is Rs~0.07 crore. The final order, years later, moves nothing. Deterrence through the market therefore depends on the first public action coming soon, and it falls on all shareholders, not only on those responsible. Against the implied penalty of section~\ref{s:r4}, observed sanctions fall short by a factor of 160 to 930 whatever the detection probability. Whether Rs~5 lakh is low for a given case cannot be judged without the gain it responds to, and the record often lacks that: \citet{DZ22} find that the size of the violation went uncalculated in 90\% of their sampled cases. This matters for the implied penalty of section~\ref{s:optimal}, because comparing $S^{*}$ with a median penalty will be persuasive only if the matters compared are of similar size. The corpus records imposed amounts. Recovery rates and reversals on appeal would lower the effective $S$ further, and \citet{AKPPS25} report that about half of appealed insider-trading sanctions were modified.
 
 \subsection{What the record's mix does and does not imply}
 
-The conduct that motivates much of the Indian debate, promoters taking money out of companies, accounts for a small share of orders. Three readings are possible. Such conduct may be rare, it may be hard to detect, or it may be handled elsewhere, by the Ministry of Corporate Affairs, the Serious Fraud Investigation Office or the courts. The corpus cannot choose between them, because it conditions on SEBI's having acted. It does sharpen the prediction stage. If Stage~2 finds that market and ownership signals carry information about these cases, that favours the second reading, and it would be the most policy-relevant result in the thesis. But with few such cases, and with ownership data only from FY2016, statistical power for these categories will be limited. Pooled results will be driven by market manipulation, and that should be said when they are reported.
+The conduct that motivates much of the Indian debate, promoters taking money out of companies, accounts for a small share of orders. Three readings are possible. Such conduct may be rare, it may be hard to detect, or it may be handled elsewhere, by the Ministry of Corporate Affairs, the Serious Fraud Investigation Office or the courts. The corpus cannot choose between them, because it conditions on SEBI's having acted. Stage~2 found that market signals carry information about fraud years, but the signal is that of manipulation targets: actively traded, volatile small companies. With few diversion and accounting cases, and ownership only from FY2016, the screen cannot say whether these categories were visible beforehand. They are also the slowest to reach a first action. They are where a screen built on accounts and audit data, which this thesis could not assemble, would add most.
 
 \subsection{Who catches fraud}
 
-H4 asks whether automated surveillance is the dominant channel, and the descriptive evidence shows why the answer needs care. Under a broad definition, the surveillance share among issuer frauds is a majority at 54.9\%, which taken at face value would reject H4. Under the alert-only definition it is 13.8\%, and H4 would stand. The difference lies in orders stating that SEBI or an exchange observed something, without saying how. Those could be automated alerts that orders do not bother to describe, or they could be staff reading filings. The protocol codes them surveillance and flags them, so both readings can be reported.
+H4 asks whether automated surveillance is the dominant channel. At matter level, among cohort matters that state a channel, surveillance accounts for 34.2\% of first detections and explicit alerts for 9.3\%, so H4 is not rejected. Order-level shares tell a less stable story. Under a broad definition, the surveillance share among windowed issuer-fraud orders is a majority at 54.9\%, while under the alert-only definition it is 13.8\%. The difference lies in orders stating that SEBI or an exchange observed something, without saying how. Those could be automated alerts that orders do not bother to describe, or they could be staff reading filings. The protocol codes them surveillance and flags them, so both readings can be reported. The validation adds a caution in the other direction: the pipeline reads more than half of hand-coded surveillance orders as unclear, so stated surveillance shares are understated. After 2015 the mix shifted away from surveillance and towards complaints, which suggests that complaints became the main route by which matters reach SEBI.
 
 Selection is the larger problem. Among all orders, surveillance could be anywhere from 17.3\% to 76.0\%, depending on what the unclear orders conceal. Orders may also be more likely to state a trigger when the trigger is a complaint or a reference, which leaves a paper trail, and in that case the stated shares would understate surveillance. The unclear share has fallen by more than 20 points since 2006--10. The record is improving, which itself complicates comparisons over time.
 
-\subsection{What this already implies for the record}
+\subsection{What the findings imply}
 
-Some implications do not wait for the estimates, because they concern the record and not the conduct. Over 40\% of orders state no examined period, and most state no trigger. SEBI presumably holds both facts for every matter. Publishing the examined period, the date a matter was opened and the source of first information in a fixed field of each order would cost little. It would also let SEBI and outsiders answer the questions in this thesis directly, and would remove the largest measurement problem here, the composite detection lag. Publishing matter identifiers would resolve the unit-of-analysis problem at a stroke. I offer these as recommendations about measurement. Recommendations about surveillance, screening or penalties must wait for the results in table~\ref{t:joint}.
+Three recommendations follow from the findings, in order of the evidence behind them. First, the delay to the first public action is the binding link. A screen built only from public market data, run at SEBI's existing capacity, would have reached twice the frauds random selection would, and the market responds to an early interim order, not to a late final one. Moving first actions earlier, through screening that feeds interim action, would raise the cost of fraud more than further work on adjudication. Second, monetary penalties are small against any deterrence benchmark, and the market cost falls on shareholders as a whole. Penalties aimed at those responsible, and recovery of gains, are where sanction design can improve. Third, the record itself should improve. Over 40\% of orders state no examined period, and most state no trigger. Publishing the examined period, the date a matter was opened, the source of first information and a matter identifier in a fixed field of each order would cost little. It would remove the composite detection lag and the unit-of-analysis problem, the two largest measurement problems here.
 
 \section{Limitations}\label{s:limitations}
 
 \paragraph{Selection on detection} This is the central limitation. The corpus contains frauds that SEBI caught and acted on. Clean-labelled firm-years contain undetected fraud, lags describe detected cases only, and nothing here estimates prevalence. \citet{DMZ24} could estimate the undetected share for the United States because the collapse of Arthur Andersen forced a fresh look at a set of firms; no such shock is in hand here. Every claim in this thesis is conditional on detection.
 
-\paragraph{Right truncation} Slow detections of recent frauds have not happened yet, so recent lags are mechanically short. Cohort restriction and reverse-time estimation reduce the bias but do not remove it, and they leave the 2018 reform effectively untested.
+\paragraph{Right truncation} Slow detections of recent frauds have not happened yet, so recent lags are mechanically short. Cohort restriction, a common horizon and the truncation-adjusted estimator reduce the bias but do not remove it, and they leave the 2018 reform untested.
 
 \paragraph{The measured lag is not awareness} SEBI's internal opening dates are not public. The detection lag includes investigation time and may substantially overstate the time SEBI took to notice a matter.
 
@@ -500,9 +711,13 @@ Some implications do not wait for the estimates, because they concern the record
 
 \paragraph{Drop-out} Only 58.2\% of orders state a window, and the drop-out is systematic by category and year. Settlement orders are under-represented, so anything associated with settling is under-weighted in Stage~1.
 
-\paragraph{Extraction error} No extracted field has yet been validated blind. Development checks were made on tuned or non-blind samples. Known errors include the unread penalties, channel false positives from both rules and the model, and a residual of misread windows. Sanctions, prior actions and parties fall outside the validation sample. Rare categories will be too thinly sampled for category-level accuracy. A single person does the hand coding, so reliability is intra-coder.
+\paragraph{Extraction error} The blind validation found window, category and channel extraction reliable enough to proceed, with $\kappa$ of 0.74 and 0.63, but not error-free. The pipeline recovers about 63\% of the windows a reader finds, and it reads more than half of surveillance cases as unclear. Neither error was corrected before estimation, and no second validation sample was drawn. Sanctions, prior actions, parties and the finality label fall outside the validation sample, and penalties are known to be undercounted. Rare categories were too thinly sampled for category-level accuracy. One person did the hand coding, and the planned intra-coder re-coding was not done.
 
 \paragraph{Coverage of firms and data} Firms listed only on regional exchanges are unmatched. NSE alone publishes rename history, so BSE-only renames are known by their last name. BSE prices begin in March 2006. Prices exclude dividends, and consolidations are unadjusted. Ownership begins in December 2015, and no accounting or audit data are available, so Stage~2 tests a narrower question than the literature it builds on, and H3 cannot be tested.
+
+\paragraph{Event-study sample} Half of the firms' first public actions cannot enter the event study, mostly because the firm traded on fewer than 60\% of days before the event or has no prices. The estimates describe tradable firms. The market-value comparison needs shares outstanding and so covers only events from FY2016.
+
+\paragraph{Prediction} Stage~2 predicts frauds that SEBI caught. The partial-observability model leaves its ranking unchanged but cannot identify the detection rate, the ownership training period is four years, and recent test years contain few detected frauds.
 
 \paragraph{Scope} Frauds handled by the Ministry of Corporate Affairs, the Serious Fraud Investigation Office or the Reserve Bank lie outside the corpus, and claims are confined to securities-market enforcement by SEBI. SAT and court outcomes are not modelled, and sanctions are recorded as imposed.
 
@@ -510,13 +725,11 @@ Some implications do not wait for the estimates, because they concern the record
 
 \section{Conclusion}\label{s:ccl}
 
-\paragraph{Summary} % UPDATE: rewrite around the estimates.
-This thesis asks where India's enforcement chain against capital-market fraud fails, and it builds the evidence needed to answer. The corpus covers all 20,861 orders in SEBI's four enforcement categories. It gives an examined period for 58.2\% of those with text, reads sanctions, parties and provisions from the orders, and codes categories and channels under a protocol fixed in advance. It reconciles exactly with an independent count of SEBI's orders for 2011--2020. The descriptive record shows a median of about three years from the end of the examined period to the first public action and a further 1.2 to 1.3 years to the order. It is silent on the source of most matters, and the surveillance share depends heavily on who is counted and on what is called surveillance.
+\paragraph{Summary} This thesis asks where India's enforcement chain against capital-market fraud fails, and builds the evidence to answer. It assembles all 20,861 orders in SEBI's four enforcement categories, extracts the examined period, prior actions, sanctions, parties, categories and channels from their text, and checks the extraction against a blind hand coding. At the level of the matter, the median time from the end of the examined period to SEBI's first public action is three years. It was shorter for periods ending after the 2015 reforms. Public market signals would have flagged fraud firms at twice the rate of random selection at SEBI's investigation capacity. The market punishes a firm by about 8\% when SEBI's first public move is an interim order and not at all at the final order. Monetary penalties are a small fraction of any deterrence benchmark.
 
-\paragraph{Implications} Two implications already stand. Any study of SEBI enforcement that counts orders is partly counting a few mass matters, so the unit of analysis must be a stated choice. And recent improvement in enforcement speed cannot be read from raw lags, because right truncation produces the same picture. More broadly, SEBI could remove the main measurement problems by publishing a small set of dates and sources that it should already hold.
+\paragraph{Implications} The binding link is the time between visible signals and SEBI's first public move. Screening at existing capacity, feeding earlier interim action, is where the next rupee belongs, with penalty design second. Any study of SEBI enforcement that counts orders is partly counting a few mass matters, so the unit of analysis must be a stated choice. Recent speed cannot be read from raw lags, because right truncation produces the same picture. SEBI could remove the main measurement problems by publishing a small set of dates and sources it already holds.
 
-\paragraph{Next steps} % UPDATE: delete when done.
-The remaining steps are, in order: a repair of the penalty reader, the ownership data and panel, a matter-grouping step and a finality classifier, and then the estimation of Stages 1 and 3, followed by Stage~2 as time allows. Beyond the thesis, the network extension in H7 needs auditor identity by firm-year. The corpus and its code are intended for public release, so that the measurement can be checked and extended.
+\paragraph{Further work} Accounting and audit data would test H3 and extend the screen to the categories it cannot reach. A credible source of variation in detection, such as a change in surveillance that touched some firms and not others, would let the partial-observability model estimate how much fraud goes undetected. Auditor identity by firm-year would allow the network extension of H7. The corpus and its code are intended for public release, so that the measurement can be checked and extended.
 
 \bibliography{\bib}
 \clearpage

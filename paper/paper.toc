@@ -5,20 +5,20 @@
 \contentsline {paragraph}{What the corpus already shows}{2}{paragraph*.5}%
 \contentsline {paragraph}{Positioning in the literature}{3}{paragraph*.6}%
 \contentsline {paragraph}{Contribution}{3}{paragraph*.7}%
-\contentsline {paragraph}{Status of this draft}{4}{paragraph*.8}%
+\contentsline {paragraph}{Main findings}{4}{paragraph*.8}%
 \contentsline {paragraph}{Roadmap}{4}{paragraph*.9}%
 \contentsline {section}{\numberline {2}Institutional setting}{4}{section.10}%
 \contentsline {subsection}{\numberline {2.1}SEBI and its orders}{4}{subsection.11}%
 \contentsline {subsection}{\numberline {2.2}The path of a matter}{5}{subsection.12}%
-\contentsline {subsection}{\numberline {2.3}Sanctions}{5}{subsection.16}%
+\contentsline {subsection}{\numberline {2.3}Sanctions}{6}{subsection.16}%
 \contentsline {subsection}{\numberline {2.4}Reforms relevant to the regime tests}{6}{subsection.17}%
-\contentsline {section}{\numberline {3}Conceptual framework: the enforcement chain}{6}{section.18}%
-\contentsline {subsection}{\numberline {3.1}The deterrence condition}{6}{subsection.19}%
+\contentsline {section}{\numberline {3}Conceptual framework: the enforcement chain}{7}{section.18}%
+\contentsline {subsection}{\numberline {3.1}The deterrence condition}{7}{subsection.19}%
 \contentsline {subsection}{\numberline {3.2}Why the three stages belong together}{7}{subsection.22}%
-\contentsline {subsection}{\numberline {3.3}The implied optimal penalty}{7}{subsection.24}%
+\contentsline {subsection}{\numberline {3.3}The implied optimal penalty}{8}{subsection.24}%
 \contentsline {subsection}{\numberline {3.4}Hypotheses}{8}{subsection.26}%
 \contentsline {section}{\numberline {4}Data}{8}{section.28}%
-\contentsline {subsection}{\numberline {4.1}The order corpus}{8}{subsection.29}%
+\contentsline {subsection}{\numberline {4.1}The order corpus}{9}{subsection.29}%
 \contentsline {subsection}{\numberline {4.2}From documents to text}{10}{subsection.31}%
 \contentsline {subsection}{\numberline {4.3}The violation window}{10}{subsection.32}%
 \contentsline {paragraph}{Definition}{10}{paragraph*.33}%
@@ -26,58 +26,76 @@
 \contentsline {paragraph}{Sanity rules and yield}{11}{paragraph*.35}%
 \contentsline {paragraph}{Who drops out}{11}{paragraph*.37}%
 \contentsline {paragraph}{Development checks}{11}{paragraph*.38}%
-\contentsline {subsection}{\numberline {4.4}Prior actions and the first public action}{11}{subsection.39}%
-\contentsline {subsection}{\numberline {4.5}Sanctions, parties and provisions}{12}{subsection.40}%
-\contentsline {paragraph}{Sanctions}{12}{paragraph*.41}%
+\contentsline {subsection}{\numberline {4.4}Prior actions and the first public action}{12}{subsection.39}%
+\contentsline {subsection}{\numberline {4.5}Sanctions, parties and provisions}{13}{subsection.40}%
+\contentsline {paragraph}{Sanctions}{13}{paragraph*.41}%
 \contentsline {paragraph}{A known undercount}{13}{paragraph*.42}%
 \contentsline {paragraph}{Parties and provisions}{13}{paragraph*.43}%
 \contentsline {subsection}{\numberline {4.6}Fraud category}{13}{subsection.44}%
 \contentsline {subsection}{\numberline {4.7}Detection channel}{14}{subsection.45}%
 \contentsline {subsection}{\numberline {4.8}Validation design}{14}{subsection.46}%
-\contentsline {subsection}{\numberline {4.9}Listed firms and entity matching}{15}{subsection.48}%
-\contentsline {subsection}{\numberline {4.10}Analysis sample}{16}{subsection.50}%
-\contentsline {subsection}{\numberline {4.11}Market data and ownership}{17}{subsection.51}%
-\contentsline {subsection}{\numberline {4.12}The unit of analysis}{17}{subsection.52}%
-\contentsline {section}{\numberline {5}Descriptive evidence}{18}{section.53}%
-\contentsline {subsection}{\numberline {5.1}Enforcement activity over time}{18}{subsection.54}%
-\contentsline {subsection}{\numberline {5.2}What is enforced}{18}{subsection.56}%
-\contentsline {subsection}{\numberline {5.3}Sanctions}{19}{subsection.59}%
-\contentsline {subsection}{\numberline {5.4}Lags}{19}{subsection.61}%
-\contentsline {subsection}{\numberline {5.5}Detection channels}{21}{subsection.65}%
-\contentsline {section}{\numberline {6}Empirical strategy}{22}{section.67}%
-\contentsline {subsection}{\numberline {6.1}Stage 1: detection and resolution lags}{22}{subsection.68}%
-\contentsline {paragraph}{Hazard models}{23}{paragraph*.70}%
-\contentsline {paragraph}{Right truncation}{23}{paragraph*.72}%
-\contentsline {paragraph}{Competing risks}{24}{paragraph*.73}%
-\contentsline {paragraph}{Robustness}{25}{paragraph*.74}%
-\contentsline {subsection}{\numberline {6.2}Stage 2: ex-ante predictability}{25}{subsection.75}%
-\contentsline {subsection}{\numberline {6.3}Stage 3: sanctions and market value}{26}{subsection.77}%
-\contentsline {paragraph}{Events}{26}{paragraph*.78}%
-\contentsline {paragraph}{Abnormal returns}{26}{paragraph*.79}%
-\contentsline {paragraph}{Cross-section and the reputational gap}{27}{paragraph*.81}%
-\contentsline {paragraph}{Suspended firms}{27}{paragraph*.83}%
-\contentsline {subsection}{\numberline {6.4}Synthesis}{27}{subsection.84}%
-\contentsline {section}{\numberline {7}Discussion}{27}{section.85}%
-\contentsline {subsection}{\numberline {7.1}Where the delay sits}{27}{subsection.86}%
-\contentsline {subsection}{\numberline {7.2}What the sanctions show}{28}{subsection.87}%
-\contentsline {subsection}{\numberline {7.3}What the record's mix does and does not imply}{28}{subsection.88}%
-\contentsline {subsection}{\numberline {7.4}Who catches fraud}{29}{subsection.89}%
-\contentsline {subsection}{\numberline {7.5}What this already implies for the record}{29}{subsection.90}%
-\contentsline {section}{\numberline {8}Limitations}{29}{section.91}%
-\contentsline {paragraph}{Selection on detection}{29}{paragraph*.92}%
-\contentsline {paragraph}{Right truncation}{29}{paragraph*.93}%
-\contentsline {paragraph}{The measured lag is not awareness}{30}{paragraph*.94}%
-\contentsline {paragraph}{The window is SEBI's choice}{30}{paragraph*.95}%
-\contentsline {paragraph}{Drop-out}{30}{paragraph*.96}%
-\contentsline {paragraph}{Extraction error}{30}{paragraph*.97}%
-\contentsline {paragraph}{Coverage of firms and data}{30}{paragraph*.98}%
-\contentsline {paragraph}{Scope}{30}{paragraph*.99}%
-\contentsline {paragraph}{Causality}{30}{paragraph*.100}%
-\contentsline {section}{\numberline {9}Conclusion}{31}{section.101}%
-\contentsline {paragraph}{Summary}{31}{paragraph*.102}%
-\contentsline {paragraph}{Implications}{31}{paragraph*.103}%
-\contentsline {paragraph}{Next steps}{31}{paragraph*.104}%
-\contentsline {section}{\numberline {A}Fraud categories}{34}{appendix.105}%
-\contentsline {section}{\numberline {B}Detection channels}{34}{appendix.107}%
-\contentsline {section}{\numberline {C}Reading the window}{35}{appendix.109}%
-\contentsline {section}{\numberline {D}The pipeline and reproducibility}{36}{appendix.111}%
+\contentsline {subsection}{\numberline {4.9}Listed firms and entity matching}{16}{subsection.49}%
+\contentsline {subsection}{\numberline {4.10}Analysis sample}{16}{subsection.51}%
+\contentsline {subsection}{\numberline {4.11}Market data and ownership}{17}{subsection.52}%
+\contentsline {subsection}{\numberline {4.12}The unit of analysis}{18}{subsection.54}%
+\contentsline {section}{\numberline {5}Descriptive evidence}{19}{section.55}%
+\contentsline {subsection}{\numberline {5.1}Enforcement activity over time}{19}{subsection.56}%
+\contentsline {subsection}{\numberline {5.2}What is enforced}{19}{subsection.58}%
+\contentsline {subsection}{\numberline {5.3}Sanctions}{20}{subsection.61}%
+\contentsline {subsection}{\numberline {5.4}Lags}{20}{subsection.63}%
+\contentsline {subsection}{\numberline {5.5}Detection channels}{22}{subsection.67}%
+\contentsline {section}{\numberline {6}Empirical strategy}{23}{section.69}%
+\contentsline {subsection}{\numberline {6.1}Stage 1: detection and resolution lags}{23}{subsection.70}%
+\contentsline {paragraph}{Hazard models}{24}{paragraph*.72}%
+\contentsline {paragraph}{Right truncation}{25}{paragraph*.74}%
+\contentsline {paragraph}{Competing risks}{25}{paragraph*.75}%
+\contentsline {paragraph}{Robustness}{26}{paragraph*.76}%
+\contentsline {subsection}{\numberline {6.2}Stage 2: ex-ante predictability}{26}{subsection.77}%
+\contentsline {subsection}{\numberline {6.3}Stage 3: sanctions and market value}{27}{subsection.79}%
+\contentsline {paragraph}{Events}{27}{paragraph*.80}%
+\contentsline {paragraph}{Abnormal returns}{27}{paragraph*.81}%
+\contentsline {paragraph}{Cross-section and the reputational gap}{28}{paragraph*.83}%
+\contentsline {paragraph}{Suspended firms}{28}{paragraph*.85}%
+\contentsline {subsection}{\numberline {6.4}Synthesis}{28}{subsection.86}%
+\contentsline {section}{\numberline {7}Results}{28}{section.87}%
+\contentsline {subsection}{\numberline {7.1}Stage 1: how long matters stay unaddressed}{29}{subsection.88}%
+\contentsline {paragraph}{From orders to matters}{29}{paragraph*.89}%
+\contentsline {paragraph}{The distribution}{29}{paragraph*.90}%
+\contentsline {paragraph}{What predicts a faster first action}{30}{paragraph*.93}%
+\contentsline {paragraph}{H2: did detection speed up after 2015?}{31}{paragraph*.95}%
+\contentsline {paragraph}{Who catches fraud, and H4}{31}{paragraph*.96}%
+\contentsline {paragraph}{Robustness}{31}{paragraph*.101}%
+\contentsline {subsection}{\numberline {7.2}Stage 2: was fraud visible beforehand?}{32}{subsection.104}%
+\contentsline {subsection}{\numberline {7.3}Stage 3: what an order costs the firm}{33}{subsection.109}%
+\contentsline {paragraph}{Events}{33}{paragraph*.110}%
+\contentsline {paragraph}{The market reaction}{33}{paragraph*.111}%
+\contentsline {paragraph}{What moves the reaction}{34}{paragraph*.114}%
+\contentsline {paragraph}{H6 and the reputational gap}{34}{paragraph*.116}%
+\contentsline {subsection}{\numberline {7.4}Synthesis: the implied penalty}{35}{subsection.119}%
+\contentsline {subsection}{\numberline {7.5}The hypotheses}{36}{subsection.121}%
+\contentsline {section}{\numberline {8}Discussion}{45}{section.123}%
+\contentsline {subsection}{\numberline {8.1}Where the delay sits}{45}{subsection.124}%
+\contentsline {subsection}{\numberline {8.2}What the sanctions show}{45}{subsection.125}%
+\contentsline {subsection}{\numberline {8.3}What the record's mix does and does not imply}{46}{subsection.126}%
+\contentsline {subsection}{\numberline {8.4}Who catches fraud}{46}{subsection.127}%
+\contentsline {subsection}{\numberline {8.5}What the findings imply}{47}{subsection.128}%
+\contentsline {section}{\numberline {9}Limitations}{47}{section.129}%
+\contentsline {paragraph}{Selection on detection}{47}{paragraph*.130}%
+\contentsline {paragraph}{Right truncation}{47}{paragraph*.131}%
+\contentsline {paragraph}{The measured lag is not awareness}{47}{paragraph*.132}%
+\contentsline {paragraph}{The window is SEBI's choice}{48}{paragraph*.133}%
+\contentsline {paragraph}{Drop-out}{48}{paragraph*.134}%
+\contentsline {paragraph}{Extraction error}{48}{paragraph*.135}%
+\contentsline {paragraph}{Coverage of firms and data}{48}{paragraph*.136}%
+\contentsline {paragraph}{Event-study sample}{48}{paragraph*.137}%
+\contentsline {paragraph}{Prediction}{48}{paragraph*.138}%
+\contentsline {paragraph}{Scope}{48}{paragraph*.139}%
+\contentsline {paragraph}{Causality}{49}{paragraph*.140}%
+\contentsline {section}{\numberline {10}Conclusion}{49}{section.141}%
+\contentsline {paragraph}{Summary}{49}{paragraph*.142}%
+\contentsline {paragraph}{Implications}{49}{paragraph*.143}%
+\contentsline {paragraph}{Further work}{49}{paragraph*.144}%
+\contentsline {section}{\numberline {A}Fraud categories}{52}{appendix.145}%
+\contentsline {section}{\numberline {B}Detection channels}{52}{appendix.147}%
+\contentsline {section}{\numberline {C}Reading the window}{53}{appendix.149}%
+\contentsline {section}{\numberline {D}The pipeline and reproducibility}{54}{appendix.151}%

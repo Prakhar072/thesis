@@ -614,3 +614,167 @@ issuer firm. The AFT has robust (not clustered) errors.
 - **Diversion, accounting and RPT** frauds take longest to come to light.
 
 Validation figures do not cover the lag model. 105 hand-coded orders back the window ends.
+
+## 2026-11-18 — Ownership (A7), panel and coverage (A8), Stage 1 with ownership
+
+**A7** (`python -m src.fetch_shareholding`, user-run, finished 2026-11-18 00:33; 426.9 min, 11,932 requests): 11,938
+firm-quarters (ok 11,581 · empty 357); data for 1,354 of 1,763 sample firms on BSE; median promoter holding 51.3%;
+22.2% of parsed firm-quarters with a pledge value carry a pledge.
+
+**A8** (`python -m src.build_panel`, 2026-11-18): `derived/panel.parquet`, 18,149 firm-years (fraud firms 13,563 ·
+controls 4,586); fraud years 2,430; post-public years 6,683. **Coverage table** (`derived/panel_coverage.csv`):
+
+| Unit | N | With prices | With ownership | With both |
+|---|---|---|---|---|
+| Fraud firms | 1,254 | 1,145 (91.3%) | 955 (76.2%) | 955 (76.2%) |
+| Control firms | 600 | 457 (76.2%) | 368 (61.3%) | 368 (61.3%) |
+| Fraud firm-years FY2010–2025 | 2,430 | 2,234 (91.9%) | 959 (39.5%) | 955 (39.3%) |
+| Fraud firm-years FY2016+ | 1,120 | 1,031 (92.1%) | 959 (85.6%) | 955 (85.3%) |
+
+Annual price returns have extreme values (maximum ×39,000: penny stocks and unadjusted consolidations), so Stage 2
+winsorises them.
+
+**Stage 1 with ownership** (`python -m src.stage1 --ownership`, 2026-11-18; all other figures unchanged from 2026-11-17).
+Block (4) = listed matters in the cohort with ownership in the window-end FY: **n 225** (windows ending FY2016–19).
+Log market cap HR 1.12 (1.02–1.24, p 0.02; AFT TR 0.95); pledged % HR 1.010 per point (1.005–1.015, p < 0.001; TR 0.996);
+promoter % HR 0.994 (p 0.05); post-LODR 1.10 (n.s. inside this small post-2015 sample); concordance 0.596.
+Reading: larger firms and firms with more promoter pledging are acted on sooner. For Stage 1, H5's direction (opacity →
+slower detection) is not supported by pledging; promoter holding points weakly that way. Small n.
+
+## 2026-11-18 — Finality classifier (`src/classify_finality.py`)
+
+`python -m src.classify_finality` → `derived/order_finality.parquet` (`finality-v1`). Order type decides AO and ED/CGM
+(FINAL) and settlement orders (SETTLEMENT_FINAL). WTM orders use SEBI's title where it states the kind, else text rules:
+"final order" in the opening; takeover exemption in the opening (OTHER); operative confirm/extend/revoke (CONFIRMATION);
+operative "until further orders", "pending investigation", invitation to object, or "treated as a show-cause notice"
+(INTERIM); "for a period of …" or disposal of the SCN (FINAL); an operative direction (FINAL, low confidence).
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| All orders | FINAL 16,184 · SETTLEMENT_FINAL 1,981 · INTERIM 950 · OTHER 628 · CONFIRMATION 552 · UNKNOWN 566 | 20,861 |
+| WTM | FINAL 3,777 · INTERIM 950 · OTHER 579 · CONFIRMATION 552 · UNKNOWN 566 (8.8%); title 1,409 · text 4,449 · none 566 | 6,424 |
+| **Silver check** (text rules on WTM orders whose title states the kind, title hidden) | **923 of 981 (94.1%)**: confirmation 128/152 · final 368/374 · interim 427/455; interim precision 427/438 (97.5%) | titled orders are not a random sample; agent spot checks of text-only labels (8 each of interim, confirmation, other; 8 weak final) found two false OTHER, fixed before the run |
+
+## 2026-11-18 — Stage 3: event study (`src/stage3.py`)
+
+`python -m src.stage3` → `derived/stage3/`, `derived/stage3_numbers.json`, `paper/tables/stage3_{cars,cross,gap,suspension}.tex`,
+`paper/figures_stage3.pdf`. Events: the frozen sample's 7,461 public actions on fraud firms, typed by finality; 362
+non-enforcement dropped → 7,099 (FINAL 5,380 · SETTLEMENT 791 · INTERIM 602 · CONFIRMATION 326). **Primary sample: each
+firm's first public action** (2,120: FINAL 1,487 · SETTLEMENT 334 · INTERIM 290 · CONFIRMATION 9). Market model, Dimson
+beta, BSE 500, estimation −250 to −30; trades on ≥ 60% of estimation days; broken price series (a raw daily return
+> +200% or < −80% in −250…+30) set aside; mean CAR and BMP winsorised at 1/99% (two events had CARs of +1,001% and +447%
+before the rule; rules fixed before results were re-read).
+
+| Figure | Value | Scope / note |
+|---|---|---|
+| First actions with a usable estimate | 1,049 of 2,120 (thin trading 614 · no prices 363 · out of range 47 · broken series 32 · suspended 15) | small illiquid firms drop out |
+| **Interim order, CAR(−1,+1)** | **−2.95% (median −2.06%); BMP z −4.78, rank z −3.19; 67% negative; n 137** | |
+| **Interim order, CAR(0,+10)** | **−7.81% (median −6.05%); BMP −5.92, rank −5.76; 70% negative** | (−5,+5): −6.56% |
+| Interim, checks on CAR(0,+10) | liquid subsample −8.04% (n 121) · first of each type −7.72% (n 168) · OLS beta −7.90% | all p < 0.001 |
+| Final order | CAR(−1,+1) −0.26% (BMP −1.16, rank 0.20) · (0,+10) +0.69% (median −0.23%) · n 682 | no reaction |
+| Settlement order | CAR(−1,+1) 0.00% · (0,+10) −1.47% (median −1.74%; BMP −1.50, rank −1.83) · n 228 | marginal |
+| Pre-event drift (−30,−2) | all −1.46% (BMP −2.59, rank −2.65); interim −1.80% (n.s. by BMP) | some leakage or decline before the order |
+| Cross-section, CAR(0,+10), n 1,049 | interim −6.4 pp*** · settlement −3.1 pp*** · debarment −3.2 pp** · issuer a noticee −2.1 pp** · log sanction +0.3 pp (n.s.) · R² 0.06 | relative to final orders; HC1 |
+| Suspended at the event | 15 first actions (interim 5); interim mean CAR(0,+10) −7.81% → −7.54% (suspended at 0) to −9.30% (at −50%) | bounds |
+| **Reputational gap** (market cap at the previous March, FY2016+ only) | interim (n 41): median value lost **₹4.44 crore** vs median sanctions in all the firm's orders **₹0.07 crore**; 63% lose more than all sanctions, 73% more than sanctions on the firm itself | settlement (n 55): ₹4.53 cr vs ₹0.37 cr. Totals are dominated by a few large caps (all first actions: −₹25,899 crore, a net gain) and are not read |
+| Sanctions on the firm itself | 23% of first-action firms with a market cap ever carry a monetary sanction imposed on the company | party-level penalties matched to the firm |
+
+**Reading (provisional).** **H6 holds for interim orders:** the market marks a firm down by about 8% in the 11 trading
+days after the first interim order, far more than anything SEBI later collects from it. Final orders carry no news:
+they come years after the first action, by which time it is known. This separates the conflicting Indian evidence: Gupta,
+Patel and Sane study final orders.
+
+## 2026-11-18 — Stage 2: prediction (`src/stage2.py`)
+
+`python -m src.stage2` → `derived/stage2/`, `derived/stage2_numbers.json`, `paper/tables/stage2_{metrics,coefficients}.tex`,
+`paper/figures_stage2.pdf`. Frame: the panel's 11,466 firm-years before each firm's first public action (fraud years
+1,980; issuer a noticee 925), predictors from the previous financial year, controls weighted 9.61. Out of time. Class
+weights. Recall at capacity: within each test year, controls counting with their weight, averaged over test years.
+H1's test is a permutation test with scores shuffled within year (1,000 permutations). A firm-clustered bootstrap
+interval was tried first and dropped, because it ran about five points above the point estimate on this statistic.
+
+| Specification (train → test) | Model | AUC | AUPRC (base) | **Recall@402** | Random (95th pct) | p vs random |
+|---|---|---|---|---|---|---|
+| Market, FY2011–18 → 2019–25 (6,807 / 1,418 fraud → 3,777 / 397) | Logit | 0.650 | 0.036 (0.017) | **26.7%** | 12.2% (13.4%) | 0.001 |
+| | LASSO (C = 1) | 0.650 | 0.036 | 26.7% | 12.2% | 0.001 |
+| | Gradient boosting (46 trees) | 0.665 | 0.038 | 25.1% | 12.2% | 0.001 |
+| Market, 2011–20 → 2021–25 | Logit / LASSO / trees | 0.634 / 0.629 / 0.645 | 0.030 / 0.030 / 0.032 (0.014) | 24.8 / 24.8 / 22.2% | 12.1% | 0.001 |
+| Market + ownership, 2017–20 → 2021–25 (2,850 / 457 → 2,498 / 231) | Logit / LASSO / trees | 0.601 / 0.608 / 0.664 | 0.026 / 0.022 / 0.043 | 20.7 / 21.0 / **27.0%** | 12.1% | 0.001 |
+| Market, 2018 split, issuer-a-noticee label (635 → 218) | Logit / LASSO / trees | 0.604 / 0.603 / 0.615 | 0.020 / 0.023 / 0.019 (0.009) | 26.5 / 28.5 / 28.1% | 12.2% | 0.001 |
+
+- Recall curve (main logit): k 100 → 9.5% (random 3.0) · 200 → 13.7% (6.1) · 402 → 26.7% (12.2) · 600 → 43.2% (18.3) ·
+  1,000 → 55.7% (30.4).
+- By test year (main logit, recall@402): 2019 26.9% · 2020 34.2% · 2021 35.4% · 2022 28.4% · 2023 35.2% · 2024 13.3% ·
+  2025 13.3%. The last two years have few detected frauds (30, 15), which is the truncation again.
+- Predictors (LASSO, standardised; tree gain share):
+  - Market, 2018 split: log turnover +1.10 (28%) · excess return +0.58 (26%) · Amihud +0.67 (15%) · volatility
+    +0.03 (15%) · return −0.35 (11%).
+  - With ownership: promoter holding −0.45 (23%) · market cap +0.29 (12%) · pledged % +0.23 (8%).
+  - The zero-volume share carries nothing, because bhavcopies list only traded days.
+
+**Reading.** **H1 is not rejected** (its criterion is performance indistinguishable from random ranking): a market-signal
+screen ranked at SEBI's capacity reaches about twice the share of the
+year's (detected) frauds that random selection would, 25–27% against 12%. Ownership adds little except to the trees,
+and the ownership training sample is short. AUC near 0.65 and AUPRC about twice the base rate are modest. The labels are
+frauds SEBI caught, and the partial-observability robustness (§6.5) is not run.
+
+## 2026-11-18 — Synthesis: the implied optimal penalty (`src/synthesis.py`)
+
+`python -m src.synthesis` → `paper/tables/synthesis.tex`, `derived/synthesis_numbers.json`. S* = (H / p) · e^{rτ}.
+- **H** comes from Stage 3: interim orders that were a firm's first public action and have a market cap (n 41, FY2016+).
+  The median value lost is ₹4.44 crore. The mean CAR(0,+10) of −7.81% times the median market cap (₹116 crore) gives
+  ₹9.09 crore.
+- **τ** is the Stage 1 cohort median, 3.02 y (the truncation-adjusted 2.82 y changes S* by under 2%).
+- **p** is a grid. The 0.33 value is Dyck, Morse and Zingales's US estimate, imported.
+
+| S* (₹ crore), H = median value lost | r = 8% | r = 12% |
+|---|---|---|
+| p = 0.20 | 28.3 | 31.9 |
+| p = 0.33 | 17.1 | 19.3 |
+| p = 0.50 | 11.3 | 12.8 |
+
+With H = mean CAR × median cap, S* runs from ₹23.2 to ₹65.3 crore. **Observed:** the median of all monetary sanctions in
+the same 41 firms' orders is ₹0.07 crore (₹7 lakh); the median penalty over all penalty orders in the corpus is ₹5 lakh.
+Observed sanctions fall short of S* in every cell, by 160× to 930×. Caveats: H is shareholder loss, not social harm; p
+cannot be estimated from detected cases; n is small; penalties are undercounted by up to 5.9% (2026-11-07).
+
+## 2026-11-18 — Thesis: results written into `paper/paper.tex`
+
+The new **Results** section (§7) covers Stage 1 (matters, distribution, hazard models, H2, channels and H4,
+robustness), Stage 2, Stage 3, the synthesis, and a verdict table for H1–H7. Generated tables: `stage1_*`,
+`stage2_*`, `stage3_*`, `synthesis`. Figures: `figures_stage{1,2,3}.pdf`. Also rewritten from the estimates: the abstract,
+the introduction's findings paragraph (replacing the draft-status paragraph), validation (§4.8, now with a results
+table), the unit of analysis (§4.11), method sentences (Efron–Petrosian estimator, common horizon, Dimson + OLS betas,
+the finality classifier, partial observability not run), the discussion, the limitations and the conclusion.
+
+**Verdicts** (each against the rejection criterion fixed in the plan):
+- H1 not rejected (prediction beats random).
+- H2 rejected for 2015 (detection faster); 2018 not testable.
+- H3 not testable.
+- H4 not rejected among matters stating a channel; open over all matters.
+- H5 mixed.
+- H6 not rejected for interim orders, rejected for final orders.
+- H7 future work.
+
+The paper compiles at 54 pages with no undefined references. The one `UPDATE` left is the penalty-reader paragraph,
+which is not fixed.
+
+## 2026-11-18 — Stage 2 robustness: partial observability (`src/partial_observability.py`)
+
+`python -m src.partial_observability` → `paper/tables/stage2_partial.tex`, `derived/partial_observability.json`,
+`derived/stage2/partial_observability.csv`. Bivariate probit with partial observability, P(y) = Φ(x'β_C)·Φ(w'β_D), ρ = 0.
+Commission takes the market predictors and detection takes log turnover plus main exchange NSE, which is excluded from
+commission. Training FY2011–18 (6,778 firm-years with an exchange, 1,389 fraud), weighted pseudo-likelihood. The first
+run was singular: the missing-value indicators coincide and the zero-volume share is constant. Those columns were
+dropped, after which it converged.
+
+| Figure | Value | Note |
+|---|---|---|
+| Pseudo-log-likelihood | −1,373.0 (13 parameters) vs single probit −1,379.2 (10) | |
+| Commission equation | ≈ single probit (turnover +0.59 vs +0.57; Amihud +0.29 vs +0.37; excess return +0.33 vs +0.33) | |
+| Detection equation | constant +5.39 (SE 210), NSE −5.03 (SE 210), turnover −0.15 (SE 0.17) | **not identified** |
+| Implied mean P(commit) / P(detected given commit) | 0.067 / 0.826 | the 0.826 reflects the functional form, not the data, and is not an estimate |
+| Recall at 402, test 2019–25 | commission probability 27.6% vs probit 26.2%; rank correlation 0.96 | ranking insensitive |
+
+**Reading.** Stage 2's ranking is insensitive to modelling detection separately under this restriction. The undetected
+share is not identified. That matches the plan's warning that the exclusion restriction is contestable.
